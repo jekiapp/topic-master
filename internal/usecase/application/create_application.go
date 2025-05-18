@@ -7,7 +7,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jekiapp/nsqper/internal/model/acl"
-	repoapp "github.com/jekiapp/nsqper/internal/repository/application"
+	repository "github.com/jekiapp/nsqper/internal/repository"
+	apprepo "github.com/jekiapp/nsqper/internal/repository/application"
+	permissionrepo "github.com/jekiapp/nsqper/internal/repository/permission"
+	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
 	"github.com/tidwall/buntdb"
 )
 
@@ -31,20 +34,22 @@ type applicationRepo struct {
 }
 
 func (r *applicationRepo) CreateApplication(app acl.PermissionApplication) error {
-	return repoapp.CreateApplication(r.db, app)
+	return apprepo.CreateApplication(r.db, app)
 }
 
 func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionID string) (*acl.PermissionApplication, error) {
-	return repoapp.GetApplicationByUserAndPermission(r.db, userID, permissionID)
+	return apprepo.GetApplicationByUserAndPermission(r.db, userID, permissionID)
 }
 
 type CreateApplicationUsecase struct {
 	repo iApplicationRepo
+	db   *buntdb.DB
 }
 
 func NewCreateApplicationUsecase(db *buntdb.DB) CreateApplicationUsecase {
 	return CreateApplicationUsecase{
 		repo: &applicationRepo{db: db},
+		db:   db,
 	}
 }
 
@@ -75,5 +80,38 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	if err := uc.repo.CreateApplication(app); err != nil {
 		return CreateApplicationResponse{}, err
 	}
+
+	// by permission id, get the entity, then check the group owner of this entity
+	permission, err := permissionrepo.GetPermissionByID(uc.db, req.PermissionID)
+	if err != nil {
+		return CreateApplicationResponse{}, errors.New("permission not found")
+	}
+	entity, err := repository.GetEntityByID(uc.db, permission.EntityID)
+	if err != nil {
+		return CreateApplicationResponse{}, errors.New("entity not found")
+	}
+	groupID := entity.GroupOwner
+	userIDs, err := userrepo.ListUserIDsByGroupID(uc.db, groupID)
+	if err != nil {
+		return CreateApplicationResponse{}, errors.New("failed to list group members")
+	}
+	for _, userID := range userIDs {
+		user, err := userrepo.GetUserByID(uc.db, userID)
+		if err != nil || user == nil {
+			continue
+		}
+		if user.Type == "admin" {
+			assignment := acl.ApplicationAssignment{
+				ID:            uuid.NewString(),
+				ApplicationID: app.ID,
+				ReviewerID:    user.ID,
+				ReviewStatus:  "pending",
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
+			}
+			_ = apprepo.CreateApplicationAssignment(uc.db, assignment)
+		}
+	}
+
 	return CreateApplicationResponse{Application: app}, nil
 }

@@ -43,3 +43,22 @@ func GetPermission(db *buntdb.DB, name string, entityID string) (*acl.Permission
 	}
 	return &permission, nil
 }
+
+func GetPermissionByID(db *buntdb.DB, id string) (*acl.Permission, error) {
+	var permission acl.Permission
+	err := db.View(func(tx *buntdb.Tx) error {
+		return tx.AscendKeys(permissionPrefix+"*", func(key, value string) bool {
+			if err := json.Unmarshal([]byte(value), &permission); err == nil && permission.ID == id {
+				return false // found
+			}
+			return true // keep searching
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	if permission.ID != id {
+		return nil, fmt.Errorf("permission not found")
+	}
+	return &permission, nil
+}
