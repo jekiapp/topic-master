@@ -2,6 +2,24 @@ package acl
 
 import "time"
 
+// Permission represents an action or resource (master)
+type Permission struct {
+	ID        string // Unique identifier
+	Name      string // Permission name
+	EntityID  string // Reference to Entity.ID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// GroupPermission maps groups to permissions (many-to-many)
+type GroupPermission struct {
+	ID           string // Unique identifier for the mapping
+	GroupID      string // Reference to Group.ID
+	PermissionID string // Reference to Permission.ID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 // PermissionApplication represents a user's request to obtain a permission.
 type PermissionApplication struct {
 	ID           string    // Unique identifier for the application
@@ -14,7 +32,7 @@ type PermissionApplication struct {
 }
 
 // PermissionApplicationReviewer links a permission application to a reviewer and their review status.
-type PermissionApplicationReviewer struct {
+type ApplicationAssignment struct {
 	ID            string    // Unique identifier for the mapping
 	ApplicationID string    // Reference to PermissionApplication.ID
 	ReviewerID    string    // Reference to User.ID (the reviewer)
@@ -25,8 +43,8 @@ type PermissionApplicationReviewer struct {
 	UpdatedAt     time.Time // Last update timestamp
 }
 
-// PermissionApplicationHistory tracks the history of actions taken on a permission application.
-type PermissionApplicationHistory struct {
+// ApplicationHistory tracks the history of actions taken on a permission application.
+type ApplicationHistory struct {
 	ID            string    // Unique identifier for the history record
 	ApplicationID string    // Reference to PermissionApplication.ID
 	Action        string    // Action taken (e.g., submitted, reviewed, approved, rejected)

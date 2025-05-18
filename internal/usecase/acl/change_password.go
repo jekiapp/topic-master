@@ -13,7 +13,7 @@ import (
 )
 
 type ChangePasswordRequest struct {
-	Username    string `json:"username"`
+	UserID      string `json:"user_id"`
 	OldPassword string `json:"old_password"`
 	NewPassword string `json:"new_password"`
 }
@@ -23,7 +23,7 @@ type ChangePasswordResponse struct {
 }
 
 type iUserPasswordRepo interface {
-	GetUserByUsername(username string) (*acl.User, error)
+	GetUserByID(userID string) (*acl.User, error)
 	UpdateUser(user acl.User) error
 }
 
@@ -31,8 +31,8 @@ type changePasswordRepo struct {
 	db *buntdb.DB
 }
 
-func (r *changePasswordRepo) GetUserByUsername(username string) (*acl.User, error) {
-	return userrepo.GetUserByUsername(r.db, username)
+func (r *changePasswordRepo) GetUserByID(userID string) (*acl.User, error) {
+	return userrepo.GetUserByID(r.db, userID)
 }
 
 func (r *changePasswordRepo) UpdateUser(user acl.User) error {
@@ -50,10 +50,10 @@ func NewChangePasswordUsecase(db *buntdb.DB) ChangePasswordUsecase {
 }
 
 func (uc ChangePasswordUsecase) Handle(ctx context.Context, req ChangePasswordRequest) (ChangePasswordResponse, error) {
-	if req.Username == "" || req.OldPassword == "" || req.NewPassword == "" {
-		return ChangePasswordResponse{Success: false}, errors.New("missing required fields: username, old_password, or new_password")
+	if req.UserID == "" || req.OldPassword == "" || req.NewPassword == "" {
+		return ChangePasswordResponse{Success: false}, errors.New("missing required fields: user_id, old_password, or new_password")
 	}
-	user, err := uc.repo.GetUserByUsername(req.Username)
+	user, err := uc.repo.GetUserByID(req.UserID)
 	if err != nil || user == nil {
 		return ChangePasswordResponse{Success: false}, errors.New("user not found")
 	}

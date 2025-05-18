@@ -5,7 +5,7 @@ import "time"
 type Entity struct {
 	ID          string
 	TypeID      string
-	GroupOwner  string
+	GroupOwner  string // Group.ID
 	Name        string
 	Resource    string
 	Status      string

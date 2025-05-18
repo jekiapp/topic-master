@@ -33,24 +33,6 @@ type UserGroup struct {
 	UpdatedAt time.Time
 }
 
-// Permission represents an action or resource (master)
-type Permission struct {
-	ID        string // Unique identifier
-	Name      string // Permission name
-	EntityID  string // Reference to Entity.ID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-// GroupPermission maps groups to permissions (many-to-many)
-type GroupPermission struct {
-	ID           string // Unique identifier for the mapping
-	GroupID      string // Reference to Group.ID
-	PermissionID string // Reference to Permission.ID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-}
-
 // Authorization maps a user to a permission (for access control checks)
 type Authorization struct {
 	ID           string // Unique identifier for the mapping

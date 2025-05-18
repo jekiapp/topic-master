@@ -63,3 +63,20 @@ func GetGroupByName(db *buntdb.DB, name string) (*acl.Group, error) {
 	}
 	return &group, nil
 }
+
+func ListUserIDsByGroupID(db *buntdb.DB, groupID string) ([]string, error) {
+	var userIDs []string
+	err := db.View(func(tx *buntdb.Tx) error {
+		return tx.AscendKeys("usergroup:*:"+groupID, func(key, value string) bool {
+			var userGroup acl.UserGroup
+			if err := msgpack.Unmarshal([]byte(value), &userGroup); err == nil {
+				userIDs = append(userIDs, userGroup.UserID)
+			}
+			return true
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return userIDs, nil
+}
