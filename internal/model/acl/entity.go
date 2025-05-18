@@ -1,4 +1,4 @@
-package model
+package acl
 
 import "time"
 
@@ -22,4 +22,13 @@ type EntityType struct {
 	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+// publish, tail, etc.
+type EntityDefaultPermission struct {
+	ID             string
+	EntityID       string
+	PermissionName string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
