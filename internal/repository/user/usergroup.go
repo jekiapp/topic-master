@@ -80,3 +80,21 @@ func ListUserIDsByGroupID(db *buntdb.DB, groupID string) ([]string, error) {
 	}
 	return userIDs, nil
 }
+
+func GetAdminUserIDsByGroupID(db *buntdb.DB, groupID string) ([]string, error) {
+	userIDs, err := ListUserIDsByGroupID(db, groupID)
+	if err != nil {
+		return nil, err
+	}
+	var adminIDs []string
+	for _, userID := range userIDs {
+		user, err := GetUserByID(db, userID)
+		if err != nil || user == nil {
+			continue
+		}
+		if user.Type == "admin" {
+			adminIDs = append(adminIDs, user.ID)
+		}
+	}
+	return adminIDs, nil
+}

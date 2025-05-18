@@ -27,6 +27,10 @@ type CreateApplicationResponse struct {
 type iApplicationRepo interface {
 	CreateApplication(app acl.PermissionApplication) error
 	GetApplicationByUserAndPermission(userID, permissionID string) (*acl.PermissionApplication, error)
+	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
+	GetGroupByName(name string) (*acl.Group, error)
+	ListUserIDsByGroupID(groupID string) ([]string, error)
+	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
 }
 
 type applicationRepo struct {
@@ -39,6 +43,22 @@ func (r *applicationRepo) CreateApplication(app acl.PermissionApplication) error
 
 func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionID string) (*acl.PermissionApplication, error) {
 	return apprepo.GetApplicationByUserAndPermission(r.db, userID, permissionID)
+}
+
+func (r *applicationRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, error) {
+	return userrepo.GetAdminUserIDsByGroupID(r.db, groupID)
+}
+
+func (r *applicationRepo) GetGroupByName(name string) (*acl.Group, error) {
+	return userrepo.GetGroupByName(r.db, name)
+}
+
+func (r *applicationRepo) ListUserIDsByGroupID(groupID string) ([]string, error) {
+	return userrepo.ListUserIDsByGroupID(r.db, groupID)
+}
+
+func (r *applicationRepo) CreateApplicationAssignment(assignment acl.ApplicationAssignment) error {
+	return apprepo.CreateApplicationAssignment(r.db, assignment)
 }
 
 type CreateApplicationUsecase struct {
@@ -54,6 +74,7 @@ func NewCreateApplicationUsecase(db *buntdb.DB) CreateApplicationUsecase {
 }
 
 func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplicationRequest) (CreateApplicationResponse, error) {
+	// 1. Validate input
 	if req.UserID == "" {
 		return CreateApplicationResponse{}, errors.New("missing required field: user_id")
 	}
@@ -63,11 +84,14 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	if req.Reason == "" {
 		return CreateApplicationResponse{}, errors.New("missing required field: reason")
 	}
-	// Check if application already exists
+
+	// 2. Check for duplicate pending application
 	existing, err := uc.repo.GetApplicationByUserAndPermission(req.UserID, req.PermissionID)
 	if err == nil && existing != nil && existing.Status == "pending" {
 		return CreateApplicationResponse{}, errors.New("application already exists for this user and permission and is pending")
 	}
+
+	// 3. Create the application
 	app := acl.PermissionApplication{
 		ID:           uuid.NewString(),
 		UserID:       req.UserID,
@@ -81,7 +105,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 		return CreateApplicationResponse{}, err
 	}
 
-	// by permission id, get the entity, then check the group owner of this entity
+	// 4. Lookup permission, entity, and group owner for assignment
 	permission, err := permissionrepo.GetPermissionByID(uc.db, req.PermissionID)
 	if err != nil {
 		return CreateApplicationResponse{}, errors.New("permission not found")
@@ -91,26 +115,35 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 		return CreateApplicationResponse{}, errors.New("entity not found")
 	}
 	groupID := entity.GroupOwner
-	userIDs, err := userrepo.ListUserIDsByGroupID(uc.db, groupID)
+
+	// 5. Get admin user IDs in the group
+	adminIDs, err := uc.repo.GetAdminUserIDsByGroupID(groupID)
 	if err != nil {
-		return CreateApplicationResponse{}, errors.New("failed to list group members")
+		return CreateApplicationResponse{}, errors.New("failed to list admin group members")
 	}
-	for _, userID := range userIDs {
-		user, err := userrepo.GetUserByID(uc.db, userID)
-		if err != nil || user == nil {
-			continue
+
+	// 6. Get all user IDs in the root group
+	rootGroup, err := uc.repo.GetGroupByName("root")
+	if err != nil {
+		return CreateApplicationResponse{}, errors.New("root group not found")
+	}
+	rootUserIDs, err := uc.repo.ListUserIDsByGroupID(rootGroup.ID)
+	if err != nil {
+		return CreateApplicationResponse{}, errors.New("failed to list root group members")
+	}
+	adminIDs = append(adminIDs, rootUserIDs...)
+
+	// 7. Create assignment for each admin/root user
+	for _, adminID := range adminIDs {
+		assignment := acl.ApplicationAssignment{
+			ID:            uuid.NewString(),
+			ApplicationID: app.ID,
+			ReviewerID:    adminID,
+			ReviewStatus:  "pending",
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 		}
-		if user.Type == "admin" {
-			assignment := acl.ApplicationAssignment{
-				ID:            uuid.NewString(),
-				ApplicationID: app.ID,
-				ReviewerID:    user.ID,
-				ReviewStatus:  "pending",
-				CreatedAt:     time.Now(),
-				UpdatedAt:     time.Now(),
-			}
-			_ = apprepo.CreateApplicationAssignment(uc.db, assignment)
-		}
+		_ = uc.repo.CreateApplicationAssignment(assignment)
 	}
 
 	return CreateApplicationResponse{Application: app}, nil
