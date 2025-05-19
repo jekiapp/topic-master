@@ -1,0 +1,218 @@
+version: '3'
+
+services:
+  nsqlookupd:
+    image: nsqio/nsq:latest
+    command: /nsqlookupd
+    ports:
+      - "4160:4160"  # HTTP interface
+      - "4161:4161"  # TCP interface
+    volumes:
+      - nsq_data:/data
+
+  nsqd:
+    image: nsqio/nsq:latest
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4161
+    ports:
+      - "4150:4150"  # HTTP interface
+      - "4151:4151"  # TCP interface
+      - "4152:4152"  # HTTP interface for /stats
+    volumes:
+      - nsq_data:/data
+    depends_on:
+      - nsqlookupd
+
+  topic-creator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - nsqd
+
+  consumer-order-created:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=order_created
+    depends_on:
+      - nsqd
+
+  consumer-order-paid:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=order_paid
+    depends_on:
+      - nsqd
+
+  consumer-order-shipped:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=order_shipped
+    depends_on:
+      - nsqd
+
+  consumer-order-delivered:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=order_delivered
+    depends_on:
+      - nsqd
+
+  consumer-order-cancelled:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=order_cancelled
+    depends_on:
+      - nsqd
+
+  consumer-payment-processed:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=payment_processed
+    depends_on:
+      - nsqd
+
+  consumer-payment-failed:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=payment_failed
+    depends_on:
+      - nsqd
+
+  consumer-inventory-updated:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=inventory_updated
+    depends_on:
+      - nsqd
+
+  consumer-inventory-low:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=inventory_low
+    depends_on:
+      - nsqd
+
+  consumer-inventory-out-of-stock:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=inventory_out_of_stock
+    depends_on:
+      - nsqd
+
+  consumer-customer-registered:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=customer_registered
+    depends_on:
+      - nsqd
+
+  consumer-customer-login:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=customer_login
+    depends_on:
+      - nsqd
+
+  consumer-customer-address-updated:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=customer_address_updated
+    depends_on:
+      - nsqd
+
+  consumer-cart-updated:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=cart_updated
+    depends_on:
+      - nsqd
+
+  consumer-cart-abandoned:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=cart_abandoned
+    depends_on:
+      - nsqd
+
+  consumer-product-viewed:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=product_viewed
+    depends_on:
+      - nsqd
+
+  consumer-product-reviewed:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=product_reviewed
+    depends_on:
+      - nsqd
+
+  consumer-promotion-created:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=promotion_created
+    depends_on:
+      - nsqd
+
+  consumer-promotion-applied:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=promotion_applied
+    depends_on:
+      - nsqd
+
+  consumer-refund-requested:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=refund_requested
+    depends_on:
+      - nsqd
+
+volumes:
+  nsq_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data
