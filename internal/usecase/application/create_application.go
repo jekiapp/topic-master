@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jekiapp/nsqper/internal/model/acl"
-	repository "github.com/jekiapp/nsqper/internal/repository"
 	apprepo "github.com/jekiapp/nsqper/internal/repository/application"
+	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
 	permissionrepo "github.com/jekiapp/nsqper/internal/repository/permission"
 	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
 	"github.com/tidwall/buntdb"
@@ -110,7 +110,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	if err != nil {
 		return CreateApplicationResponse{}, errors.New("permission not found")
 	}
-	entity, err := repository.GetEntityByID(uc.db, permission.EntityID)
+	entity, err := entityrepo.GetEntityByID(uc.db, permission.EntityID)
 	if err != nil {
 		return CreateApplicationResponse{}, errors.New("entity not found")
 	}
