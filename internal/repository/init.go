@@ -1,10 +1,11 @@
 package repository
 
 import (
-	"github.com/jekiapp/hi-mod-arch/config"
+	"github.com/jekiapp/nsqper/internal/config"
+	"github.com/jekiapp/nsqper/internal/repository/lookupd"
 )
 
 func Init(cfg *config.Config) error {
-	// init other repository
+	lookupd.Init(cfg)
 	return nil
 }

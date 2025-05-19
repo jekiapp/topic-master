@@ -1,4 +1,4 @@
-package repository
+package entity
 
 import (
 	"encoding/json"
@@ -10,6 +10,7 @@ import (
 
 const entityPrefix = "entity:"
 
+// format id = nsqtopic:topic_name
 func GetEntityByID(db *buntdb.DB, id string) (*acl.Entity, error) {
 	var entity acl.Entity
 	err := db.View(func(tx *buntdb.Tx) error {
