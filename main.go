@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/tidwall/buntdb"
 
 	"github.com/jekiapp/nsqper/internal/config"
+	"github.com/jekiapp/nsqper/internal/repository"
 )
 
 func main() {
@@ -48,9 +50,14 @@ func main() {
 
 	fmt.Printf("Loaded config: %+v\n", cfg)
 
+	repository.Init(cfg)
+
 	mux := http.NewServeMux()
 	handler := initHandler(db, cfg)
 	handler.routes(mux)
+
+	// sync all the topics
+	handler.syncTopicsUC.HandleQuery(context.Background(), nil)
 
 	// Start the server
 	fmt.Printf("NSQper is running on port %s...\n", *port)

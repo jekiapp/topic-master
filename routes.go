@@ -5,6 +5,8 @@ import (
 
 	"github.com/jekiapp/nsqper/internal/config"
 	acl "github.com/jekiapp/nsqper/internal/usecase/acl"
+	topicUC "github.com/jekiapp/nsqper/internal/usecase/topic"
+	"github.com/jekiapp/nsqper/pkg/handler"
 	handlerPkg "github.com/jekiapp/nsqper/pkg/handler"
 	"github.com/tidwall/buntdb"
 )
@@ -17,6 +19,7 @@ type Handler struct {
 	createUserGroupUC   acl.CreateUserGroupUsecase
 	createPermissionUC  acl.CreatePermissionUsecase
 	changePasswordUC    acl.ChangePasswordUsecase
+	syncTopicsUC        topicUC.SyncTopicsUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -28,6 +31,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		createUserGroupUC:   acl.NewCreateUserGroupUsecase(db),
 		createPermissionUC:  acl.NewCreatePermissionUsecase(db),
 		changePasswordUC:    acl.NewChangePasswordUsecase(db),
+		syncTopicsUC:        topicUC.NewSyncTopicsUsecase(db),
 	}
 }
 
@@ -39,4 +43,5 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/create-usergroup", handlerPkg.HandleGenericPost(h.createUserGroupUC.Handle))
 	mux.HandleFunc("/api/create-permission", handlerPkg.HandleGenericPost(h.createPermissionUC.Handle))
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
+	mux.HandleFunc("/api/sync-topics", handler.QueryHandler(h.syncTopicsUC.HandleQuery))
 }
