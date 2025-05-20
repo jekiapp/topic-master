@@ -1,40 +1,54 @@
-version: '3'
-
 services:
   nsqlookupd:
     image: nsqio/nsq:latest
     command: /nsqlookupd
     ports:
-      - "4160:4160"  # HTTP interface
-      - "4161:4161"  # TCP interface
+      - "4161:4161"  # HTTP interface
+      - "4160:4160"  # TCP interface
     volumes:
       - nsq_data:/data
 
   nsqd:
     image: nsqio/nsq:latest
-    command: /nsqd --lookupd-tcp-address=nsqlookupd:4161
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
     ports:
-      - "4150:4150"  # HTTP interface
-      - "4151:4151"  # TCP interface
+      - "4151:4151"  # HTTP interface
+      - "4150:4150"  # TCP interface
       - "4152:4152"  # HTTP interface for /stats
     volumes:
       - nsq_data:/data
     depends_on:
       - nsqlookupd
 
-  topic-creator:
+  nsqadmin:
+    image: nsqio/nsq:latest
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    ports:
+      - "4171:4171"  # HTTP interface
+    depends_on:
+      - nsqlookupd
+      - nsqd
+
+  publisher:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: publisher/Dockerfile
+    volumes:
+      - ./topics.txt:/app/topics.txt
     depends_on:
       - nsqd
 
   consumer:
     build:
-      context: ./consumer
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: consumer/Dockerfile
+    volumes:
+      - ./topics.txt:/app/topics.txt
+    environment:
+      - TOPICS=${TOPICS}
+      - NSQLOOKUPD_TCP_ADDRESS=nsqlookupd:4160
     depends_on:
-      - nsqd
+      - nsqlookupd
 
 volumes:
   nsq_data:
@@ -42,4 +56,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${PWD}/data
+      device: ${GOPATH}/src/github.com/jekiapp/nsqper/infra/test_setup/data

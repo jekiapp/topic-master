@@ -1,14 +1,14 @@
-FROM python:3.9-slim
-
+FROM golang:1.21-alpine AS builder
 WORKDIR /app
+COPY consumer/* .
+RUN go mod tidy
+RUN go build -o consumer main.go
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY consumer.py .
-COPY ../topics.txt /topics.txt
-
-# Read topics from file and set as environment variable
-RUN echo "TOPICS=$(cat /topics.txt | tr '\n' ' ')" > /app/.env
-
-CMD ["sh", "-c", "source /app/.env && python consumer.py"] 
+FROM alpine:latest
+WORKDIR /app
+RUN apk add --no-cache curl
+COPY --from=builder /app/consumer .
+COPY topics.txt .
+COPY consumer/start_consumer.sh .
+RUN chmod +x start_consumer.sh
+ENTRYPOINT ["/app/start_consumer.sh"] 
