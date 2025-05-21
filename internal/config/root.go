@@ -73,11 +73,6 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 		}
 	}
 
-	// Assign root user to root group
-	_, err := usergroup.GetUserGroup(db, rootUser.ID, rootGroup.ID)
-	if err != nil {
-		return errors.New("failed to check user-group mapping: " + err.Error())
-	}
 	// Only create if not already assigned
 	if _, err := usergroup.GetUserGroup(db, rootUser.ID, rootGroup.ID); err != nil {
 		userGroup := aclmodel.UserGroup{

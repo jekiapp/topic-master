@@ -12,7 +12,7 @@ var lookupdAddr string
 
 // Init sets the lookupd address from config
 func Init(cfg *config.Config) {
-	lookupdAddr = cfg.NSQLookupdAddr
+	lookupdAddr = cfg.NSQLookupdHTTPAddr
 }
 
 // GetAllTopics fetches all topics from lookupd

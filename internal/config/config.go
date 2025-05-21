@@ -1,11 +1,9 @@
 package config
 
 import (
-	"bufio"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
-	"fmt"
-	"os"
-	"strings"
 
 	"github.com/tidwall/buntdb"
 	"github.com/vmihailenco/msgpack/v5"
@@ -15,11 +13,12 @@ import (
 	usergroup "github.com/jekiapp/nsqper/internal/repository/user"
 )
 
+const configKey = "nsqper_config"
+
 type Config struct {
-	NSQLookupdAddr string
-	NSQDAddr       string
-	SecretKeyFile  string
-	SecretKey      []byte
+	NSQLookupdHTTPAddr string
+	NSQDAddr           string
+	SecretKey          []byte
 }
 
 func NewConfig(db *buntdb.DB) (*Config, error) {
@@ -28,7 +27,7 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 	// Fetch the msgpack-encoded config from buntDB
 	err := db.View(func(tx *buntdb.Tx) error {
 		var err error
-		raw, err = tx.Get("nsqper_config")
+		raw, err = tx.Get(configKey)
 		if err == buntdb.ErrNotFound {
 			return errors.New("nsqper_config not found in buntDB")
 		} else if err != nil {
@@ -45,41 +44,7 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 		return nil, errors.New("failed to unmarshal nsqper_config: " + err.Error())
 	}
 
-	// Read the secret key file
-	secretKeyBytes, err := os.ReadFile(cfg.SecretKeyFile)
-	if err != nil {
-		return nil, errors.New("failed to read secret key file: " + err.Error())
-	}
-	cfg.SecretKey = secretKeyBytes
-
 	return &cfg, nil
-}
-
-func PromptConfig() *Config {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("NSQLookupdAddr: ")
-	nsqlookupdAddr, _ := reader.ReadString('\n')
-	// fmt.Print("NSQDAddr: ")
-	// nsqdAddr, _ := reader.ReadString('\n')
-	fmt.Print("Secret key file:")
-	secretKeyFile, _ := reader.ReadString('\n')
-
-	return &Config{
-		NSQLookupdAddr: strings.TrimSpace(nsqlookupdAddr),
-		// NSQDAddr:       strings.TrimSpace(nsqdAddr),
-		SecretKeyFile: strings.TrimSpace(secretKeyFile),
-	}
-}
-
-func SaveConfig(db *buntdb.DB, cfg *Config) error {
-	data, err := msgpack.Marshal(cfg)
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *buntdb.Tx) error {
-		_, _, err := tx.Set("nsqper_config", string(data), nil)
-		return err
-	})
 }
 
 // CheckRootGroupAndUserExist returns true if both root group and root user exist in the DB.
@@ -89,8 +54,28 @@ func CheckRootGroupAndUserExist(db *buntdb.DB) (bool, error) {
 	return group != nil && user != nil, nil
 }
 
-//  TODO: add function to check if root group exists in db
-// check also if root group  has "root" user
+// SetupNewConfig creates a new config with a random secret key, saves it to the db, and returns it.
+func SetupNewConfig(db *buntdb.DB, nsqlookupdHTTPAddr string) (*Config, error) {
+	// Generate a random 32-byte secret key
+	key := make([]byte, 32)
+	_, err := rand.Read(key)
+	if err != nil {
+		return nil, errors.New("failed to generate random secret key: " + err.Error())
+	}
+	secretKey := []byte(base64.StdEncoding.EncodeToString(key))
 
-// if not, then create function to prompt to set up password for root user
-// then create root group in db and user root with password, using user/user.go
+	cfg := &Config{
+		NSQLookupdHTTPAddr: nsqlookupdHTTPAddr,
+		SecretKey:          secretKey,
+	}
+
+	data, err := msgpack.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = db.Update(func(tx *buntdb.Tx) error {
+		_, _, err := tx.Set(configKey, string(data), nil)
+		return err
+	})
+	return cfg, err
+}

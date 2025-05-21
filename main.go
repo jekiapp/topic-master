@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/tidwall/buntdb"
 
@@ -14,32 +15,34 @@ import (
 	"github.com/jekiapp/nsqper/internal/repository"
 )
 
+const dbfile = "nsqper.db"
+
 func main() {
-	dataPath := flag.String("data_path", "", "Path to buntdb data file (required)")
+	dataDir := flag.String("data_dir", "", "Path to buntdb data directory(required)")
+	nsqlookupdHTTPAddr := flag.String("nsqlookupd_http_address", "", "NSQLookupd HTTP address (required if no config)")
 	port := flag.String("port", "4181", "Port to listen on")
 	flag.Parse()
-	if *dataPath == "" {
-		fmt.Println("-data_path is required")
+	if *dataDir == "" {
+		fmt.Println("-data_dir is required")
 		os.Exit(1)
 	}
 
-	db, err := buntdb.Open(*dataPath)
+	dataPath := filepath.Join(*dataDir, dbfile)
+
+	db, err := buntdb.Open(dataPath)
 	if err != nil {
 		log.Fatalf("failed to open buntdb: %v", err)
 	}
 	defer db.Close()
-
 	cfg, err := config.NewConfig(db)
 	if err != nil {
-		fmt.Println("No config found, please enter configuration:")
-		cfg = config.PromptConfig()
-		if err := config.SaveConfig(db, cfg); err != nil {
-			log.Fatalf("failed to save config: %v", err)
+		if *nsqlookupdHTTPAddr == "" {
+			fmt.Println("No config found. Please provide -nsqlookupd_http_address flag.")
+			os.Exit(1)
 		}
-		fmt.Println("Config saved. Reloading...")
-		cfg, err = config.NewConfig(db)
+		cfg, err = config.SetupNewConfig(db, *nsqlookupdHTTPAddr)
 		if err != nil {
-			log.Fatalf("failed to load config after saving: %v", err)
+			log.Fatalf("failed to setup new config: %v", err)
 		}
 	}
 
@@ -47,8 +50,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to check and setup root: %v", err)
 	}
-
-	fmt.Printf("Loaded config: %+v\n", cfg)
 
 	repository.Init(cfg)
 
