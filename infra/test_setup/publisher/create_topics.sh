@@ -27,7 +27,7 @@ while true; do
   message="{\"event\":\"$random_topic\",\"timestamp\":$timestamp,\"data\":{\"id\":$RANDOM}}"
   
   echo "Publishing to $random_topic: $message"
-  curl -X POST "http://nsqd:4151/pub?topic=$random_topic" -d "$message"
+  curl -s -X POST "http://nsqd:4151/pub?topic=$random_topic" -d "$message"
   
   sleep 1
 done 
