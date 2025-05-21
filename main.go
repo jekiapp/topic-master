@@ -58,7 +58,10 @@ func main() {
 	handler.routes(mux)
 
 	// sync all the topics
-	handler.syncTopicsUC.HandleQuery(context.Background(), nil)
+	_, err = handler.syncTopicsUC.HandleQuery(context.Background(), nil)
+	if err != nil {
+		log.Fatalf("failed to sync topics: %v", err)
+	}
 
 	// Start the server
 	fmt.Printf("NSQper is running on port %s...\n", *port)

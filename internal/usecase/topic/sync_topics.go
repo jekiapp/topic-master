@@ -18,17 +18,13 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-type SyncTopicsRequest struct{}
-
 type SyncTopicsResponse struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error,omitempty"`
 }
 
 type iSyncTopicsRepo interface {
-	GetAllTopics() ([]string, error)
-	GetNsqTopicEntity(topic string) (*acl.Entity, error)
-	CreateNsqTopicEntity(topic string) (*acl.Entity, error)
+	topic.ISyncTopics
 }
 
 type syncTopicsRepo struct {
@@ -47,9 +43,17 @@ func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*acl.Entity, error)
 	return entity.CreateNsqTopicEntity(r.db, topic)
 }
 
+func (r *syncTopicsRepo) GetAllNsqTopicEntities() ([]*acl.Entity, error) {
+	return entity.GetAllNsqTopicEntities(r.db)
+}
+
+func (r *syncTopicsRepo) DeleteNsqTopicEntity(topic string) error {
+	return entity.DeleteNsqTopicEntity(r.db, topic)
+}
+
 type SyncTopicsUsecase struct {
 	db   *buntdb.DB
-	repo *syncTopicsRepo
+	repo iSyncTopicsRepo
 }
 
 func NewSyncTopicsUsecase(db *buntdb.DB) SyncTopicsUsecase {

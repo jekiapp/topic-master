@@ -56,3 +56,38 @@ func GetNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 	}
 	return &entity, nil
 }
+
+func GetAllNsqTopicEntities(db *buntdb.DB) ([]*acl.Entity, error) {
+	var entities []*acl.Entity
+	var firstErr error
+	prefix := entityPrefix + "nsq_topic:"
+
+	err := db.View(func(tx *buntdb.Tx) error {
+		return tx.AscendKeys(prefix+"*", func(key, value string) bool {
+			var entity acl.Entity
+			if err := msgpack.Unmarshal([]byte(value), &entity); err != nil {
+				if firstErr == nil {
+					firstErr = err
+				}
+				return false // stop the iteration
+			}
+			entities = append(entities, &entity)
+			return true
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	return entities, nil
+}
+
+func DeleteNsqTopicEntity(db *buntdb.DB, topic string) error {
+	id := entityPrefix + "nsq_topic:" + topic
+	return db.Update(func(tx *buntdb.Tx) error {
+		_, err := tx.Delete(id)
+		return err
+	})
+}
