@@ -9,8 +9,8 @@ import (
 	"github.com/jekiapp/nsqper/internal/config"
 	"github.com/jekiapp/nsqper/internal/logic/auth"
 	"github.com/jekiapp/nsqper/internal/model/acl"
+	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
 	"github.com/tidwall/buntdb"
-	"github.com/vmihailenco/msgpack/v5"
 )
 
 type LoginRequest struct {
@@ -23,30 +23,37 @@ type LoginResponse struct {
 	User  acl.User `json:"user"`
 }
 
+type iUserLoginRepo interface {
+	GetUserByUsername(username string) (*acl.User, error)
+}
+
+type loginRepo struct {
+	db *buntdb.DB
+}
+
+func (r *loginRepo) GetUserByUsername(username string) (*acl.User, error) {
+	return userrepo.GetUserByUsername(r.db, username)
+}
+
 type LoginUsecase struct {
-	db     *buntdb.DB
+	repo   iUserLoginRepo
 	config *config.Config
 }
 
 func NewLoginUsecase(db *buntdb.DB, cfg *config.Config) LoginUsecase {
-	return LoginUsecase{db: db, config: cfg}
+	return LoginUsecase{
+		repo:   &loginRepo{db: db},
+		config: cfg,
+	}
 }
 
 func (uc LoginUsecase) Handle(ctx context.Context, req LoginRequest) (LoginResponse, error) {
-	var user acl.User
-	key := "user:" + req.Username
-	err := uc.db.View(func(tx *buntdb.Tx) error {
-		val, err := tx.Get(key)
-		if err != nil {
-			return errors.New("user not found")
-		}
-		if err := msgpack.Unmarshal([]byte(val), &user); err != nil {
-			return errors.New("failed to decode user data")
-		}
-		return nil
-	})
+	user, err := uc.repo.GetUserByUsername(req.Username)
 	if err != nil {
 		return LoginResponse{}, err
+	}
+	if user == nil {
+		return LoginResponse{}, errors.New("user not found")
 	}
 
 	// Hash the provided password and compare
@@ -71,6 +78,6 @@ func (uc LoginUsecase) Handle(ctx context.Context, req LoginRequest) (LoginRespo
 
 	return LoginResponse{
 		Token: token,
-		User:  user,
+		User:  *user,
 	}, nil
 }

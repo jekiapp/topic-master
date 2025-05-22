@@ -25,10 +25,7 @@ type Handler struct {
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
-	webUsecase, err := webUC.NewWebUsecase()
-	if err != nil {
-		panic(err)
-	}
+	webUsecase := webUC.NewWebUsecase()
 
 	return Handler{
 		createUserUC:        acl.NewCreateUserUsecase(db),
@@ -44,7 +41,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 }
 
 func (h Handler) routes(mux *http.ServeMux) {
-	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
+
 	mux.HandleFunc("/api/create-user", handlerPkg.HandleGenericPost(h.createUserUC.Handle))
 	mux.HandleFunc("/api/login", handlerPkg.HandleGenericPost(h.loginUC.Handle))
 	mux.HandleFunc("/api/assign-user-to-group", handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle))
@@ -53,4 +50,6 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/create-permission", handlerPkg.HandleGenericPost(h.createPermissionUC.Handle))
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
 	mux.HandleFunc("/api/sync-topics", handler.QueryHandler(h.syncTopicsUC.HandleQuery))
+
+	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

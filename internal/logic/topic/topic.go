@@ -2,6 +2,7 @@ package topic
 
 import (
 	"errors"
+	"log"
 
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	"github.com/tidwall/buntdb"
@@ -19,6 +20,10 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 	topics, err := iSyncTopics.GetAllTopics()
 	if err != nil {
 		return err
+	}
+
+	if len(topics) == 0 {
+		log.Println("[WARN] No topics found")
 	}
 	// Build a set for fast lookup of valid topics
 	topicSet := make(map[string]struct{}, len(topics))

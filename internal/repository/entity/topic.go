@@ -14,7 +14,7 @@ func CreateNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 	entity := &acl.Entity{
 		ID:        id,
 		TypeID:    "nsq_topic",
-		Name:      "Topic: " + topic,
+		Name:      topic,
 		Resource:  "NSQ",
 		Status:    "active",
 		CreatedAt: time.Now(),
