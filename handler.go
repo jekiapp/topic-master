@@ -13,6 +13,7 @@ import (
 )
 
 type Handler struct {
+	config              *config.Config
 	createUserUC        acl.CreateUserUsecase
 	loginUC             acl.LoginUsecase
 	assignUserToGroupUC acl.AssignUserToGroupUsecase
@@ -28,6 +29,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 	webUsecase := webUC.NewWebUsecase()
 
 	return Handler{
+		config:              cfg,
 		createUserUC:        acl.NewCreateUserUsecase(db),
 		loginUC:             acl.NewLoginUsecase(db, cfg),
 		assignUserToGroupUC: acl.NewAssignUserToGroupUsecase(db),
@@ -41,9 +43,10 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 }
 
 func (h Handler) routes(mux *http.ServeMux) {
+	// authMiddleware := handlerPkg.InitJWTMiddleware(string(h.config.SecretKey))
 
 	mux.HandleFunc("/api/create-user", handlerPkg.HandleGenericPost(h.createUserUC.Handle))
-	mux.HandleFunc("/api/login", handlerPkg.HandleGenericPost(h.loginUC.Handle))
+	mux.HandleFunc("/api/login", h.loginUC.Handle)
 	mux.HandleFunc("/api/assign-user-to-group", handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle))
 	mux.HandleFunc("/api/delete-user", handlerPkg.HandleGenericPost(h.deleteUserUC.Handle))
 	mux.HandleFunc("/api/create-usergroup", handlerPkg.HandleGenericPost(h.createUserGroupUC.Handle))
@@ -51,5 +54,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
 	mux.HandleFunc("/api/sync-topics", handler.QueryHandler(h.syncTopicsUC.HandleQuery))
 
+	mux.HandleFunc("/login", handlerPkg.HandleStatic(h.webUC.RenderIndex))
+	mux.HandleFunc("/login/*", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
