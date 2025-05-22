@@ -1,0 +1,20 @@
+User Management Feature TODOs
+=============================
+
+[ ] User listing & search (admin)
+    - Endpoint/UI for admins to list and search users.
+
+[ ] User profile update
+    - Endpoint for users/admins to update user profile fields (name, phone, etc.).
+
+[ ] User activation/deactivation
+    - Endpoint/usecase to set user status (e.g., active/inactive) without deleting.
+
+[ ] Audit logging
+    - Log admin/user actions (create, delete, password reset, group assignment, etc.) for accountability.
+
+[ ] Admin password reset for users
+    - Endpoint for admins to reset a user's password.
+
+[ ] Group/role listing & management
+    - Endpoints to list all groups, list users in a group, and manage group membership.

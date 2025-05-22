@@ -18,17 +18,10 @@ func NewWebUsecase() *WebUsecase {
 }
 
 func (u *WebUsecase) RenderIndex(w http.ResponseWriter, r *http.Request) error {
-	var file string
-	if r.URL.Path == "/" {
-		file = "static/home/index.html"
-	} else {
-		cleanPath := strings.Trim(r.URL.Path, "/")
-		lastSection := path.Base(cleanPath)
-		if strings.Contains(lastSection, ".") {
-			file = path.Join("static", cleanPath)
-		} else {
-			file = path.Join("static", cleanPath, "index.html")
-		}
+	cleanPath := strings.Trim(r.URL.Path, "/")
+	file := path.Join("static", cleanPath)
+	if cleanPath == "" || !strings.Contains(path.Base(cleanPath), ".") {
+		file = path.Join("static", cleanPath, "index.html")
 	}
 
 	ext := path.Ext(file)

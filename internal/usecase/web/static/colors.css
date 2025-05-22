@@ -1,0 +1,14 @@
+:root {
+  --primary-bg: #f6f0fa;
+  --primary-white: #fff;
+  --primary-purple: #8e44ad;
+  --secondary-purple: #a678d3;
+  --accent-purple: #b388ff;
+  --shadow-purple: rgba(120, 80, 160, 0.10);
+  --border-purple: #d6b4e7;
+  --input-bg: #faf6fc;
+  --button-hover-purple: #6c3483;
+  --error-red: #e74c3c;
+  --shadow-btn: rgba(142, 68, 173, 0.08);
+  --shadow-focus: #e9d6f7;
+} 
