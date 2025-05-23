@@ -11,6 +11,7 @@ type GenericQueryHandler[R any] func(ctx context.Context, input map[string]strin
 // QueryHandler handles GET requests by parsing query parameters into a map
 func QueryHandler[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		queries := map[string]string{}
 		for key, values := range r.URL.Query() {
 			if len(values) > 0 {

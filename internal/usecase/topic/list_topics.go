@@ -5,6 +5,7 @@ import (
 
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
+	"github.com/jekiapp/nsqper/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -45,6 +46,7 @@ func NewListTopicsUsecase(db *buntdb.DB) ListTopicsUsecase {
 // HandleQuery handles HTTP query for listing topics by group.
 // params should contain "group" key.
 func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]string) (ListTopicsResponse, error) {
+	userInfo := util.GetUserInfo(ctx)
 	group := params["group"]
 	if group == "" {
 		return ListTopicsResponse{Error: "group is required"}, nil

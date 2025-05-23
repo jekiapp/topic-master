@@ -2,18 +2,25 @@ package acl
 
 import "time"
 
+// GroupRole represents a user's role in a group
+type GroupRole struct {
+	GroupName string // Name of the group
+	Role      string // Role of the user in the group (e.g., admin, user)
+}
+
 // User represents a system user (master)
 type User struct {
-	ID        string    // Unique identifier (e.g., UUID or string key)
-	Username  string    // Username
-	Name      string    // Display Name
-	Password  string    // Password hash
-	Email     string    // Email address
-	Phone     string    // Phone number
-	Type      string    // Type (e.g., admin, user, etc.)
-	Status    string    // Status (e.g., active, inactive, etc.)
-	CreatedAt time.Time // Creation timestamp
-	UpdatedAt time.Time // Last update timestamp
+	ID        string      // Unique identifier (e.g., UUID or string key)
+	Username  string      // Username
+	Name      string      // Display Name
+	Password  string      // Password hash
+	Email     string      // Email address
+	Phone     string      // Phone number
+	Type      string      // Type (e.g., admin, user, etc.)
+	Status    string      // Status (e.g., active, inactive, etc.)
+	CreatedAt time.Time   // Creation timestamp
+	UpdatedAt time.Time   // Last update timestamp
+	Groups    []GroupRole // List of groups and roles
 }
 
 // Group represents a user group or role (master)

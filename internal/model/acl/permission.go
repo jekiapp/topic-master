@@ -4,9 +4,10 @@ import "time"
 
 // Permission represents an action or resource (master)
 type Permission struct {
-	ID        string // Unique identifier
+	// Unique identifier is the combination of Name:EntityID
 	Name      string // Permission name
 	EntityID  string // Reference to Entity.ID
+	Type      string // Type of the permission (e.g. "group", "user")
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

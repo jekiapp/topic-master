@@ -12,8 +12,10 @@ import (
 	"github.com/jekiapp/nsqper/internal/config"
 	"github.com/jekiapp/nsqper/internal/logic/auth"
 	"github.com/jekiapp/nsqper/internal/model/acl"
+	usergrouprepo "github.com/jekiapp/nsqper/internal/repository/user"
 	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
 	"github.com/tidwall/buntdb"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type LoginRequest struct {
@@ -28,6 +30,7 @@ type LoginResponse struct {
 
 type iUserLoginRepo interface {
 	GetUserByUsername(username string) (*acl.User, error)
+	ListGroupsForUser(userID, userType string) ([]acl.GroupRole, error)
 }
 
 type loginRepo struct {
@@ -36,6 +39,10 @@ type loginRepo struct {
 
 func (r *loginRepo) GetUserByUsername(username string) (*acl.User, error) {
 	return userrepo.GetUserByUsername(r.db, username)
+}
+
+func (r *loginRepo) ListGroupsForUser(userID, userType string) ([]acl.GroupRole, error) {
+	return usergrouprepo.ListGroupsForUser(r.db, userID, userType)
 }
 
 type LoginUsecase struct {
@@ -103,12 +110,18 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 		return LoginResponse{}, errors.New("invalid password")
 	}
 
+	// Fetch all groups for the user
+	groups, err := uc.repo.ListGroupsForUser(user.ID, user.Type)
+	if err != nil {
+		return LoginResponse{}, errors.New("failed to fetch user groups")
+	}
+
 	// Prepare JWT claims
 	claims := &acl.JWTClaims{
 		UserID:           user.ID,
 		Username:         user.Username,
-		Roles:            []string{user.Type},                   // treat user.Type as a single role for now
-		RegisteredClaims: auth.DefaultRegisteredClaims(user.ID), // helper to set standard claims
+		Groups:           groups,
+		RegisteredClaims: auth.DefaultRegisteredClaims(user.ID),
 	}
 
 	token, err := auth.GenerateJWT(claims, uc.config.SecretKey)

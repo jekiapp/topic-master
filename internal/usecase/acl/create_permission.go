@@ -3,21 +3,24 @@ package acl
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	permissionrepo "github.com/jekiapp/nsqper/internal/repository/permission"
 	"github.com/tidwall/buntdb"
 )
 
 type CreatePermissionRequest struct {
-	Name     string `json:"name"`
-	EntityID string `json:"entity_id"`
+	Actions  []string `json:"actions"` // format: ["publish","tail","delete"]
+	EntityID string   `json:"entity_id"`
+	Type     string   `json:"type"`
+	Reason   string   `json:"reason"`
 }
 
 type CreatePermissionResponse struct {
-	Permission acl.Permission
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
 }
 
 type iPermissionRepo interface {
@@ -48,26 +51,31 @@ func NewCreatePermissionUsecase(db *buntdb.DB) CreatePermissionUsecase {
 }
 
 func (uc CreatePermissionUsecase) Handle(ctx context.Context, req CreatePermissionRequest) (CreatePermissionResponse, error) {
-	if req.Name == "" {
-		return CreatePermissionResponse{}, errors.New("missing required field: name")
+	if len(req.Actions) == 0 {
+		return CreatePermissionResponse{}, errors.New("missing required field: actions")
 	}
 	if req.EntityID == "" {
 		return CreatePermissionResponse{}, errors.New("missing required field: entity_id")
 	}
-	// Check if permission already exists
-	existingPermission, err := uc.repo.GetPermission(req.Name, req.EntityID)
-	if err == nil && existingPermission != nil {
-		return CreatePermissionResponse{}, errors.New("permission already exists")
+
+	for _, action := range req.Actions {
+		// Check if permission already exists
+		existingPermission, err := uc.repo.GetPermission(action, req.EntityID)
+		if err == nil && existingPermission != nil {
+			log.Printf("permission already exists: %s:%s", action, req.EntityID)
+			continue
+		}
+		permission := acl.Permission{
+			Name:      action,
+			EntityID:  req.EntityID,
+			Type:      req.Type,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		if err := uc.repo.CreatePermission(permission); err != nil {
+			return CreatePermissionResponse{Status: "error", Error: err.Error()}, err
+		}
 	}
-	permission := acl.Permission{
-		ID:        uuid.NewString(),
-		Name:      req.Name,
-		EntityID:  req.EntityID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	if err := uc.repo.CreatePermission(permission); err != nil {
-		return CreatePermissionResponse{}, err
-	}
-	return CreatePermissionResponse{Permission: permission}, nil
+
+	return CreatePermissionResponse{Status: "success"}, nil
 }
