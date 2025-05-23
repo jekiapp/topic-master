@@ -1,0 +1,46 @@
+<!-- 
+ this file is a  page that mounted inside the iframe of the dashboard
+ this page is used to display the list of topics that the user has access to
+ the topics are fetched via the api/topic/list_topics, rendered by jquery
+ the topics are rendered in a table with the following columns:
+ - topic name
+ - topic group
+ - topic description
+ - topic created at
+ - RPS (1 hour)
+ - Status
+ - Bookmark (dont show title, just icon)
+
+  
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Topics</title>
+  <link rel="stylesheet" href="/colors.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <div class="topics-container">
+    <h2>My Topics</h2>
+    <table id="topics-table">
+      <thead>
+        <tr>
+          <th>Topic Name</th>
+          <th>Group</th>
+          <th>Description</th>
+          <th>RPS (1h)</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data will be injected here -->
+      </tbody>
+    </table>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
