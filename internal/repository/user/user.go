@@ -1,27 +1,49 @@
 package user
 
 import (
+	"strings"
+
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	"github.com/tidwall/buntdb"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
+func InitIndexUser(db *buntdb.DB) error {
+	indexes := acl.User{}.GetIndexes()
+	for _, index := range indexes {
+		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func CreateUser(db *buntdb.DB, user acl.User) error {
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := "user:" + user.ID
+		key := user.GetPrimaryKey()
 		msgpackValue, err := msgpack.Marshal(user)
 		if err != nil {
 			return err
 		}
 		value := string(msgpackValue)
 		_, _, err = tx.Set(key, value, nil)
+		if err != nil {
+			return err
+		}
+		// set index
+		for name, value := range user.GetIndexValues() {
+			_, _, err = tx.Set(key+":"+name, value, nil)
+		}
 		return err
 	})
 }
 
 func GetUserByID(db *buntdb.DB, id string) (*acl.User, error) {
-	var user acl.User
-	key := "user:" + id
+	var user = acl.User{
+		ID: id,
+	}
+	key := user.GetPrimaryKey()
 	err := db.View(func(tx *buntdb.Tx) error {
 		val, err := tx.Get(key)
 		if err != nil {
@@ -37,7 +59,7 @@ func GetUserByID(db *buntdb.DB, id string) (*acl.User, error) {
 
 func UpdateUser(db *buntdb.DB, user acl.User) error {
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := "user:" + user.ID
+		key := user.GetPrimaryKey()
 		msgpackValue, err := msgpack.Marshal(user)
 		if err != nil {
 			return err
@@ -49,24 +71,30 @@ func UpdateUser(db *buntdb.DB, user acl.User) error {
 }
 
 func GetUserByUsername(db *buntdb.DB, username string) (*acl.User, error) {
-	var user acl.User
-	found := false
+	var user = &acl.User{}
 	err := db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendKeys("user:*", func(key, value string) bool {
-			if err := msgpack.Unmarshal([]byte(value), &user); err == nil && user.Username == username {
-				found = true
+		var foundKey string
+		err := tx.AscendEqual(acl.IdxUser_Username, username, func(key, value string) bool {
+			if value == username {
+				foundKey = strings.TrimSuffix(key, ":username")
 				return false // found
 			}
 			return true // keep searching
 		})
+		if err != nil {
+			return err
+		}
+		val, err := tx.Get(foundKey)
+		if err != nil {
+			return err
+		}
+		return msgpack.Unmarshal([]byte(val), user)
 	})
 	if err != nil {
 		return nil, err
 	}
-	if !found {
-		return nil, nil
-	}
-	return &user, nil
+
+	return user, nil
 }
 
 // ListGroupsForUser fetches all groups for a user and returns []acl.GroupRole

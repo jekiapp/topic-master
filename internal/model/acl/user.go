@@ -1,6 +1,13 @@
 package acl
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jekiapp/nsqper/internal/model"
+	"github.com/tidwall/buntdb"
+)
 
 // GroupRole represents a user's role in a group
 type GroupRole struct {
@@ -23,21 +30,48 @@ type User struct {
 	Groups    []GroupRole // List of groups and roles
 }
 
-// Group represents a user group or role (master)
-type Group struct {
-	ID        string // Unique identifier
-	Name      string // Group name
-	CreatedAt time.Time
-	UpdatedAt time.Time
+const (
+	TableUser        = "user"
+	IdxUser_Type     = TableUser + ":type"
+	IdxUser_Status   = TableUser + ":status"
+	IdxUser_Username = TableUser + ":username"
+	IdxUser_Email    = TableUser + ":email"
+)
+
+func (u User) GetPrimaryKey() string {
+	id := u.ID
+	if id == "" {
+		id = uuid.NewString()
+	}
+	return fmt.Sprintf("%s:%s", TableUser, id)
 }
 
-// UserGroup maps users to groups (many-to-many)
-type UserGroup struct {
-	ID        string // Unique identifier for the mapping
-	UserID    string // Reference to User.ID
-	GroupID   string // Reference to Group.ID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+func (u User) GetIndexes() []model.Index {
+	return []model.Index{
+		{
+			Name:    IdxUser_Type,
+			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "type"),
+			Type:    buntdb.IndexString,
+		},
+		{
+			Name:    IdxUser_Username,
+			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "username"),
+			Type:    buntdb.IndexString,
+		},
+		{
+			Name:    IdxUser_Email,
+			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "email"),
+			Type:    buntdb.IndexString,
+		},
+	}
+}
+
+func (u User) GetIndexValues() map[string]string {
+	return map[string]string{
+		"type":     u.Type,
+		"username": u.Username,
+		"email":    u.Email,
+	}
 }
 
 // Authorization maps a user to a permission (for access control checks)
