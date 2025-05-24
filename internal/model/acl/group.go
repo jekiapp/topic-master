@@ -23,7 +23,11 @@ const (
 )
 
 func (g Group) GetPrimaryKey() string {
-	return fmt.Sprintf("%s:%s", TableGroup, g.ID)
+	id := g.ID
+	if id == "" {
+		id = uuid.NewString()
+	}
+	return fmt.Sprintf("%s:%s", TableGroup, id)
 }
 
 func (g Group) GetIndexes() []model.Index {

@@ -26,11 +26,12 @@ type CreateApplicationResponse struct {
 
 type iApplicationRepo interface {
 	CreateApplication(app acl.PermissionApplication) error
-	GetApplicationByUserAndPermission(userID, permissionID string) (*acl.PermissionApplication, error)
+	GetApplicationByUserAndPermission(userID, permissionKey string) (*acl.PermissionApplication, error)
 	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
 	GetGroupByName(name string) (*acl.Group, error)
 	ListUserIDsByGroupID(groupID string) ([]string, error)
 	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
+	GetPermissionByID(id string) (*acl.Permission, error)
 }
 
 type applicationRepo struct {
@@ -41,8 +42,8 @@ func (r *applicationRepo) CreateApplication(app acl.PermissionApplication) error
 	return apprepo.CreateApplication(r.db, app)
 }
 
-func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionID string) (*acl.PermissionApplication, error) {
-	return apprepo.GetApplicationByUserAndPermission(r.db, userID, permissionID)
+func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionKey string) (*acl.PermissionApplication, error) {
+	return apprepo.GetApplicationByUserAndPermission(r.db, userID, permissionKey)
 }
 
 func (r *applicationRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, error) {
@@ -54,11 +55,23 @@ func (r *applicationRepo) GetGroupByName(name string) (*acl.Group, error) {
 }
 
 func (r *applicationRepo) ListUserIDsByGroupID(groupID string) ([]string, error) {
-	return userrepo.ListUserIDsByGroupID(r.db, groupID)
+	userGroups, err := userrepo.ListUserGroupsByGroupID(r.db, groupID)
+	if err != nil {
+		return nil, err
+	}
+	var userIDs []string
+	for _, userGroup := range userGroups {
+		userIDs = append(userIDs, userGroup.UserID)
+	}
+	return userIDs, nil
 }
 
 func (r *applicationRepo) CreateApplicationAssignment(assignment acl.ApplicationAssignment) error {
 	return apprepo.CreateApplicationAssignment(r.db, assignment)
+}
+
+func (r *applicationRepo) GetPermissionByID(id string) (*acl.Permission, error) {
+	return permissionrepo.GetPermissionByID(r.db, id)
 }
 
 type CreateApplicationUsecase struct {
@@ -106,7 +119,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	}
 
 	// 4. Lookup permission, entity, and group owner for assignment
-	permission, err := permissionrepo.GetPermissionByID(uc.db, req.PermissionID)
+	permission, err := uc.repo.GetPermissionByID(req.PermissionID)
 	if err != nil {
 		return CreateApplicationResponse{}, errors.New("permission not found")
 	}

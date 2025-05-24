@@ -47,16 +47,23 @@ func NewListTopicsUsecase(db *buntdb.DB) ListTopicsUsecase {
 // params should contain "group" key.
 func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]string) (ListTopicsResponse, error) {
 	userInfo := util.GetUserInfo(ctx)
-	group := params["group"]
-	if group == "" {
-		return ListTopicsResponse{Error: "group is required"}, nil
+	usergroups := userInfo.Groups
+	if len(usergroups) == 0 {
+		return ListTopicsResponse{Error: "user is not a member of any group"}, nil
 	}
+	group := usergroups[0]
 	var topics []*acl.Entity
 	var err error
-	if group == "root" {
+	if group.GroupName == "root" {
 		topics, err = uc.repo.GetAllNsqTopicEntities()
 	} else {
-		topics, err = uc.repo.ListNsqTopicEntitiesByGroup(group)
+		for _, group := range usergroups {
+			t, err := uc.repo.ListNsqTopicEntitiesByGroup(group.GroupName)
+			if err != nil {
+				return ListTopicsResponse{Error: err.Error()}, err
+			}
+			topics = append(topics, t...)
+		}
 	}
 	if err != nil {
 		return ListTopicsResponse{Error: err.Error()}, err

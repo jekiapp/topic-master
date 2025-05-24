@@ -70,25 +70,48 @@ func CreateGroup(db *buntdb.DB, group acl.Group) error {
 	})
 }
 
-func GetGroupByName(db *buntdb.DB, name string) (*acl.Group, error) {
-	var group acl.Group
+// get group by id
+func GetGroupByID(db *buntdb.DB, id string) (*acl.Group, error) {
+	var group = acl.Group{ID: id}
 	err := db.View(func(tx *buntdb.Tx) error {
-		var foundKey string
-		err := tx.AscendEqual(acl.IdxGroup_Name, name, func(key, value string) bool {
-			if value == name {
-				foundKey = strings.TrimSuffix(key, ":name")
-				return false
-			}
-			return true
-		})
-		if err != nil {
-			return err
-		}
-		val, err := tx.Get(foundKey)
+		val, err := tx.Get(group.GetPrimaryKey())
 		if err != nil {
 			return err
 		}
 		return msgpack.Unmarshal([]byte(val), &group)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
+}
+
+// get group by name
+func GetGroupByName(db *buntdb.DB, name string) (*acl.Group, error) {
+	var group acl.Group
+	err := db.View(func(tx *buntdb.Tx) error {
+		err := tx.AscendEqual(acl.IdxGroup_Name, name, func(key, value string) bool {
+			if value != name {
+				return true
+			}
+
+			foundKey := strings.TrimSuffix(key, ":name")
+			val, err := tx.Get(foundKey)
+			if err != nil {
+				log.Printf("error getting group: %s", err)
+				return false
+			}
+			err = msgpack.Unmarshal([]byte(val), &group)
+			if err != nil {
+				log.Printf("error unmarshalling group: %s", err)
+			}
+			return false
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, err

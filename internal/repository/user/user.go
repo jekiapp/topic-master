@@ -101,13 +101,13 @@ func GetUserByUsername(db *buntdb.DB, username string) (*acl.User, error) {
 func ListGroupsForUser(db *buntdb.DB, userID, userType string) ([]acl.GroupRole, error) {
 	var groups []acl.GroupRole
 	err := db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendKeys("usergroup:"+userID+":*", func(key, value string) bool {
+		return tx.AscendEqual(acl.IdxUserGroup_UserID, userID, func(key, value string) bool {
 			var ug acl.UserGroup
 			if err := msgpack.Unmarshal([]byte(value), &ug); err != nil {
 				return true
 			}
 			// Get group name
-			group, err := GetGroupByName(db, ug.GroupID)
+			group, err := GetGroupByID(db, ug.GroupID)
 			groupName := ug.GroupID
 			if err == nil && group != nil {
 				groupName = group.Name

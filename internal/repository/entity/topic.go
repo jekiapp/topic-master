@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"strings"
 	"time"
 
 	"github.com/jekiapp/nsqper/internal/model"
@@ -10,9 +11,7 @@ import (
 )
 
 func CreateNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
-	id := entityPrefix + "nsq_topic:" + topic
 	entity := &acl.Entity{
-		ID:        id,
 		TypeID:    "nsq_topic",
 		Name:      topic,
 		Resource:  "NSQ",
@@ -25,7 +24,14 @@ func CreateNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 		return nil, err
 	}
 	err = db.Update(func(tx *buntdb.Tx) error {
-		_, _, err := tx.Set(id, string(data), nil)
+		_, _, err := tx.Set(entity.GetPrimaryKey(), string(data), nil)
+		//set index
+		for key, value := range entity.GetIndexValues() {
+			if value == "" {
+				continue
+			}
+			tx.Set(key, value, nil)
+		}
 		return err
 	})
 	if err != nil {
@@ -35,21 +41,20 @@ func CreateNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 }
 
 func GetNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
-	id := entityPrefix + "nsq_topic:" + topic
 	var entity acl.Entity
 	err := db.View(func(tx *buntdb.Tx) error {
-		resp, err := tx.Get(id)
-		if err != nil {
-			return err
-		}
-		if resp == "" {
-			return model.ErrNotFound
-		}
-		err = msgpack.Unmarshal([]byte(resp), &entity)
-		if err != nil {
-			return err
-		}
-		return nil
+		return tx.AscendEqual(acl.IdxEntity_Name, topic, func(key, value string) bool {
+			foundKey := strings.TrimSuffix(key, ":name")
+			val, err := tx.Get(foundKey)
+			if err != nil {
+				return false
+			}
+			err = msgpack.Unmarshal([]byte(val), &entity)
+			if err != nil {
+				return false
+			}
+			return false
+		})
 	})
 	if err != nil {
 		return nil, model.ErrNotFound
@@ -60,16 +65,18 @@ func GetNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 func GetAllNsqTopicEntities(db *buntdb.DB) ([]*acl.Entity, error) {
 	var entities []*acl.Entity
 	var firstErr error
-	prefix := entityPrefix + "nsq_topic:"
 
 	err := db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendKeys(prefix+"*", func(key, value string) bool {
+		return tx.AscendEqual(acl.IdxEntity_TypeID, "nsq_topic", func(key, value string) bool {
 			var entity acl.Entity
-			if err := msgpack.Unmarshal([]byte(value), &entity); err != nil {
-				if firstErr == nil {
-					firstErr = err
-				}
-				return false // stop the iteration
+			foundKey := strings.TrimSuffix(key, ":typeid")
+			val, err := tx.Get(foundKey)
+			if err != nil {
+				return false
+			}
+			err = msgpack.Unmarshal([]byte(val), &entity)
+			if err != nil {
+				return false
 			}
 			entities = append(entities, &entity)
 			return true
@@ -96,20 +103,25 @@ func DeleteNsqTopicEntity(db *buntdb.DB, topic string) error {
 func ListNsqTopicEntitiesByGroup(db *buntdb.DB, group string) ([]*acl.Entity, error) {
 	var entities []*acl.Entity
 	var firstErr error
-	prefix := entityPrefix + "nsq_topic:"
+
+	groupName := group + ":nsq_topic"
 
 	err := db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendKeys(prefix+"*", func(key, value string) bool {
+		return tx.AscendEqual(acl.IdxEntity_GroupName, groupName, func(key, value string) bool {
 			var entity acl.Entity
-			if err := msgpack.Unmarshal([]byte(value), &entity); err != nil {
+			foundKey := strings.TrimSuffix(key, ":group_name")
+			val, err := tx.Get(foundKey)
+			if err != nil {
+				return false
+			}
+			if err := msgpack.Unmarshal([]byte(val), &entity); err != nil {
 				if firstErr == nil {
 					firstErr = err
 				}
 				return false // stop the iteration
 			}
-			if entity.GroupOwner == group {
-				entities = append(entities, &entity)
-			}
+			entities = append(entities, &entity)
+
 			return true
 		})
 	})
