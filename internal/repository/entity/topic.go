@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"log"
 	"strings"
 	"time"
 
@@ -24,13 +25,14 @@ func CreateNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 		return nil, err
 	}
 	err = db.Update(func(tx *buntdb.Tx) error {
-		_, _, err := tx.Set(entity.GetPrimaryKey(), string(data), nil)
+		pk := entity.GetPrimaryKey()
+		_, _, err := tx.Set(pk, string(data), nil)
 		//set index
 		for key, value := range entity.GetIndexValues() {
 			if value == "" {
 				continue
 			}
-			tx.Set(key, value, nil)
+			tx.Set(pk+":"+key, value, nil)
 		}
 		return err
 	})
@@ -43,8 +45,8 @@ func CreateNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 func GetNsqTopicEntity(db *buntdb.DB, topic string) (*acl.Entity, error) {
 	var entity acl.Entity
 	err := db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendEqual(acl.IdxEntity_Name, topic, func(key, value string) bool {
-			foundKey := strings.TrimSuffix(key, ":name")
+		return tx.AscendEqual(acl.IdxEntity_TypeName, "nsq_topic:"+topic, func(key, value string) bool {
+			foundKey := strings.TrimSuffix(key, ":type_name")
 			val, err := tx.Get(foundKey)
 			if err != nil {
 				return false
@@ -92,10 +94,18 @@ func GetAllNsqTopicEntities(db *buntdb.DB) ([]*acl.Entity, error) {
 }
 
 func DeleteNsqTopicEntity(db *buntdb.DB, topic string) error {
-	id := entityPrefix + "nsq_topic:" + topic
+	typeName := "nsq_topic:" + topic
 	return db.Update(func(tx *buntdb.Tx) error {
-		_, err := tx.Delete(id)
-		return err
+		tx.AscendEqual(acl.IdxEntity_TypeName, typeName, func(key, value string) bool {
+			foundKey := strings.TrimSuffix(key, ":type_name")
+			_, err := tx.Delete(foundKey)
+			if err != nil {
+				log.Printf("error deleting entity: %s", err)
+				return false
+			}
+			return true
+		})
+		return nil
 	})
 }
 
@@ -104,12 +114,12 @@ func ListNsqTopicEntitiesByGroup(db *buntdb.DB, group string) ([]*acl.Entity, er
 	var entities []*acl.Entity
 	var firstErr error
 
-	groupName := group + ":nsq_topic"
+	groupType := group + ":nsq_topic"
 
 	err := db.View(func(tx *buntdb.Tx) error {
-		return tx.AscendEqual(acl.IdxEntity_GroupName, groupName, func(key, value string) bool {
+		return tx.AscendEqual(acl.IdxEntity_GroupType, groupType, func(key, value string) bool {
 			var entity acl.Entity
-			foundKey := strings.TrimSuffix(key, ":group_name")
+			foundKey := strings.TrimSuffix(key, ":group_type")
 			val, err := tx.Get(foundKey)
 			if err != nil {
 				return false

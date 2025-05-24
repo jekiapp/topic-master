@@ -8,7 +8,16 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-const entityPrefix = "entity:"
+func InitIndexEntity(db *buntdb.DB) error {
+	indexes := acl.Entity{}.GetIndexes()
+	for _, index := range indexes {
+		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // format id = nsqtopic:topic_name
 func GetEntityByID(db *buntdb.DB, id string) (*acl.Entity, error) {

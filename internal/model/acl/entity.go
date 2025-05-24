@@ -46,7 +46,8 @@ const (
 	IdxEntity_Group     = TableEntity + ":group"
 	IdxEntity_Name      = TableEntity + ":name"
 	IdxEntity_Status    = TableEntity + ":status"
-	IdxEntity_GroupName = TableEntity + ":group_name"
+	IdxEntity_GroupType = TableEntity + ":group_type"
+	IdxEntity_TypeName  = TableEntity + ":type_name"
 )
 
 func (e Entity) GetPrimaryKey() string {
@@ -80,8 +81,12 @@ func (e Entity) GetIndexes() []model.Index {
 			Type:    buntdb.IndexString,
 		},
 		{
-			Name:    IdxEntity_GroupName,
-			Pattern: TableEntity + ":*:group_name",
+			Name:    IdxEntity_GroupType,
+			Pattern: TableEntity + ":*:group_type",
+			Type:    buntdb.IndexString,
+		}, {
+			Name:    IdxEntity_TypeName,
+			Pattern: TableEntity + ":*:type_name",
 			Type:    buntdb.IndexString,
 		},
 	}
@@ -93,6 +98,7 @@ func (e Entity) GetIndexValues() map[string]string {
 		"group":      e.GroupOwner,
 		"name":       e.Name,
 		"status":     e.Status,
-		"group_name": e.GroupOwner + ":" + e.Name,
+		"group_type": e.GroupOwner + ":" + e.TypeID,
+		"type_name":  e.TypeID + ":" + e.Name,
 	}
 }

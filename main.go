@@ -51,7 +51,7 @@ func main() {
 		log.Fatalf("failed to check and setup root: %v", err)
 	}
 
-	repository.Init(cfg)
+	repository.Init(cfg, db)
 
 	mux := http.NewServeMux()
 	handler := initHandler(db, cfg)

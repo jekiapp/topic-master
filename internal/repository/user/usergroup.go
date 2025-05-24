@@ -10,6 +10,28 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
+func InitIndexGroup(db *buntdb.DB) error {
+	indexes := acl.Group{}.GetIndexes()
+	for _, index := range indexes {
+		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func InitIndexUserGroup(db *buntdb.DB) error {
+	indexes := acl.UserGroup{}.GetIndexes()
+	for _, index := range indexes {
+		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func CreateUserGroup(db *buntdb.DB, userGroup acl.UserGroup) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		key := userGroup.GetPrimaryKey()
@@ -63,6 +85,16 @@ func CreateGroup(db *buntdb.DB, group acl.Group) error {
 		msgpackValue, err := msgpack.Marshal(group)
 		if err != nil {
 			return err
+		}
+		// set index
+		for name, value := range group.GetIndexValues() {
+			if value == "" {
+				continue
+			}
+			_, _, err = tx.Set(key+":"+name, value, nil)
+			if err != nil {
+				log.Printf("error setting index: %s", err)
+			}
 		}
 		value := string(msgpackValue)
 		_, _, err = tx.Set(key, value, nil)
