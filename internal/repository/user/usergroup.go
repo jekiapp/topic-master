@@ -32,26 +32,26 @@ func CreateUserGroup(dbConn *buntdb.DB, userGroup acl.UserGroup) error {
 	return db.Insert(dbConn, userGroup)
 }
 
-func GetUserGroup(dbConn *buntdb.DB, userID, groupID string) (*acl.UserGroup, error) {
+func GetUserGroup(dbConn *buntdb.DB, userID, groupID string) (acl.UserGroup, error) {
 	tmp := acl.UserGroup{UserID: userID, GroupID: groupID}
 	userGroup, err := db.SelectOne[acl.UserGroup](dbConn, tmp, acl.IdxUserGroup_ID)
 	if err != nil {
-		return nil, err
+		return acl.UserGroup{}, err
 	}
-	return &userGroup, nil
+	return userGroup, nil
 }
 
 func CreateGroup(dbConn *buntdb.DB, group acl.Group) error {
 	return db.Insert(dbConn, group)
 }
 
-func GetGroupByID(dbConn *buntdb.DB, id string) (*acl.Group, error) {
+func GetGroupByID(dbConn *buntdb.DB, id string) (acl.Group, error) {
 	tmp := acl.Group{ID: id}
 	group, err := db.GetByID[acl.Group](dbConn, tmp)
 	if err != nil {
-		return nil, err
+		return acl.Group{}, err
 	}
-	return &group, nil
+	return group, nil
 }
 
 func GetGroupByName(dbConn *buntdb.DB, name string) (acl.Group, error) {
@@ -87,4 +87,9 @@ func GetAdminUserIDsByGroupID(dbConn *buntdb.DB, groupID string) ([]string, erro
 		}
 	}
 	return adminIDs, nil
+}
+
+func ListUserGroupsByUserID(dbConn *buntdb.DB, userID string) ([]acl.UserGroup, error) {
+	pivot := acl.UserGroup{UserID: userID}
+	return db.SelectAll[acl.UserGroup](dbConn, pivot, acl.IdxUserGroup_UserID)
 }

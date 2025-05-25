@@ -22,7 +22,7 @@ type AssignUserToGroupResponse struct {
 
 type iUserGroupRepo interface {
 	CreateUserGroup(userGroup acl.UserGroup) error
-	GetUserGroup(userID, groupID string) (*acl.UserGroup, error)
+	GetUserGroup(userID, groupID string) (acl.UserGroup, error)
 }
 
 type userGroupRepo struct {
@@ -33,7 +33,7 @@ func (r *userGroupRepo) CreateUserGroup(userGroup acl.UserGroup) error {
 	return usergrouprepo.CreateUserGroup(r.db, userGroup)
 }
 
-func (r *userGroupRepo) GetUserGroup(userID, groupID string) (*acl.UserGroup, error) {
+func (r *userGroupRepo) GetUserGroup(userID, groupID string) (acl.UserGroup, error) {
 	return usergrouprepo.GetUserGroup(r.db, userID, groupID)
 }
 
@@ -52,8 +52,8 @@ func (uc AssignUserToGroupUsecase) Handle(ctx context.Context, req AssignUserToG
 		return AssignUserToGroupResponse{}, errors.New("missing required fields: user_id or group_id")
 	}
 	// Check if mapping already exists
-	existing, err := uc.repo.GetUserGroup(req.UserID, req.GroupID)
-	if err == nil && existing != nil {
+	_, err := uc.repo.GetUserGroup(req.UserID, req.GroupID)
+	if err == nil {
 		return AssignUserToGroupResponse{}, errors.New("user is already assigned to this group")
 	}
 	userGroup := acl.UserGroup{

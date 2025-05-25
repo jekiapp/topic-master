@@ -59,7 +59,7 @@ func ListGroupsForUser(dbConn *buntdb.DB, userID, userType string) ([]acl.GroupR
 	for _, ug := range userGroups {
 		group, err := GetGroupByID(dbConn, ug.GroupID)
 		groupName := ug.GroupID
-		if err == nil && group != nil {
+		if err == nil {
 			groupName = group.Name
 		}
 		groups = append(groups, acl.GroupRole{GroupName: groupName, Role: userType})
@@ -68,4 +68,9 @@ func ListGroupsForUser(dbConn *buntdb.DB, userID, userType string) ([]acl.GroupR
 		groups = append(groups, acl.GroupRole{GroupName: "", Role: userType})
 	}
 	return groups, nil
+}
+
+func GetAllUsers(dbConn *buntdb.DB) ([]acl.User, error) {
+	pivot := acl.User{} // empty pivot to select all
+	return db.SelectAll[acl.User](dbConn, pivot, acl.IdxUser_Username)
 }

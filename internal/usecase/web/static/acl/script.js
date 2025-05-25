@@ -38,8 +38,18 @@ function fillGroupsTable() {
 function fillUsersTable() {
   const $tbody = $('#users-tbody');
   $tbody.empty();
-  users.forEach(u => {
-    $tbody.append(`<tr><td>${u.username}</td><td>${u.name}</td><td>${u.email}</td><td>${u.groups}</td><td>${u.type}</td><td>${u.status}</td></tr>`);
+  $.ajax({
+    url: '/api/user-list',
+    method: 'POST',
+    contentType: 'application/json',
+    data: '{}',
+    success: function(resp) {
+      if (resp && resp.data && resp.data.users) {
+        resp.data.users.forEach(u => {
+          $tbody.append(`<tr><td>${u.username}</td><td>${u.name}</td><td>${u.email}</td><td>${u.groups}</td><td>${u.status}</td></tr>`);
+        });
+      }
+    }
   });
 }
 

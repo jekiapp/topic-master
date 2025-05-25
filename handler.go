@@ -25,6 +25,7 @@ type Handler struct {
 	syncTopicsUC        topicUC.SyncTopicsUsecase
 	webUC               *webUC.WebUsecase
 	getGroupListUC      listUC.GetGroupListUsecase
+	getUserListUC       listUC.GetUserListUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -42,6 +43,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		syncTopicsUC:        topicUC.NewSyncTopicsUsecase(db),
 		webUC:               webUsecase,
 		getGroupListUC:      listUC.NewGetGroupListUsecase(db),
+		getUserListUC:       listUC.NewGetUserListUsecase(db),
 	}
 }
 
@@ -58,6 +60,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/sync-topics", handler.QueryHandler(h.syncTopicsUC.HandleQuery))
 
 	mux.HandleFunc("/api/group-list", handlerPkg.HandleGenericPost(h.getGroupListUC.Handle))
+	mux.HandleFunc("/api/user-list", handlerPkg.HandleGenericPost(h.getUserListUC.Handle))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
