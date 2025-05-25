@@ -1,10 +1,11 @@
 package handler
 
 import (
+	"context"
+	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
-
-	"context"
 
 	"github.com/golang-jwt/jwt/v4"
 
@@ -22,28 +23,52 @@ func JWTMiddleware(next http.HandlerFunc, secret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		isAjax := r.Header.Get("X-Requested-With") == "XMLHttpRequest"
-		if !strings.HasPrefix(authHeader, "Bearer ") {
+
+		var tokenString string
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+		} else {
+			// Try to get access_token from cookies
+			cookie, err := r.Cookie("access_token")
+			if err == nil && cookie.Value != "" {
+				tokenString = cookie.Value
+			}
+		}
+
+		if tokenString == "" {
 			if isAjax {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error": "Missing or invalid Authorization header"}`))
+				w.Write([]byte(`{"error": "Missing or invalid Authorization header and access_token cookie"}`))
 			} else {
-				http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
+				http.Error(w, "Missing or invalid Authorization header and access_token cookie", http.StatusUnauthorized)
 			}
 			return
 		}
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// Decode base64 secret key before using for JWT verification
+		decodedSecret, err := base64.StdEncoding.DecodeString(secret)
+		if err != nil {
+			if isAjax {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error": "Failed to decode secret key"}`))
+			} else {
+				http.Error(w, "Failed to decode secret key", http.StatusUnauthorized)
+			}
+			return
+		}
 		token := &acl.JWTClaims{}
 		parsedToken, err := jwt.ParseWithClaims(tokenString, token, func(token *jwt.Token) (interface{}, error) {
-			return []byte(secret), nil
+			return decodedSecret, nil
 		})
 		if err != nil || !parsedToken.Valid {
 			if isAjax {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error": "Invalid token"}`))
+				w.Write([]byte(fmt.Sprintf(`{"error": "Invalid token %s"}`, err.Error())))
 			} else {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				http.Error(w, fmt.Sprintf("Invalid token %s", err.Error()), http.StatusUnauthorized)
 			}
 			return
 		}

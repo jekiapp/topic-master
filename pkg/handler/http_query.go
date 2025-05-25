@@ -21,13 +21,25 @@ func QueryHandler[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 
 		resp, err := handler(r.Context(), queries)
 		w.Header().Set("Content-Type", "application/json")
+
+		var response Response[R]
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			response = Response[R]{
+				Status:  StatusError,
+				Message: "Handler execution failed",
+				Error:   err.Error(),
+			}
 		} else {
 			w.WriteHeader(http.StatusOK)
+			response = Response[R]{
+				Status:  StatusSuccess,
+				Message: "Operation completed successfully",
+				Data:    resp,
+			}
 		}
 
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, `{"error": "failed to encode JSON"}`, http.StatusInternalServerError)
 		}
 	}

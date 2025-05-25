@@ -3,6 +3,7 @@ package acl
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -124,7 +125,12 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 		RegisteredClaims: auth.DefaultRegisteredClaims(user.ID),
 	}
 
-	token, err := auth.GenerateJWT(claims, uc.config.SecretKey)
+	// Decode base64 secret key before using for JWT
+	secret, err := base64.StdEncoding.DecodeString(string(uc.config.SecretKey))
+	if err != nil {
+		return LoginResponse{}, errors.New("failed to decode secret key")
+	}
+	token, err := auth.GenerateJWT(claims, secret)
 	if err != nil {
 		return LoginResponse{}, errors.New("failed to generate token")
 	}

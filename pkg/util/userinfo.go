@@ -10,8 +10,8 @@ import (
 )
 
 func GetUserInfo(ctx context.Context) *acl.User {
-	claims := ctx.Value(model.UserInfoKey).(*acl.JWTClaims)
-	if claims == nil {
+	claims, ok := ctx.Value(model.UserInfoKey).(*acl.JWTClaims)
+	if !ok {
 		return nil
 	}
 	user := &acl.User{

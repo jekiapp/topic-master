@@ -8,7 +8,6 @@ import (
 	listUC "github.com/jekiapp/nsqper/internal/usecase/acl/list"
 	topicUC "github.com/jekiapp/nsqper/internal/usecase/topic"
 	webUC "github.com/jekiapp/nsqper/internal/usecase/web"
-	"github.com/jekiapp/nsqper/pkg/handler"
 	handlerPkg "github.com/jekiapp/nsqper/pkg/handler"
 	"github.com/tidwall/buntdb"
 )
@@ -26,6 +25,7 @@ type Handler struct {
 	webUC               *webUC.WebUsecase
 	getGroupListUC      listUC.GetGroupListUsecase
 	getUserListUC       listUC.GetUserListUsecase
+	listTopicsUC        topicUC.ListTopicsUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -44,11 +44,12 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		webUC:               webUsecase,
 		getGroupListUC:      listUC.NewGetGroupListUsecase(db),
 		getUserListUC:       listUC.NewGetUserListUsecase(db),
+		listTopicsUC:        topicUC.NewListTopicsUsecase(db),
 	}
 }
 
 func (h Handler) routes(mux *http.ServeMux) {
-	// authMiddleware := handlerPkg.InitJWTMiddleware(string(h.config.SecretKey))
+	authMiddleware := handlerPkg.InitJWTMiddleware(string(h.config.SecretKey))
 
 	mux.HandleFunc("/api/login", h.loginUC.Handle)
 	mux.HandleFunc("/api/create-user", handlerPkg.HandleGenericPost(h.createUserUC.Handle))
@@ -57,10 +58,12 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/create-usergroup", handlerPkg.HandleGenericPost(h.createUserGroupUC.Handle))
 	mux.HandleFunc("/api/create-permission", handlerPkg.HandleGenericPost(h.createPermissionUC.Handle))
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
-	mux.HandleFunc("/api/sync-topics", handler.QueryHandler(h.syncTopicsUC.HandleQuery))
+	mux.HandleFunc("/api/sync-topics", handlerPkg.QueryHandler(h.syncTopicsUC.HandleQuery))
 
 	mux.HandleFunc("/api/group-list", handlerPkg.HandleGenericPost(h.getGroupListUC.Handle))
 	mux.HandleFunc("/api/user-list", handlerPkg.HandleGenericPost(h.getUserListUC.Handle))
+
+	mux.HandleFunc("/api/topic/list-topics", authMiddleware(handlerPkg.QueryHandler(h.listTopicsUC.HandleQuery)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

@@ -2,6 +2,7 @@ package topic
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
@@ -11,7 +12,6 @@ import (
 
 type ListTopicsResponse struct {
 	Topics []acl.Entity `json:"topics"`
-	Error  string       `json:"error,omitempty"`
 }
 
 type iListTopicsRepo interface {
@@ -47,9 +47,12 @@ func NewListTopicsUsecase(db *buntdb.DB) ListTopicsUsecase {
 // params should contain "group" key.
 func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]string) (ListTopicsResponse, error) {
 	userInfo := util.GetUserInfo(ctx)
+	if userInfo == nil {
+		return ListTopicsResponse{}, errors.New("user is not authenticated")
+	}
 	usergroups := userInfo.Groups
 	if len(usergroups) == 0 {
-		return ListTopicsResponse{Error: "user is not a member of any group"}, nil
+		return ListTopicsResponse{}, errors.New("user is not a member of any group")
 	}
 	group := usergroups[0]
 	var topics []acl.Entity
@@ -60,13 +63,13 @@ func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]s
 		for _, group := range usergroups {
 			t, err := uc.repo.ListNsqTopicEntitiesByGroup(group.GroupName)
 			if err != nil {
-				return ListTopicsResponse{Error: err.Error()}, err
+				return ListTopicsResponse{}, err
 			}
 			topics = append(topics, t...)
 		}
 	}
 	if err != nil {
-		return ListTopicsResponse{Error: err.Error()}, err
+		return ListTopicsResponse{}, err
 	}
 	return ListTopicsResponse{Topics: topics}, nil
 }
