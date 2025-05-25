@@ -15,7 +15,6 @@ import (
 	usergrouprepo "github.com/jekiapp/nsqper/internal/repository/user"
 	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
 	"github.com/tidwall/buntdb"
-	"github.com/vmihailenco/msgpack/v5"
 )
 
 type LoginRequest struct {

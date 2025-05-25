@@ -10,24 +10,24 @@ import (
 )
 
 type ListTopicsResponse struct {
-	Topics []*acl.Entity `json:"topics"`
-	Error  string        `json:"error,omitempty"`
+	Topics []acl.Entity `json:"topics"`
+	Error  string       `json:"error,omitempty"`
 }
 
 type iListTopicsRepo interface {
-	ListNsqTopicEntitiesByGroup(group string) ([]*acl.Entity, error)
-	GetAllNsqTopicEntities() ([]*acl.Entity, error)
+	ListNsqTopicEntitiesByGroup(group string) ([]acl.Entity, error)
+	GetAllNsqTopicEntities() ([]acl.Entity, error)
 }
 
 type listTopicsRepo struct {
 	db *buntdb.DB
 }
 
-func (r *listTopicsRepo) ListNsqTopicEntitiesByGroup(group string) ([]*acl.Entity, error) {
+func (r *listTopicsRepo) ListNsqTopicEntitiesByGroup(group string) ([]acl.Entity, error) {
 	return entityrepo.ListNsqTopicEntitiesByGroup(r.db, group)
 }
 
-func (r *listTopicsRepo) GetAllNsqTopicEntities() ([]*acl.Entity, error) {
+func (r *listTopicsRepo) GetAllNsqTopicEntities() ([]acl.Entity, error) {
 	return entityrepo.GetAllNsqTopicEntities(r.db)
 }
 
@@ -52,7 +52,7 @@ func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]s
 		return ListTopicsResponse{Error: "user is not a member of any group"}, nil
 	}
 	group := usergroups[0]
-	var topics []*acl.Entity
+	var topics []acl.Entity
 	var err error
 	if group.GroupName == "root" {
 		topics, err = uc.repo.GetAllNsqTopicEntities()

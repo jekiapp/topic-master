@@ -103,3 +103,7 @@ func (e Entity) GetIndexValues() map[string]string {
 		"type_name":  e.TypeID + ":" + e.Name,
 	}
 }
+
+const (
+	EntityType_NSQTopic = "nsq_topic"
+)

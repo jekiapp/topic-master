@@ -10,7 +10,7 @@ import (
 
 func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
 	entity := &acl.Entity{
-		TypeID:    "nsq_topic",
+		TypeID:    acl.EntityType_NSQTopic,
 		Name:      topic,
 		Resource:  "NSQ",
 		Status:    "active",
@@ -25,7 +25,7 @@ func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) 
 }
 
 func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
-	tmp := acl.Entity{TypeID: "nsq_topic", Name: topic}
+	tmp := acl.Entity{TypeID: acl.EntityType_NSQTopic, Name: topic}
 	entity, err := db.SelectOne[acl.Entity](dbConn, tmp, acl.IdxEntity_TypeName)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
 }
 
 func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]acl.Entity, error) {
-	tmp := acl.Entity{TypeID: "nsq_topic"}
+	tmp := acl.Entity{TypeID: acl.EntityType_NSQTopic}
 	entities, err := db.SelectAll[acl.Entity](dbConn, tmp, acl.IdxEntity_TypeID)
 	if err != nil {
 		return nil, err
@@ -43,13 +43,13 @@ func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]acl.Entity, error) {
 }
 
 func DeleteNsqTopicEntity(dbConn *buntdb.DB, topic string) error {
-	tmp := acl.Entity{TypeID: "nsq_topic", Name: topic}
+	tmp := acl.Entity{TypeID: acl.EntityType_NSQTopic, Name: topic}
 	return db.DeleteByIndex(dbConn, tmp, acl.IdxEntity_TypeName)
 }
 
 // ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is "root", returns all topics.
 func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]acl.Entity, error) {
-	tmp := acl.Entity{GroupOwner: group, TypeID: "nsq_topic"}
+	tmp := acl.Entity{GroupOwner: group, TypeID: acl.EntityType_NSQTopic}
 	entities, err := db.SelectAll[acl.Entity](dbConn, tmp, acl.IdxEntity_GroupType)
 	if err != nil {
 		return nil, err

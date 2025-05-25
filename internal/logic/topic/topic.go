@@ -10,7 +10,7 @@ import (
 
 type ISyncTopics interface {
 	GetAllTopics() ([]string, error)
-	GetAllNsqTopicEntities() ([]*acl.Entity, error)
+	GetAllNsqTopicEntities() ([]acl.Entity, error)
 	CreateNsqTopicEntity(topic string) (*acl.Entity, error)
 	DeleteNsqTopicEntity(topic string) error
 }

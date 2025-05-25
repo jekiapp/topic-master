@@ -25,7 +25,7 @@ type CreatePermissionResponse struct {
 
 type iPermissionRepo interface {
 	CreatePermission(permission acl.Permission) error
-	GetPermission(name string, entityID string) (*acl.Permission, error)
+	GetPermissionByNameEntity(name string, entityID string) (*acl.Permission, error)
 }
 
 type createPermissionRepo struct {
@@ -36,8 +36,8 @@ func (r *createPermissionRepo) CreatePermission(permission acl.Permission) error
 	return permissionrepo.CreatePermission(r.db, permission)
 }
 
-func (r *createPermissionRepo) GetPermission(name string, entityID string) (*acl.Permission, error) {
-	return permissionrepo.GetPermission(r.db, name, entityID)
+func (r *createPermissionRepo) GetPermissionByNameEntity(name string, entityID string) (*acl.Permission, error) {
+	return permissionrepo.GetPermissionByNameEntity(r.db, name, entityID)
 }
 
 type CreatePermissionUsecase struct {
@@ -60,7 +60,7 @@ func (uc CreatePermissionUsecase) Handle(ctx context.Context, req CreatePermissi
 
 	for _, action := range req.Actions {
 		// Check if permission already exists
-		existingPermission, err := uc.repo.GetPermission(action, req.EntityID)
+		existingPermission, err := uc.repo.GetPermissionByNameEntity(action, req.EntityID)
 		if err == nil && existingPermission != nil {
 			log.Printf("permission already exists: %s:%s", action, req.EntityID)
 			continue

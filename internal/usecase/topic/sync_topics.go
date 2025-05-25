@@ -43,7 +43,7 @@ func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*acl.Entity, error)
 	return entity.CreateNsqTopicEntity(r.db, topic)
 }
 
-func (r *syncTopicsRepo) GetAllNsqTopicEntities() ([]*acl.Entity, error) {
+func (r *syncTopicsRepo) GetAllNsqTopicEntities() ([]acl.Entity, error) {
 	return entity.GetAllNsqTopicEntities(r.db)
 }
 
