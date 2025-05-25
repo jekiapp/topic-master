@@ -14,7 +14,7 @@ func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) 
 		Name:       topic,
 		Resource:   "NSQ",
 		Status:     "active",
-		GroupOwner: "root",
+		GroupOwner: acl.GroupRoot,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
@@ -48,7 +48,7 @@ func DeleteNsqTopicEntity(dbConn *buntdb.DB, topic string) error {
 	return db.DeleteByIndex(dbConn, tmp, acl.IdxEntity_TypeName)
 }
 
-// ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is "root", returns all topics.
+// ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is acl.GroupRoot, returns all topics.
 func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]acl.Entity, error) {
 	tmp := acl.Entity{GroupOwner: group, TypeID: acl.EntityType_NSQTopic}
 	entities, err := db.SelectAll[acl.Entity](dbConn, tmp, acl.IdxEntity_GroupType)

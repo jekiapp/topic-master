@@ -38,7 +38,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	now := time.Now()
 
 	rootGroup := aclmodel.Group{
-		Name:        "root",
+		Name:        aclmodel.GroupRoot,
 		Description: "Main administrator group",
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -53,7 +53,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	hash := sha256.Sum256([]byte(password))
 	hashedPassword := hex.EncodeToString(hash[:])
 	rootUser := aclmodel.User{
-		Username:  "root",
+		Username:  aclmodel.GroupRoot,
 		Name:      "Root User",
 		Password:  hashedPassword,
 		Email:     "root@localhost",

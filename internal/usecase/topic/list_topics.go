@@ -58,7 +58,7 @@ func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]s
 	group := usergroups[0]
 	var topicEntities []acl.Entity
 	var err error
-	if group.GroupName == "root" {
+	if group.GroupName == acl.GroupRoot {
 		topicEntities, err = uc.repo.GetAllNsqTopicEntities()
 	} else {
 		for _, group := range usergroups {

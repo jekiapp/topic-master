@@ -5,7 +5,8 @@ import (
 
 	"github.com/jekiapp/nsqper/internal/config"
 	acl "github.com/jekiapp/nsqper/internal/usecase/acl"
-	listUC "github.com/jekiapp/nsqper/internal/usecase/acl/list"
+	aclGroup "github.com/jekiapp/nsqper/internal/usecase/acl/group"
+	aclUser "github.com/jekiapp/nsqper/internal/usecase/acl/user"
 	topicUC "github.com/jekiapp/nsqper/internal/usecase/topic"
 	webUC "github.com/jekiapp/nsqper/internal/usecase/web"
 	handlerPkg "github.com/jekiapp/nsqper/pkg/handler"
@@ -14,17 +15,17 @@ import (
 
 type Handler struct {
 	config              *config.Config
-	createUserUC        acl.CreateUserUsecase
+	createUserUC        aclUser.CreateUserUsecase
 	loginUC             acl.LoginUsecase
 	assignUserToGroupUC acl.AssignUserToGroupUsecase
-	deleteUserUC        acl.DeleteUserUsecase
-	createUserGroupUC   acl.CreateGroupUsecase
+	deleteUserUC        aclUser.DeleteUserUsecase
+	createGroupUC       aclGroup.CreateGroupUsecase
 	createPermissionUC  acl.CreatePermissionUsecase
-	changePasswordUC    acl.ChangePasswordUsecase
+	changePasswordUC    aclUser.ChangePasswordUsecase
 	syncTopicsUC        topicUC.SyncTopicsUsecase
 	webUC               *webUC.WebUsecase
-	getGroupListUC      listUC.GetGroupListUsecase
-	getUserListUC       listUC.GetUserListUsecase
+	getGroupListUC      aclGroup.GetGroupListUsecase
+	getUserListUC       aclUser.GetUserListUsecase
 	listTopicsUC        topicUC.ListTopicsUsecase
 }
 
@@ -33,17 +34,17 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 
 	return Handler{
 		config:              cfg,
-		createUserUC:        acl.NewCreateUserUsecase(db),
+		createUserUC:        aclUser.NewCreateUserUsecase(db),
 		loginUC:             acl.NewLoginUsecase(db, cfg),
 		assignUserToGroupUC: acl.NewAssignUserToGroupUsecase(db),
-		deleteUserUC:        acl.NewDeleteUserUsecase(db),
-		createUserGroupUC:   acl.NewCreateGroupUsecase(db),
+		deleteUserUC:        aclUser.NewDeleteUserUsecase(db),
+		createGroupUC:       aclGroup.NewCreateGroupUsecase(db),
 		createPermissionUC:  acl.NewCreatePermissionUsecase(db),
-		changePasswordUC:    acl.NewChangePasswordUsecase(db),
+		changePasswordUC:    aclUser.NewChangePasswordUsecase(db),
 		syncTopicsUC:        topicUC.NewSyncTopicsUsecase(db),
 		webUC:               webUsecase,
-		getGroupListUC:      listUC.NewGetGroupListUsecase(db),
-		getUserListUC:       listUC.NewGetUserListUsecase(db),
+		getGroupListUC:      aclGroup.NewGetGroupListUsecase(db),
+		getUserListUC:       aclUser.NewGetUserListUsecase(db),
 		listTopicsUC:        topicUC.NewListTopicsUsecase(db),
 	}
 }
@@ -55,7 +56,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/create-user", handlerPkg.HandleGenericPost(h.createUserUC.Handle))
 	mux.HandleFunc("/api/assign-user-to-group", handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle))
 	mux.HandleFunc("/api/delete-user", handlerPkg.HandleGenericPost(h.deleteUserUC.Handle))
-	mux.HandleFunc("/api/create-usergroup", handlerPkg.HandleGenericPost(h.createUserGroupUC.Handle))
+	mux.HandleFunc("/api/create-group", handlerPkg.HandleGenericPost(h.createGroupUC.Handle))
 	mux.HandleFunc("/api/create-permission", handlerPkg.HandleGenericPost(h.createPermissionUC.Handle))
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
 	mux.HandleFunc("/api/sync-topics", handlerPkg.QueryHandler(h.syncTopicsUC.HandleQuery))

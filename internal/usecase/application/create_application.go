@@ -28,7 +28,7 @@ type iApplicationRepo interface {
 	CreateApplication(app acl.PermissionApplication) error
 	GetApplicationByUserAndPermission(userID, permissionKey string) (*acl.PermissionApplication, error)
 	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
-	GetGroupByName(name string) (*acl.Group, error)
+	GetGroupByName(name string) (acl.Group, error)
 	ListUserIDsByGroupID(groupID string) ([]string, error)
 	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
 	GetPermissionByID(id string) (*acl.Permission, error)
@@ -50,7 +50,7 @@ func (r *applicationRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, er
 	return userrepo.GetAdminUserIDsByGroupID(r.db, groupID)
 }
 
-func (r *applicationRepo) GetGroupByName(name string) (*acl.Group, error) {
+func (r *applicationRepo) GetGroupByName(name string) (acl.Group, error) {
 	return userrepo.GetGroupByName(r.db, name)
 }
 
@@ -136,7 +136,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	}
 
 	// 6. Get all user IDs in the root group
-	rootGroup, err := uc.repo.GetGroupByName("root")
+	rootGroup, err := uc.repo.GetGroupByName(acl.GroupRoot)
 	if err != nil {
 		return CreateApplicationResponse{}, errors.New("root group not found")
 	}

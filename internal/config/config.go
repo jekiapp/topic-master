@@ -10,6 +10,7 @@ import (
 
 	// Correct internal imports
 
+	aclmodel "github.com/jekiapp/nsqper/internal/model/acl"
 	usergroup "github.com/jekiapp/nsqper/internal/repository/user"
 	dbPkg "github.com/jekiapp/nsqper/pkg/db"
 )
@@ -50,14 +51,14 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 
 // CheckRootGroupAndUserExist returns true if both root group and root user exist in the DB.
 func CheckRootGroupAndUserExist(db *buntdb.DB) (bool, error) {
-	_, err := usergroup.GetGroupByName(db, "root")
+	_, err := usergroup.GetGroupByName(db, aclmodel.GroupRoot)
 	if err != nil && err != dbPkg.ErrNotFound {
 		return false, err
 	}
 	if err == dbPkg.ErrNotFound {
 		return false, nil
 	}
-	_, err = usergroup.GetUserByUsername(db, "root")
+	_, err = usergroup.GetUserByUsername(db, aclmodel.GroupRoot)
 	if err != nil && err != dbPkg.ErrNotFound {
 		return false, err
 	}
