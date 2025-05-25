@@ -1,17 +1,191 @@
 package db
 
 import (
-	"database/sql"
+	"fmt"
+	"log"
+	"strings"
+
+	"github.com/tidwall/buntdb"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type DbConfig struct {
 	Host string
-	// ... etc
 }
 
-// TODO: Create our own DB object that implements new interface with sql.DB functions
-// to abstract the infrastructure layer.
-// then return that object, instead of *sql.DB object.
-func InitDatabase(cfg DbConfig) (*sql.DB, error) {
-	return &sql.DB{}, nil
+type Index struct {
+	Name    string
+	Pattern string
+	Type    IndexType
+}
+
+type IndexType func(a, b string) bool
+
+type IndexItem struct {
+	Name string
+	Type IndexType
+}
+
+type Record interface {
+	GetPrimaryKey() string
+	GetIndexes() []Index
+	GetIndexValues() map[string]string
+}
+
+func Insert(db *buntdb.DB, record Record) error {
+	return db.Update(func(tx *buntdb.Tx) error {
+		key := record.GetPrimaryKey()
+		msgpackValue, err := msgpack.Marshal(record)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Get(key)
+		if err == nil {
+			return fmt.Errorf("data %s already exists", key)
+		}
+
+		// set primary data
+		value := string(msgpackValue)
+		_, _, err = tx.Set(key, value, nil)
+		if err != nil {
+			return err
+		}
+
+		// set index
+		for name, value := range record.GetIndexValues() {
+			_, _, err = tx.Set(key+":"+name, value, nil)
+			if err != nil {
+				log.Printf("error setting index: %s", err)
+			}
+		}
+		return err
+	})
+}
+
+func Update(db *buntdb.DB, record Record) error {
+	return db.Update(func(tx *buntdb.Tx) error {
+		key := record.GetPrimaryKey()
+		msgpackValue, err := msgpack.Marshal(record)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Get(key)
+		if err != nil {
+			return fmt.Errorf("data %s not found", key)
+		}
+
+		value := string(msgpackValue)
+		_, _, err = tx.Set(key, value, nil)
+		if err != nil {
+			return err
+		}
+
+		// set index
+		for name, value := range record.GetIndexValues() {
+			_, _, err = tx.Set(key+":"+name, value, nil)
+			if err != nil {
+				log.Printf("error setting index: %s", err)
+			}
+		}
+		return nil
+	})
+}
+
+func Upsert(db *buntdb.DB, record Record) error {
+	return db.Update(func(tx *buntdb.Tx) error {
+		key := record.GetPrimaryKey()
+		msgpackValue, err := msgpack.Marshal(record)
+		if err != nil {
+			return err
+		}
+
+		value := string(msgpackValue)
+		_, _, err = tx.Set(key, value, nil)
+		if err != nil {
+			return err
+		}
+
+		// set index
+		for name, value := range record.GetIndexValues() {
+			_, _, err = tx.Set(key+":"+name, value, nil)
+			if err != nil {
+				log.Printf("error setting index: %s", err)
+			}
+		}
+		return nil
+	})
+}
+
+func SelectAll[T any](db *buntdb.DB, record Record, indexName string) ([]T, error) {
+	var results []T
+
+	// get index field name
+	// tablename:indexname
+	idxField := strings.Split(indexName, ":")[1]
+
+	// get index value for pivot
+	pivot := record.GetIndexValues()[idxField]
+
+	err := db.View(func(tx *buntdb.Tx) error {
+		tx.AscendEqual(indexName, pivot, func(key string, value string) bool {
+			// they key would be like this:
+			// table:<id>:indexname
+			// pick just table:<id>
+			newKey := strings.TrimSuffix(key, ":"+idxField)
+			val, err := tx.Get(newKey)
+			if err != nil {
+				log.Printf("error getting value: %s", err)
+				return false
+			}
+			var result T
+			err = msgpack.Unmarshal([]byte(val), &result)
+			if err != nil {
+				log.Printf("error unmarshalling value: %s", err)
+				return false
+			}
+			results = append(results, result)
+			return true
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error) {
+	var result T
+
+	// get index field name
+	// tablename:indexname
+	idxField := strings.Split(indexName, ":")[1]
+
+	// get index value for pivot
+	pivot := record.GetIndexValues()[idxField]
+
+	err := db.View(func(tx *buntdb.Tx) error {
+		tx.AscendEqual(indexName, pivot, func(key string, value string) bool {
+			// they key would be like this:
+			// table:<id>:indexname
+			// pick just table:<id>
+			newKey := strings.TrimSuffix(key, ":"+idxField)
+			val, err := tx.Get(newKey)
+			if err != nil {
+				log.Printf("error getting value: %s", err)
+				return false
+			}
+			err = msgpack.Unmarshal([]byte(val), &result)
+			if err != nil {
+				log.Printf("error unmarshalling value: %s", err)
+				return false
+			}
+			return false
+		})
+		return nil
+	})
+
+	return result, err
 }
