@@ -37,8 +37,34 @@ $(function() {
     }
   }
 
+  function setActiveMenuByHash(hash) {
+    $('.menu li a').removeClass('active');
+    if (hash === '#access') {
+      accessControlMenu.addClass('active');
+    } else {
+      myTopicsMenu.addClass('active');
+    }
+  }
+
+  function handleHashChange() {
+    const hash = window.location.hash;
+    setActiveMenuByHash(hash);
+    if (hash === '#access') {
+      showAccessControl();
+    } else {
+      showMyTopics();
+    }
+  }
+
+  // On page load, handle hash
+  handleHashChange();
+
+  // Listen for hash changes
+  $(window).on('hashchange', handleHashChange);
+
   myTopicsMenu.on('click', function(e) {
     e.preventDefault();
+    window.location.hash = '#my-topics';
     $('.menu li a').removeClass('active');
     $(this).addClass('active');
     showMyTopics();
@@ -46,11 +72,9 @@ $(function() {
 
   accessControlMenu.on('click', function(e) {
     e.preventDefault();
+    window.location.hash = '#access';
     $('.menu li a').removeClass('active');
     $(this).addClass('active');
     showAccessControl();
   });
-
-  // Optionally, load My Topics by default on page load
-  showMyTopics();
 }); 
