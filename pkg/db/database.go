@@ -52,14 +52,23 @@ func Insert(db *buntdb.DB, record Record) error {
 			return err
 		}
 
-		// set index
+		// set index with rollback on failure
+		setIndexes := make([]string, 0)
 		for name, value := range record.GetIndexValues() {
-			_, _, err = tx.Set(key+":"+name, value, nil)
+			idxKey := key + ":" + name
+			_, _, err = tx.Set(idxKey, value, nil)
 			if err != nil {
 				log.Printf("error setting index: %s", err)
+				// rollback: delete primary and any set indexes
+				tx.Delete(key)
+				for _, sIdxKey := range setIndexes {
+					tx.Delete(sIdxKey)
+				}
+				return fmt.Errorf("failed to set index %s: %w", name, err)
 			}
+			setIndexes = append(setIndexes, idxKey)
 		}
-		return err
+		return nil
 	})
 }
 
@@ -77,17 +86,26 @@ func Update(db *buntdb.DB, record Record) error {
 		}
 
 		value := string(msgpackValue)
-		_, _, err = tx.Set(key, value, nil)
+		prevValue, _, err := tx.Set(key, value, nil)
 		if err != nil {
 			return err
 		}
 
-		// set index
+		// set index with rollback on failure
+		setIndexes := make([]string, 0)
 		for name, value := range record.GetIndexValues() {
-			_, _, err = tx.Set(key+":"+name, value, nil)
+			idxKey := key + ":" + name
+			_, _, err = tx.Set(idxKey, value, nil)
 			if err != nil {
 				log.Printf("error setting index: %s", err)
+				// rollback: restore previous value and remove set indexes
+				tx.Set(key, prevValue, nil)
+				for _, sIdxKey := range setIndexes {
+					tx.Delete(sIdxKey)
+				}
+				return fmt.Errorf("failed to set index %s: %w", name, err)
 			}
+			setIndexes = append(setIndexes, idxKey)
 		}
 		return nil
 	})
@@ -102,17 +120,30 @@ func Upsert(db *buntdb.DB, record Record) error {
 		}
 
 		value := string(msgpackValue)
-		_, _, err = tx.Set(key, value, nil)
+		prevValue, replaced, err := tx.Set(key, value, nil)
 		if err != nil {
 			return err
 		}
 
-		// set index
+		// set index with rollback on failure
+		setIndexes := make([]string, 0)
 		for name, value := range record.GetIndexValues() {
-			_, _, err = tx.Set(key+":"+name, value, nil)
+			idxKey := key + ":" + name
+			_, _, err = tx.Set(idxKey, value, nil)
 			if err != nil {
 				log.Printf("error setting index: %s", err)
+				// rollback: restore or delete primary, remove set indexes
+				if replaced {
+					tx.Set(key, prevValue, nil)
+				} else {
+					tx.Delete(key)
+				}
+				for _, sIdxKey := range setIndexes {
+					tx.Delete(sIdxKey)
+				}
+				return fmt.Errorf("failed to set index %s: %w", name, err)
 			}
+			setIndexes = append(setIndexes, idxKey)
 		}
 		return nil
 	})
