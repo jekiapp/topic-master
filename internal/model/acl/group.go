@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jekiapp/nsqper/internal/model"
+	"github.com/jekiapp/nsqper/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -30,8 +30,8 @@ func (g Group) GetPrimaryKey() string {
 	return fmt.Sprintf("%s:%s", TableGroup, id)
 }
 
-func (g Group) GetIndexes() []model.Index {
-	return []model.Index{
+func (g Group) GetIndexes() []db.Index {
+	return []db.Index{
 		{
 			Name:    IdxGroup_Name,
 			Pattern: fmt.Sprintf("%s:*:%s", TableGroup, "name"),
@@ -72,8 +72,8 @@ func (ug UserGroup) GetPrimaryKey() string {
 	return fmt.Sprintf("%s:%s", TableUserGroup, id)
 }
 
-func (ug UserGroup) GetIndexes() []model.Index {
-	return []model.Index{
+func (ug UserGroup) GetIndexes() []db.Index {
+	return []db.Index{
 		{
 			Name:    IdxUserGroup_ID,
 			Pattern: fmt.Sprintf("%s:*:%s", TableUserGroup, "usergroup_id"),

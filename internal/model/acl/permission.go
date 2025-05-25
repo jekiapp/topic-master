@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jekiapp/nsqper/internal/model"
+	"github.com/jekiapp/nsqper/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -26,8 +26,8 @@ const (
 	IdxPermission_NameEntity = TablePermission + ":name_entity"
 )
 
-func (p Permission) GetIndexes() []model.Index {
-	return []model.Index{
+func (p Permission) GetIndexes() []db.Index {
+	return []db.Index{
 		{
 			Name:    IdxPermission_Type,
 			Pattern: fmt.Sprintf("%s:*:%s", TablePermission, "type"),

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tidwall/buntdb"
 
-	"github.com/jekiapp/nsqper/internal/model"
+	"github.com/jekiapp/nsqper/pkg/db"
 )
 
 type Entity struct {
@@ -58,8 +58,8 @@ func (e Entity) GetPrimaryKey() string {
 	return TableEntity + ":" + id
 }
 
-func (e Entity) GetIndexes() []model.Index {
-	return []model.Index{
+func (e Entity) GetIndexes() []db.Index {
+	return []db.Index{
 		{
 			Name:    IdxEntity_TypeID,
 			Pattern: TableEntity + ":*:typeid",
@@ -84,7 +84,8 @@ func (e Entity) GetIndexes() []model.Index {
 			Name:    IdxEntity_GroupType,
 			Pattern: TableEntity + ":*:group_type",
 			Type:    buntdb.IndexString,
-		}, {
+		},
+		{
 			Name:    IdxEntity_TypeName,
 			Pattern: TableEntity + ":*:type_name",
 			Type:    buntdb.IndexString,

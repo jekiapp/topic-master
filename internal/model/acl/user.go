@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jekiapp/nsqper/internal/model"
+	"github.com/jekiapp/nsqper/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -46,8 +46,8 @@ func (u User) GetPrimaryKey() string {
 	return fmt.Sprintf("%s:%s", TableUser, id)
 }
 
-func (u User) GetIndexes() []model.Index {
-	return []model.Index{
+func (u User) GetIndexes() []db.Index {
+	return []db.Index{
 		{
 			Name:    IdxUser_Type,
 			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "type"),

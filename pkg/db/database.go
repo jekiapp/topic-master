@@ -220,3 +220,57 @@ func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error)
 
 	return result, err
 }
+
+// make sure the id in the primary key is not empty
+func GetByID[T any](db *buntdb.DB, record Record) (T, error) {
+	var result T
+	key := record.GetPrimaryKey()
+	id := strings.Split(key, ":")[1]
+	if id == "" {
+		return result, fmt.Errorf("id is empty")
+	}
+
+	err := db.View(func(tx *buntdb.Tx) error {
+		val, err := tx.Get(key)
+		if err != nil {
+			return err
+		}
+		return msgpack.Unmarshal([]byte(val), &result)
+	})
+	return result, err
+}
+
+func DeleteByID(db *buntdb.DB, record Record) error {
+	return db.Update(func(tx *buntdb.Tx) error {
+		key := record.GetPrimaryKey()
+		_, err := tx.Delete(key)
+		if err != nil {
+			return err
+		}
+		// delete indexes
+		for name := range record.GetIndexValues() {
+			idxKey := key + ":" + name
+			tx.Delete(idxKey)
+		}
+		return nil
+	})
+}
+
+func DeleteByIndex(db *buntdb.DB, record Record, indexName string) error {
+	return db.Update(func(tx *buntdb.Tx) error {
+		idxField := strings.Split(indexName, ":")[1]
+		pivot := record.GetIndexValues()[idxField]
+		tx.AscendEqual(indexName, pivot, func(key string, value string) bool {
+			pk := strings.TrimSuffix(key, ":"+idxField)
+			// delete primary
+			tx.Delete(pk)
+			// delete indexes
+			for name := range record.GetIndexValues() {
+				idxKey := pk + ":" + name
+				tx.Delete(idxKey)
+			}
+			return true
+		})
+		return nil
+	})
+}
