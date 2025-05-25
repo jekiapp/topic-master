@@ -11,11 +11,12 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-type CreateUserGroupRequest struct {
-	Name string `json:"name"`
+type CreateGroupRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-type CreateUserGroupResponse struct {
+type CreateGroupResponse struct {
 	Group acl.Group
 }
 
@@ -36,33 +37,34 @@ func (r *createGroupRepo) GetGroupByName(name string) (acl.Group, error) {
 	return grouprepo.GetGroupByName(r.db, name)
 }
 
-type CreateUserGroupUsecase struct {
+type CreateGroupUsecase struct {
 	repo iGroupRepo
 }
 
-func NewCreateUserGroupUsecase(db *buntdb.DB) CreateUserGroupUsecase {
-	return CreateUserGroupUsecase{
+func NewCreateGroupUsecase(db *buntdb.DB) CreateGroupUsecase {
+	return CreateGroupUsecase{
 		repo: &createGroupRepo{db: db},
 	}
 }
 
-func (uc CreateUserGroupUsecase) Handle(ctx context.Context, req CreateUserGroupRequest) (CreateUserGroupResponse, error) {
+func (uc CreateGroupUsecase) Handle(ctx context.Context, req CreateGroupRequest) (CreateGroupResponse, error) {
 	if req.Name == "" {
-		return CreateUserGroupResponse{}, errors.New("missing required field: name")
+		return CreateGroupResponse{}, errors.New("missing required field: name")
 	}
 	// Check if group already exists
 	_, err := uc.repo.GetGroupByName(req.Name)
 	if err == nil {
-		return CreateUserGroupResponse{}, errors.New("group already exists")
+		return CreateGroupResponse{}, errors.New("group already exists")
 	}
 	group := acl.Group{
-		ID:        uuid.NewString(),
-		Name:      req.Name,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          uuid.NewString(),
+		Name:        req.Name,
+		Description: req.Description,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	if err := uc.repo.CreateGroup(group); err != nil {
-		return CreateUserGroupResponse{}, err
+		return CreateGroupResponse{}, err
 	}
-	return CreateUserGroupResponse{Group: group}, nil
+	return CreateGroupResponse{Group: group}, nil
 }

@@ -18,7 +18,7 @@ type Handler struct {
 	loginUC             acl.LoginUsecase
 	assignUserToGroupUC acl.AssignUserToGroupUsecase
 	deleteUserUC        acl.DeleteUserUsecase
-	createUserGroupUC   acl.CreateUserGroupUsecase
+	createUserGroupUC   acl.CreateGroupUsecase
 	createPermissionUC  acl.CreatePermissionUsecase
 	changePasswordUC    acl.ChangePasswordUsecase
 	syncTopicsUC        topicUC.SyncTopicsUsecase
@@ -37,7 +37,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		loginUC:             acl.NewLoginUsecase(db, cfg),
 		assignUserToGroupUC: acl.NewAssignUserToGroupUsecase(db),
 		deleteUserUC:        acl.NewDeleteUserUsecase(db),
-		createUserGroupUC:   acl.NewCreateUserGroupUsecase(db),
+		createUserGroupUC:   acl.NewCreateGroupUsecase(db),
 		createPermissionUC:  acl.NewCreatePermissionUsecase(db),
 		changePasswordUC:    acl.NewChangePasswordUsecase(db),
 		syncTopicsUC:        topicUC.NewSyncTopicsUsecase(db),

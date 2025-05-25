@@ -21,11 +21,13 @@ type CreateUserRequest struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
+	GroupID  string `json:"group_id"`
 	Type     string `json:"type"`
 }
 
 type CreateUserResponse struct {
-	User acl.User
+	Username          string `json:"username"`
+	GeneratedPassword string `json:"generated_password"`
 }
 
 type iUserRepo interface {
@@ -94,7 +96,7 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 	if err := uc.repo.CreateUser(user); err != nil {
 		return CreateUserResponse{}, err
 	}
-	return CreateUserResponse{User: user}, nil
+	return CreateUserResponse{Username: user.Username, GeneratedPassword: password}, nil
 }
 
 type createUserRepo struct {
