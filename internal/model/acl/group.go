@@ -11,10 +11,11 @@ import (
 
 // Group represents a user group or role (master)
 type Group struct {
-	ID        string // Unique identifier
-	Name      string // Group name
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          string // Unique identifier
+	Name        string // Group name
+	Description string // Group description
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 const (

@@ -38,9 +38,10 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	now := time.Now()
 
 	rootGroup := aclmodel.Group{
-		Name:      "root",
-		CreatedAt: now,
-		UpdatedAt: now,
+		Name:        "root",
+		Description: "Main administrator group",
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 	// fill it now, so that we can use it in the next step
 	rootGroup.ID = rootGroup.GetPrimaryKey()
@@ -56,7 +57,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 		Name:      "Root User",
 		Password:  hashedPassword,
 		Email:     "root@localhost",
-		Type:      "admin",
+		Type:      aclmodel.TypeAdmin,
 		Status:    "active",
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -69,17 +70,16 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	}
 
 	// Only create if not already assigned
-	if _, err := usergroup.GetUserGroup(db, rootUser.ID, rootGroup.ID); err != nil {
-		userGroup := aclmodel.UserGroup{
-			UserID:    rootUser.ID,
-			GroupID:   rootGroup.ID,
-			CreatedAt: now,
-			UpdatedAt: now,
-		}
-		err := usergroup.CreateUserGroup(db, userGroup)
-		if err != nil {
-			return errors.New("failed to assign root user to root group: " + err.Error())
-		}
+	userGroup := aclmodel.UserGroup{
+		UserID:    rootUser.ID,
+		GroupID:   rootGroup.ID,
+		Type:      aclmodel.TypeAdmin,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	err = usergroup.CreateUserGroup(db, userGroup)
+	if err != nil {
+		return errors.New("failed to assign root user to root group: " + err.Error())
 	}
 
 	fmt.Println("Root group and root user setup complete.")

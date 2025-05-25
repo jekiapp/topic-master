@@ -23,7 +23,7 @@ type ChangePasswordResponse struct {
 }
 
 type iUserPasswordRepo interface {
-	GetUserByID(userID string) (*acl.User, error)
+	GetUserByID(userID string) (acl.User, error)
 	UpdateUser(user acl.User) error
 }
 
@@ -31,7 +31,7 @@ type changePasswordRepo struct {
 	db *buntdb.DB
 }
 
-func (r *changePasswordRepo) GetUserByID(userID string) (*acl.User, error) {
+func (r *changePasswordRepo) GetUserByID(userID string) (acl.User, error) {
 	return userrepo.GetUserByID(r.db, userID)
 }
 
@@ -54,7 +54,7 @@ func (uc ChangePasswordUsecase) Handle(ctx context.Context, req ChangePasswordRe
 		return ChangePasswordResponse{Success: false}, errors.New("missing required fields: user_id, old_password, or new_password")
 	}
 	user, err := uc.repo.GetUserByID(req.UserID)
-	if err != nil || user == nil {
+	if err != nil {
 		return ChangePasswordResponse{Success: false}, errors.New("user not found")
 	}
 	// Hash the old password and compare
@@ -68,7 +68,7 @@ func (uc ChangePasswordUsecase) Handle(ctx context.Context, req ChangePasswordRe
 	hashedNewPassword := hex.EncodeToString(newHash[:])
 	user.Password = hashedNewPassword
 	user.UpdatedAt = time.Now()
-	if err := uc.repo.UpdateUser(*user); err != nil {
+	if err := uc.repo.UpdateUser(user); err != nil {
 		return ChangePasswordResponse{Success: false}, err
 	}
 	return ChangePasswordResponse{Success: true}, nil

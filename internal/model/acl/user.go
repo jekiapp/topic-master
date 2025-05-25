@@ -82,3 +82,8 @@ type Authorization struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
+
+const (
+	TypeAdmin = "admin"
+	TypeUser  = "user"
+)

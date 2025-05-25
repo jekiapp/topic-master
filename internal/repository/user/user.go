@@ -21,13 +21,13 @@ func CreateUser(dbConn *buntdb.DB, user acl.User) error {
 	return db.Insert(dbConn, user)
 }
 
-func GetUserByID(dbConn *buntdb.DB, id string) (*acl.User, error) {
+func GetUserByID(dbConn *buntdb.DB, id string) (acl.User, error) {
 	tmp := acl.User{ID: id}
 	user, err := db.GetByID[acl.User](dbConn, tmp)
 	if err != nil {
-		return nil, err
+		return acl.User{}, err
 	}
-	return &user, nil
+	return user, nil
 }
 
 func UpdateUser(dbConn *buntdb.DB, user acl.User) error {

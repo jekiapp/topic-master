@@ -35,6 +35,11 @@ type Record interface {
 	GetIndexValues() map[string]string
 }
 
+type Pagination struct {
+	Page  int // 1-based
+	Limit int
+}
+
 func Insert(db *buntdb.DB, record Record) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		key := record.GetPrimaryKey()
@@ -155,7 +160,13 @@ func Upsert(db *buntdb.DB, record Record) error {
 	})
 }
 
+type processFunc func(key string, value string) bool
+
 func SelectAll[T any](db *buntdb.DB, record Record, indexName string) ([]T, error) {
+	return SelectPaginated[T](db, record, indexName, nil)
+}
+
+func SelectPaginated[T any](db *buntdb.DB, record Record, indexName string, pagination *Pagination) ([]T, error) {
 	var results []T
 
 	// get index field name
@@ -165,11 +176,28 @@ func SelectAll[T any](db *buntdb.DB, record Record, indexName string) ([]T, erro
 	// get index value for pivot
 	pivot := record.GetIndexValues()[idxField]
 
-	err := db.View(func(tx *buntdb.Tx) error {
-		tx.AscendEqual(indexName, pivot, func(key string, value string) bool {
-			// they key would be like this:
-			// table:<id>:indexname
-			// pick just table:<id>
+	var skip, limit int
+	if pagination != nil && pagination.Limit > 0 {
+		limit = pagination.Limit
+		if pagination.Page == 0 {
+			pagination.Page = 1
+		}
+		if pagination.Page > 1 {
+			skip = (pagination.Page - 1) * pagination.Limit
+		}
+	}
+	idx := 0
+	collected := 0
+
+	process := func(tx *buntdb.Tx) processFunc {
+		return func(key string, value string) bool {
+			if skip > 0 && idx < skip {
+				idx++
+				return true
+			}
+			if limit > 0 && collected >= limit {
+				return false // stop iteration
+			}
 			newKey := strings.TrimSuffix(key, ":"+idxField)
 			val, err := tx.Get(newKey)
 			if err != nil {
@@ -183,8 +211,18 @@ func SelectAll[T any](db *buntdb.DB, record Record, indexName string) ([]T, erro
 				return false
 			}
 			results = append(results, result)
+			idx++
+			collected++
 			return true
-		})
+		}
+	}
+
+	err := db.View(func(tx *buntdb.Tx) error {
+		if pivot == "" {
+			tx.Ascend(indexName, process(tx))
+			return nil
+		}
+		tx.AscendEqual(indexName, pivot, process(tx))
 		return nil
 	})
 	if err != nil {
@@ -205,6 +243,10 @@ func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error)
 
 	// get index value for pivot
 	pivot := record.GetIndexValues()[idxField]
+
+	if pivot == "" {
+		return result, fmt.Errorf("pivot %s is empty", idxField)
+	}
 
 	found := false
 	err := db.View(func(tx *buntdb.Tx) error {
