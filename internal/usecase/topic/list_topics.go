@@ -5,13 +5,14 @@ import (
 	"errors"
 
 	"github.com/jekiapp/nsqper/internal/model/acl"
+	"github.com/jekiapp/nsqper/internal/model/topic"
 	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
 	"github.com/jekiapp/nsqper/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
 type ListTopicsResponse struct {
-	Topics []acl.Entity `json:"topics"`
+	Topics []topic.Topic `json:"topics"`
 }
 
 type iListTopicsRepo interface {
@@ -55,21 +56,31 @@ func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]s
 		return ListTopicsResponse{}, errors.New("user is not a member of any group")
 	}
 	group := usergroups[0]
-	var topics []acl.Entity
+	var topicEntities []acl.Entity
 	var err error
 	if group.GroupName == "root" {
-		topics, err = uc.repo.GetAllNsqTopicEntities()
+		topicEntities, err = uc.repo.GetAllNsqTopicEntities()
 	} else {
 		for _, group := range usergroups {
 			t, err := uc.repo.ListNsqTopicEntitiesByGroup(group.GroupName)
 			if err != nil {
 				return ListTopicsResponse{}, err
 			}
-			topics = append(topics, t...)
+			topicEntities = append(topicEntities, t...)
 		}
 	}
 	if err != nil {
 		return ListTopicsResponse{}, err
+	}
+	topics := make([]topic.Topic, len(topicEntities))
+	for i, t := range topicEntities {
+		topics[i] = topic.Topic{
+			ID:          t.ID,
+			Name:        t.Name,
+			Description: t.Description,
+			Status:      t.Status,
+			Group:       t.GroupOwner,
+		}
 	}
 	return ListTopicsResponse{Topics: topics}, nil
 }

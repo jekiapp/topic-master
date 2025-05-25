@@ -16,7 +16,8 @@ $(function() {
         $('#topics-table tbody').html(`<tr><td colspan="7" style="color: var(--error-red);">${resp.error}</td></tr>`);
         return;
       }
-      const rows = (resp.topics || []).map(function(t) {
+      const topics = resp.data && resp.data.topics ? resp.data.topics : [];
+      const rows = topics.map(function(t) {
         return `<tr>
           <td>${t.name || ''}</td>
           <td>${t.group || ''}</td>
