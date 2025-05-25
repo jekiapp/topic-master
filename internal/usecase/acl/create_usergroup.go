@@ -21,7 +21,7 @@ type CreateUserGroupResponse struct {
 
 type iGroupRepo interface {
 	CreateGroup(group acl.Group) error
-	GetGroupByName(name string) (*acl.Group, error)
+	GetGroupByName(name string) (acl.Group, error)
 }
 
 type createGroupRepo struct {
@@ -32,7 +32,7 @@ func (r *createGroupRepo) CreateGroup(group acl.Group) error {
 	return grouprepo.CreateGroup(r.db, group)
 }
 
-func (r *createGroupRepo) GetGroupByName(name string) (*acl.Group, error) {
+func (r *createGroupRepo) GetGroupByName(name string) (acl.Group, error) {
 	return grouprepo.GetGroupByName(r.db, name)
 }
 
@@ -51,8 +51,8 @@ func (uc CreateUserGroupUsecase) Handle(ctx context.Context, req CreateUserGroup
 		return CreateUserGroupResponse{}, errors.New("missing required field: name")
 	}
 	// Check if group already exists
-	existingGroup, err := uc.repo.GetGroupByName(req.Name)
-	if err == nil && existingGroup != nil {
+	_, err := uc.repo.GetGroupByName(req.Name)
+	if err == nil {
 		return CreateUserGroupResponse{}, errors.New("group already exists")
 	}
 	group := acl.Group{

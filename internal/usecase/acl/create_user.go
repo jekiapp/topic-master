@@ -30,7 +30,7 @@ type CreateUserResponse struct {
 
 type iUserRepo interface {
 	CreateUser(user acl.User) error
-	GetUserByUsername(username string) (*acl.User, error)
+	GetUserByUsername(username string) (acl.User, error)
 }
 
 type CreateUserUsecase struct {
@@ -62,8 +62,8 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 		return CreateUserResponse{}, errors.New("missing required fields: username, name, email, or type")
 	}
 	// Check if user already exists
-	existingUser, err := uc.repo.GetUserByUsername(req.Username)
-	if err == nil && existingUser != nil {
+	_, err := uc.repo.GetUserByUsername(req.Username)
+	if err == nil {
 		return CreateUserResponse{}, errors.New("user already exists")
 	}
 	// Generate UUID for user ID
@@ -105,6 +105,6 @@ func (r *createUserRepo) CreateUser(user acl.User) error {
 	return userrepo.CreateUser(r.db, user)
 }
 
-func (r *createUserRepo) GetUserByUsername(username string) (*acl.User, error) {
+func (r *createUserRepo) GetUserByUsername(username string) (acl.User, error) {
 	return userrepo.GetUserByUsername(r.db, username)
 }

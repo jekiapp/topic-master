@@ -38,13 +38,13 @@ func UpsertUser(dbConn *buntdb.DB, user acl.User) error {
 	return db.Upsert(dbConn, user)
 }
 
-func GetUserByUsername(dbConn *buntdb.DB, username string) (*acl.User, error) {
+func GetUserByUsername(dbConn *buntdb.DB, username string) (acl.User, error) {
 	tmp := acl.User{Username: username}
 	user, err := db.SelectOne[acl.User](dbConn, tmp, acl.IdxUser_Username)
 	if err != nil {
-		return nil, err
+		return acl.User{}, err
 	}
-	return &user, nil
+	return user, nil
 }
 
 // ListGroupsForUser fetches all groups for a user and returns []acl.GroupRole

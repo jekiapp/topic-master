@@ -14,6 +14,7 @@ import (
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	usergrouprepo "github.com/jekiapp/nsqper/internal/repository/user"
 	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
+	dbPkg "github.com/jekiapp/nsqper/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -28,7 +29,7 @@ type LoginResponse struct {
 }
 
 type iUserLoginRepo interface {
-	GetUserByUsername(username string) (*acl.User, error)
+	GetUserByUsername(username string) (acl.User, error)
 	ListGroupsForUser(userID, userType string) ([]acl.GroupRole, error)
 }
 
@@ -36,7 +37,7 @@ type loginRepo struct {
 	db *buntdb.DB
 }
 
-func (r *loginRepo) GetUserByUsername(username string) (*acl.User, error) {
+func (r *loginRepo) GetUserByUsername(username string) (acl.User, error) {
 	return userrepo.GetUserByUsername(r.db, username)
 }
 
@@ -96,10 +97,10 @@ func (uc LoginUsecase) Handle(w http.ResponseWriter, r *http.Request) {
 func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResponse, error) {
 	user, err := uc.repo.GetUserByUsername(req.Username)
 	if err != nil {
+		if err == dbPkg.ErrNotFound {
+			return LoginResponse{}, errors.New("user not found")
+		}
 		return LoginResponse{}, err
-	}
-	if user == nil {
-		return LoginResponse{}, errors.New("user not found")
 	}
 
 	// Hash the provided password and compare
@@ -130,6 +131,6 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 
 	return LoginResponse{
 		Token: token,
-		User:  *user,
+		User:  user,
 	}, nil
 }

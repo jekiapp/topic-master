@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -8,6 +9,8 @@ import (
 	"github.com/tidwall/buntdb"
 	"github.com/vmihailenco/msgpack/v5"
 )
+
+var ErrNotFound = errors.New("record not found")
 
 type DbConfig struct {
 	Host string
@@ -184,6 +187,9 @@ func SelectAll[T any](db *buntdb.DB, record Record, indexName string) ([]T, erro
 	if err != nil {
 		return nil, err
 	}
+	if len(results) == 0 {
+		return results, ErrNotFound
+	}
 	return results, nil
 }
 
@@ -197,6 +203,7 @@ func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error)
 	// get index value for pivot
 	pivot := record.GetIndexValues()[idxField]
 
+	found := false
 	err := db.View(func(tx *buntdb.Tx) error {
 		tx.AscendEqual(indexName, pivot, func(key string, value string) bool {
 			// they key would be like this:
@@ -213,11 +220,14 @@ func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error)
 				log.Printf("error unmarshalling value: %s", err)
 				return false
 			}
+			found = true
 			return false
 		})
 		return nil
 	})
-
+	if !found {
+		return result, ErrNotFound
+	}
 	return result, err
 }
 

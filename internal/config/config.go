@@ -11,6 +11,7 @@ import (
 	// Correct internal imports
 
 	usergroup "github.com/jekiapp/nsqper/internal/repository/user"
+	dbPkg "github.com/jekiapp/nsqper/pkg/db"
 )
 
 const configKey = "nsqper_config"
@@ -49,9 +50,21 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 
 // CheckRootGroupAndUserExist returns true if both root group and root user exist in the DB.
 func CheckRootGroupAndUserExist(db *buntdb.DB) (bool, error) {
-	group, _ := usergroup.GetGroupByName(db, "root")
-	user, _ := usergroup.GetUserByUsername(db, "root")
-	return group != nil && user != nil, nil
+	_, err := usergroup.GetGroupByName(db, "root")
+	if err != nil && err != dbPkg.ErrNotFound {
+		return false, err
+	}
+	if err == dbPkg.ErrNotFound {
+		return false, nil
+	}
+	_, err = usergroup.GetUserByUsername(db, "root")
+	if err != nil && err != dbPkg.ErrNotFound {
+		return false, err
+	}
+	if err == dbPkg.ErrNotFound {
+		return false, nil
+	}
+	return true, nil
 }
 
 // SetupNewConfig creates a new config with a random secret key, saves it to the db, and returns it.
