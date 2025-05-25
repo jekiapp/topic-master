@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/jekiapp/nsqper/internal/model/acl"
+	dbPkg "github.com/jekiapp/nsqper/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -33,9 +34,11 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 
 	// Get all topic entities currently in the DB
 	dbEntities, err := iSyncTopics.GetAllNsqTopicEntities()
-	if err != nil {
+	if err != nil && err != dbPkg.ErrNotFound {
 		return err
 	}
+
+	var errSet error
 	// Build a set for fast lookup of DB topics
 	dbTopicSet := make(map[string]struct{}, len(dbEntities))
 	for _, entity := range dbEntities {
@@ -44,7 +47,7 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 		if _, ok := topicSet[entity.Name]; !ok {
 			if delErr := iSyncTopics.DeleteNsqTopicEntity(entity.Name); delErr != nil {
 				// Collect deletion errors
-				err = errors.Join(err, errors.New("DeleteNsqTopicEntity("+entity.Name+"): "+delErr.Error()))
+				errSet = errors.Join(errSet, errors.New("DeleteNsqTopicEntity("+entity.Name+"): "+delErr.Error()))
 			}
 		}
 	}
@@ -54,11 +57,11 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 		if _, ok := dbTopicSet[t]; !ok {
 			if _, createErr := iSyncTopics.CreateNsqTopicEntity(t); createErr != nil {
 				// Collect creation errors
-				err = errors.Join(err, errors.New("CreateNsqTopicEntity("+t+"): "+createErr.Error()))
+				errSet = errors.Join(errSet, errors.New("CreateNsqTopicEntity("+t+"): "+createErr.Error()))
 			}
 		}
 	}
 
 	// Return any collected errors (nil if none)
-	return err
+	return errSet
 }

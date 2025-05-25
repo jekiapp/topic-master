@@ -46,12 +46,13 @@ func main() {
 		}
 	}
 
+	// make sure indexes are created before checking and setting up root
+	repository.Init(cfg, db)
+
 	err = config.CheckAndSetupRoot(db)
 	if err != nil {
 		log.Fatalf("failed to check and setup root: %v", err)
 	}
-
-	repository.Init(cfg, db)
 
 	mux := http.NewServeMux()
 	handler := initHandler(db, cfg)

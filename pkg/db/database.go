@@ -58,6 +58,9 @@ func Insert(db *buntdb.DB, record Record) error {
 		// set index with rollback on failure
 		setIndexes := make([]string, 0)
 		for name, value := range record.GetIndexValues() {
+			if value == "" {
+				return fmt.Errorf("index %s value is empty", name)
+			}
 			idxKey := key + ":" + name
 			_, _, err = tx.Set(idxKey, value, nil)
 			if err != nil {

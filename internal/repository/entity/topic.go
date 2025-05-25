@@ -10,12 +10,13 @@ import (
 
 func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
 	entity := &acl.Entity{
-		TypeID:    acl.EntityType_NSQTopic,
-		Name:      topic,
-		Resource:  "NSQ",
-		Status:    "active",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		TypeID:     acl.EntityType_NSQTopic,
+		Name:       topic,
+		Resource:   "NSQ",
+		Status:     "active",
+		GroupOwner: "root",
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 	err := db.Insert(dbConn, *entity)
 	if err != nil {
