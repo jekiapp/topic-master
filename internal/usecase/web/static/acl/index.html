@@ -61,15 +61,30 @@
             <h3>Create New Group</h3>
             <form id="create-group-form">
                 <div id="group-form-error" class="form-error" style="display:none;"></div>
-                <label for="group-name">Group Name</label>
-                <input type="text" id="group-name" name="group-name" required>
-                <label for="group-desc">Description</label>
-                <input type="text" id="group-desc" name="group-desc">
+                <div class="form-group">
+                  <label for="group-name">Group Name</label>
+                  <input type="text" id="group-name" name="group-name" required>
+                </div>
+                <div class="form-group">
+                  <label for="group-desc">Description</label>
+                  <input type="text" id="group-desc" name="group-desc">
+                </div>
                 <div class="popup-actions">
                     <button type="button" id="cancel-group-btn">Cancel</button>
                     <button type="submit" class="themed-btn">Submit</button>
                 </div>
             </form>
+        </div>
+    </div>
+    <!-- Delete confirmation popup -->
+    <div id="delete-group-popup-overlay" class="popup-overlay" style="display:none;">
+        <div class="popup-form">
+            <h3>Delete Group</h3>
+            <div id="delete-group-message" style="margin-bottom: 16px;"></div>
+            <div class="popup-actions">
+                <button type="button" id="cancel-delete-group-btn">Cancel</button>
+                <button type="button" id="confirm-delete-group-btn" class="themed-btn" style="background:#d9534f;">Delete</button>
+            </div>
         </div>
     </div>
 </body>

@@ -1,3 +1,6 @@
+let pendingDeleteGroupId = null;
+let pendingDeleteGroupName = '';
+
 function renderGroupRow(g) {
   return `
     <tr data-group-id="${g.id}" data-group-name="${g.name}" data-group-desc="${g.description}">
@@ -147,6 +150,19 @@ function handleGroupFormSubmit(e) {
   }
 }
 
+function showDeleteGroupPopup(groupId, groupName) {
+  pendingDeleteGroupId = groupId;
+  pendingDeleteGroupName = groupName;
+  $('#delete-group-message').text(`Are you sure you want to delete group '${groupName}'?`);
+  $('#delete-group-popup-overlay').show();
+}
+
+function closeDeleteGroupPopup() {
+  pendingDeleteGroupId = null;
+  pendingDeleteGroupName = '';
+  $('#delete-group-popup-overlay').hide();
+}
+
 function bindGroupEvents() {
   // Create group button
   $('#create-group-btn').on('click', function() {
@@ -176,29 +192,39 @@ function bindGroupEvents() {
     const $tr = $(this).closest('tr');
     const groupName = $tr.data('group-name');
     const groupId = $tr.data('group-id');
-    if (confirm(`Are you sure you want to delete group '${groupName}'?`)) {
-      $.ajax({
-        url: '/api/group/delete-group',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ id: groupId }),
-        success: function(resp) {
-          fillGroupsTable();
-        },
-        error: function(xhr) {
-          let msg = 'Failed to delete group';
-          if (xhr.responseJSON && xhr.responseJSON.error) {
-            msg = xhr.responseJSON.error;
-          } else if (xhr.responseText) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              if (data.error) msg = data.error;
-            } catch {}
-          }
-          alert(msg);
+    showDeleteGroupPopup(groupId, groupName);
+  });
+
+  // Confirm delete
+  $('#confirm-delete-group-btn').on('click', function() {
+    if (!pendingDeleteGroupId) return;
+    $.ajax({
+      url: '/api/group/delete-group',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ id: pendingDeleteGroupId }),
+      success: function(resp) {
+        closeDeleteGroupPopup();
+        fillGroupsTable();
+      },
+      error: function(xhr) {
+        let msg = 'Failed to delete group';
+        if (xhr.responseJSON && xhr.responseJSON.error) {
+          msg = xhr.responseJSON.error;
+        } else if (xhr.responseText) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.error) msg = data.error;
+          } catch {}
         }
-      });
-    }
+        alert(msg);
+      }
+    });
+  });
+
+  // Cancel delete
+  $('#cancel-delete-group-btn').on('click', function() {
+    closeDeleteGroupPopup();
   });
 
   // Form submit
