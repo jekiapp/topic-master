@@ -20,6 +20,25 @@ function renderGroupRow(g) {
   `;
 }
 
+function renderUserRow(u) {
+  return `<tr data-user-id="${u.id}" data-username="${u.username}">
+    <td>${u.username}</td>
+    <td>${u.name}</td>
+    <td>${u.email}</td>
+    <td>${u.groups}</td>
+    <td>${u.status}</td>
+    <td>
+      <span class="action-icon edit-user" title="Edit">
+        <img src="icons/edit_icon.png" alt="Edit" style="width:15px;height:18px;vertical-align:middle;" />
+      </span>
+      <span style="display:inline-block; width:3px;"></span>
+      <span class="action-icon delete-user" title="Delete">
+        <img src="icons/delete_icon.png" alt="Delete" style="width:15px;height:18px;vertical-align:middle;" />
+      </span>
+    </td>
+  </tr>`;
+}
+
 function fillGroupsTable() {
   const $tbody = $('#groups-tbody');
   $tbody.empty();
@@ -49,7 +68,7 @@ function fillUsersTable() {
     success: function(resp) {
       if (resp && resp.data && resp.data.users) {
         resp.data.users.forEach(u => {
-          $tbody.append(`<tr><td>${u.username}</td><td>${u.name}</td><td>${u.email}</td><td>${u.groups}</td><td>${u.status}</td></tr>`);
+          $tbody.append(renderUserRow(u));
         });
       }
     }
@@ -244,33 +263,74 @@ function showUserPopup() {
     success: function(resp) {
       const $datalist = $('#group-list');
       $datalist.empty();
+      window._groupNameToId = {};
+      window._groupIdToName = {};
+      window._availableGroups = [];
       if (resp && resp.data && resp.data.groups) {
         resp.data.groups.forEach(function(g) {
           $datalist.append(`<option value="${g.name}"></option>`);
-        });
-        // Store group name to id mapping for later
-        window._groupNameToId = {};
-        resp.data.groups.forEach(function(g) {
           window._groupNameToId[g.name] = g.id;
+          window._groupIdToName[g.id] = g.name;
+          window._availableGroups.push({id: g.id, name: g.name});
         });
       }
+      // Reset selected groups table
+      $('#selected-groups-table tbody').empty();
     }
   });
-  // Clear hidden group id
-  $('#user-group-id').val('');
+  // Clear group name input
+  $('#user-group-name').val('');
 }
 
-// Set hidden group id when group name changes
-$(document).on('input', '#user-group-name', function() {
+// Add group to table on selection
+$(document).on('change', '#user-group-name', function() {
   var name = $(this).val();
   var id = window._groupNameToId ? window._groupNameToId[name] : '';
-  $('#user-group-id').val(id || '');
+  if (id && name) {
+    // Add row if not already present
+    if ($(`#selected-groups-table tbody tr[data-group-id="${id}"]`).length === 0) {
+      $('#selected-groups-table tbody').append(
+        `<tr data-group-id="${id}">
+          <td style="padding:4px 8px;">
+            ${name}
+            <span class="remove-group-row" style="margin-left:8px;cursor:pointer;color:#d9534f;font-weight:bold;">&times;</span>
+          </td>
+          <td style="padding:4px 8px;">
+            <select class="group-type-select themed-input" style="min-width:90px;">
+              <option value="member" selected>member</option>
+              <option value="admin">admin</option>
+            </select>
+          </td>
+        </tr>`
+      );
+      // Remove from datalist
+      $(`#group-list option[value="${name}"]`).remove();
+    }
+    // Clear input
+    $(this).val('');
+  }
 });
 
-function closeUserPopup() {
-  $('#user-popup-overlay').hide();
-  $('#user-form-error').hide().text('');
-  $('#create-user-form')[0].reset();
+// Remove group row
+$(document).on('click', '.remove-group-row', function() {
+  var $row = $(this).closest('tr');
+  var id = $row.data('group-id');
+  var name = window._groupIdToName ? window._groupIdToName[id] : '';
+  if (name) {
+    // Re-add to datalist
+    $('#group-list').append(`<option value="${name}"></option>`);
+  }
+  $row.remove();
+});
+
+function collectGroupMappings() {
+  var groups = [];
+  $('#selected-groups-table tbody tr').each(function() {
+    var group_id = $(this).data('group-id');
+    var type = $(this).find('.group-type-select').val();
+    groups.push({ group_id: group_id, type: type });
+  });
+  return groups;
 }
 
 function handleUserFormSubmit(e) {
@@ -279,8 +339,7 @@ function handleUserFormSubmit(e) {
   const username = $('#user-username').val();
   const name = $('#user-name').val();
   const email = $('#user-email').val();
-  const groupId = $('#user-group-id').val();
-  const type = $('#user-type').val();
+  const groups = collectGroupMappings();
   $.ajax({
     url: '/api/user/create',
     method: 'POST',
@@ -289,8 +348,7 @@ function handleUserFormSubmit(e) {
       username: username,
       name: name,
       email: email,
-      group_id: groupId,
-      type: type
+      groups: groups
     }),
     success: function(resp) {
       closeUserPopup();
@@ -340,6 +398,15 @@ function bindUserEvents() {
       navigator.clipboard.writeText(pwd);
     }
   });
+}
+
+function closeUserPopup() {
+  $('#user-popup-overlay').hide();
+  $('#user-form-error').hide().text('');
+  $('#create-user-form')[0].reset();
+  $('#selected-groups-table tbody').empty();
+  $('#group-list').empty();
+  $('#user-group-name').val('');
 }
 
 $(function() {

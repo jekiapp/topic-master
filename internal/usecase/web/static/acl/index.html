@@ -50,6 +50,7 @@
                         <th>Email</th>
                         <th>Groups</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="users-tbody">
@@ -99,17 +100,20 @@
                   <input type="email" id="user-email" name="user-email" class="themed-input">
                 </div>
                 <div class="form-group">
-                  <label for="user-group-id">Group</label>
-                  <input list="group-list" id="user-group-name" name="user-group-name" class="themed-input" autocomplete="off" required>
-                  <datalist id="group-list"></datalist>
-                  <input type="hidden" id="user-group-id" name="user-group-id" required>
-                </div>
-                <div class="form-group">
-                  <label for="user-type">Type</label>
-                  <select id="user-type" name="user-type" class="themed-input" required>
-                    <option value="admin">admin</option>
-                    <option value="member">member</option>
-                  </select>
+                  <label for="user-group-table">Groups</label>
+                  <div id="user-group-multiselect">
+                    <input list="group-list" id="user-group-name" name="user-group-name" class="themed-input" autocomplete="off" placeholder="Type to search group...">
+                    <datalist id="group-list"></datalist>
+                    <table id="selected-groups-table" style="margin-top:8px;width:100%;border-collapse:collapse;">
+                      <!-- <thead>
+                        <tr style="background:#f5f5f5;">
+                          <th style="width:60%;text-align:left;padding:4px 8px;">Group</th>
+                          <th style="width:40%;text-align:left;padding:4px 8px;">Type</th>
+                        </tr>
+                      </thead> -->
+                      <tbody></tbody>
+                    </table>
+                  </div>
                 </div>
                 <div class="popup-actions">
                     <button type="button" id="cancel-user-btn">Cancel</button>
@@ -150,20 +154,5 @@
             </div>
         </div>
     </div>
-    <style>
-      .popup-form input,
-      .popup-form select {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 6px 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 1em;
-        background: #fff;
-        color: #222;
-        margin-top: 2px;
-        margin-bottom: 2px;
-      }
-    </style>
 </body>
 </html>

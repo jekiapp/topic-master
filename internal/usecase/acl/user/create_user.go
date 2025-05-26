@@ -21,8 +21,10 @@ type CreateUserRequest struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
-	GroupID  string `json:"group_id"`
-	Type     string `json:"type"`
+	Groups   []struct {
+		GroupID string `json:"group_id"`
+		Type    string `json:"type"`
+	} `json:"groups"`
 }
 
 type CreateUserResponse struct {
@@ -63,14 +65,19 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 	if req.Username == "" {
 		return errors.New("username is required")
 	}
-	if req.GroupID == "" {
-		return errors.New("group_id is required")
+	if len(req.Groups) == 0 {
+		return errors.New("at least one group is required")
+	}
+	for i, g := range req.Groups {
+		if g.GroupID == "" {
+			return errors.New("group_id is required for group index " + string(i))
+		}
+		if g.Type == "" {
+			return errors.New("type is required for group index " + string(i))
+		}
 	}
 	if req.Name == "" {
 		return errors.New("name is required")
-	}
-	if req.Type == "" {
-		return errors.New("type is required")
 	}
 	if req.Email == "" {
 		return errors.New("email is required")
@@ -108,7 +115,7 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 		Password:  hashedPassword,
 		Email:     req.Email,
 		Phone:     req.Phone,
-		Type:      req.Type,
+		Type:      "", // Not used at user level anymore
 		Status:    "pending",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -117,16 +124,18 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 		return CreateUserResponse{}, err
 	}
 
-	// create user group mapping
-	userGroup := acl.UserGroup{
-		UserID:    user.ID,
-		GroupID:   req.GroupID,
-		Type:      req.Type,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	if err := uc.repo.CreateUserGroup(userGroup); err != nil {
-		return CreateUserResponse{}, err
+	// create user group mappings for each group
+	for _, group := range req.Groups {
+		userGroup := acl.UserGroup{
+			UserID:    user.ID,
+			GroupID:   group.GroupID,
+			Type:      group.Type,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		if err := uc.repo.CreateUserGroup(userGroup); err != nil {
+			return CreateUserResponse{}, err
+		}
 	}
 
 	return CreateUserResponse{Username: user.Username, GeneratedPassword: password}, nil
