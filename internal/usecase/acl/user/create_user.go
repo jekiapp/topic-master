@@ -33,6 +33,7 @@ type CreateUserResponse struct {
 type iUserRepo interface {
 	CreateUser(user acl.User) error
 	GetUserByUsername(username string) (acl.User, error)
+	CreateUserGroup(userGroup acl.UserGroup) error
 }
 
 type CreateUserUsecase struct {
@@ -58,10 +59,29 @@ func generateRandomPassword(length int) (string, error) {
 	return string(result), nil
 }
 
+func validateCreateUserRequest(req CreateUserRequest) error {
+	if req.Username == "" {
+		return errors.New("username is required")
+	}
+	if req.GroupID == "" {
+		return errors.New("group_id is required")
+	}
+	if req.Name == "" {
+		return errors.New("name is required")
+	}
+	if req.Type == "" {
+		return errors.New("type is required")
+	}
+	if req.Email == "" {
+		return errors.New("email is required")
+	}
+	return nil
+}
+
 func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (CreateUserResponse, error) {
 	// Basic input validation
-	if req.Username == "" || req.Name == "" || req.Email == "" || req.Type == "" {
-		return CreateUserResponse{}, errors.New("missing required fields: username, name, email, or type")
+	if err := validateCreateUserRequest(req); err != nil {
+		return CreateUserResponse{}, err
 	}
 	// Check if user already exists
 	_, err := uc.repo.GetUserByUsername(req.Username)
@@ -96,6 +116,19 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 	if err := uc.repo.CreateUser(user); err != nil {
 		return CreateUserResponse{}, err
 	}
+
+	// create user group mapping
+	userGroup := acl.UserGroup{
+		UserID:    user.ID,
+		GroupID:   req.GroupID,
+		Type:      req.Type,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	if err := uc.repo.CreateUserGroup(userGroup); err != nil {
+		return CreateUserResponse{}, err
+	}
+
 	return CreateUserResponse{Username: user.Username, GeneratedPassword: password}, nil
 }
 
@@ -109,4 +142,8 @@ func (r *createUserRepo) CreateUser(user acl.User) error {
 
 func (r *createUserRepo) GetUserByUsername(username string) (acl.User, error) {
 	return userrepo.GetUserByUsername(r.db, username)
+}
+
+func (r *createUserRepo) CreateUserGroup(userGroup acl.UserGroup) error {
+	return userrepo.CreateUserGroup(r.db, userGroup)
 }

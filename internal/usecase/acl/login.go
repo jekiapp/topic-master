@@ -114,7 +114,7 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 	// Fetch all groups for the user
 	groups, err := uc.repo.ListGroupsForUser(user.ID, user.Type)
 	if err != nil {
-		return LoginResponse{}, errors.New("failed to fetch user groups")
+		return LoginResponse{}, errors.New("failed to fetch user groups (" + err.Error() + ")")
 	}
 
 	// Prepare JWT claims

@@ -87,7 +87,8 @@ tr:last-child td {
     font-weight: 500;
     margin-bottom: 4px;
 }
-.popup-form input[type="text"] {
+.popup-form input,
+.popup-form select {
     padding: 8px;
     border: 1px solid var(--border-purple, #d6b4e7);
     border-radius: 4px;
@@ -96,7 +97,8 @@ tr:last-child td {
     background: var(--input-bg, #faf6fc);
     color: var(--primary-purple, #2d2231);
 }
-.popup-form input[type="text"]:focus {
+
+.popup-form input:focus {
     outline: 2px solid var(--accent-purple, #8a69c4);
     box-shadow: 0 0 0 2px var(--shadow-focus, #e9d6f7);
 }

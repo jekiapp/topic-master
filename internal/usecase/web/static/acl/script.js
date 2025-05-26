@@ -231,8 +231,120 @@ function bindGroupEvents() {
   $('#create-group-form').on('submit', handleGroupFormSubmit);
 }
 
+function showUserPopup() {
+  $('#user-popup-overlay').show();
+  $('#user-form-error').hide().text('');
+  $('#create-user-form')[0].reset();
+  // Populate group datalist with names only
+  $.ajax({
+    url: '/api/group/list',
+    method: 'POST',
+    contentType: 'application/json',
+    data: '{}',
+    success: function(resp) {
+      const $datalist = $('#group-list');
+      $datalist.empty();
+      if (resp && resp.data && resp.data.groups) {
+        resp.data.groups.forEach(function(g) {
+          $datalist.append(`<option value="${g.name}"></option>`);
+        });
+        // Store group name to id mapping for later
+        window._groupNameToId = {};
+        resp.data.groups.forEach(function(g) {
+          window._groupNameToId[g.name] = g.id;
+        });
+      }
+    }
+  });
+  // Clear hidden group id
+  $('#user-group-id').val('');
+}
+
+// Set hidden group id when group name changes
+$(document).on('input', '#user-group-name', function() {
+  var name = $(this).val();
+  var id = window._groupNameToId ? window._groupNameToId[name] : '';
+  $('#user-group-id').val(id || '');
+});
+
+function closeUserPopup() {
+  $('#user-popup-overlay').hide();
+  $('#user-form-error').hide().text('');
+  $('#create-user-form')[0].reset();
+}
+
+function handleUserFormSubmit(e) {
+  e.preventDefault();
+  $('#user-form-error').hide().text('');
+  const username = $('#user-username').val();
+  const name = $('#user-name').val();
+  const email = $('#user-email').val();
+  const groupId = $('#user-group-id').val();
+  const type = $('#user-type').val();
+  $.ajax({
+    url: '/api/user/create',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+      username: username,
+      name: name,
+      email: email,
+      group_id: groupId,
+      type: type
+    }),
+    success: function(resp) {
+      closeUserPopup();
+      if (resp && resp.data) {
+        $('#created-username').text(resp.data.username || '');
+        $('#created-password').text(resp.data.generated_password || '');
+        $('#user-success-popup-overlay').show();
+      }
+      fillUsersTable();
+    },
+    error: function(xhr) {
+      let msg = 'Failed to create user';
+      if (xhr.responseJSON && xhr.responseJSON.error) {
+        msg = xhr.responseJSON.error;
+      } else if (xhr.responseText) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data.error) msg = data.error;
+        } catch {}
+      }
+      $('#user-form-error').text(msg).show();
+    }
+  });
+}
+
+function bindUserEvents() {
+  // Create user button
+  $('#create-user-btn').on('click', function() {
+    showUserPopup();
+  });
+  // Cancel button
+  $('#cancel-user-btn').on('click', function() {
+    closeUserPopup();
+  });
+  // Form submit
+  $('#create-user-form').on('submit', handleUserFormSubmit);
+  // Close user success modal
+  $('#close-user-success-btn').on('click', function() {
+    $('#user-success-popup-overlay').hide();
+    $('#created-username').text('');
+    $('#created-password').text('');
+  });
+  // Copy password button
+  $('#copy-password-btn').on('click', function() {
+    const pwd = $('#created-password').text();
+    if (pwd) {
+      navigator.clipboard.writeText(pwd);
+    }
+  });
+}
+
 $(function() {
   fillGroupsTable();
   fillUsersTable();
   bindGroupEvents();
+  bindUserEvents();
 });
