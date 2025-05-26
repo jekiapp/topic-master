@@ -1,15 +1,34 @@
+function renderGroupRow(g) {
+  return `
+    <tr data-group-id="${g.id}" data-group-name="${g.name}" data-group-desc="${g.description}">
+      <td>${g.name}</td>
+      <td>${g.description}</td>
+      <td>${g.members}</td>
+      <td>
+        <span class="action-icon edit-group" title="Edit">
+          <img src="icons/edit_icon.png" alt="Edit" style="width:15px;height:18px;vertical-align:middle;" />
+        </span>
+        <span style="display:inline-block; width:3px;"></span>
+        <span class="action-icon delete-group" title="Delete">
+          <img src="icons/delete_icon.png" alt="Delete" style="width:15px;height:18px;vertical-align:middle;" />
+        </span>
+      </td>
+    </tr>
+  `;
+}
+
 function fillGroupsTable() {
   const $tbody = $('#groups-tbody');
   $tbody.empty();
   $.ajax({
-    url: '/api/group-list',
+    url: '/api/group/list',
     method: 'POST',
     contentType: 'application/json',
     data: '{}',
     success: function(resp) {
       if (resp && resp.data && resp.data.groups) {
         resp.data.groups.forEach(g => {
-          $tbody.append(`<tr><td>${g.name}</td><td>${g.description}</td><td>${g.members}</td></tr>`);
+          $tbody.append(renderGroupRow(g));
         });
       }
     }
@@ -20,7 +39,7 @@ function fillUsersTable() {
   const $tbody = $('#users-tbody');
   $tbody.empty();
   $.ajax({
-    url: '/api/user-list',
+    url: '/api/user/list',
     method: 'POST',
     contentType: 'application/json',
     data: '{}',
@@ -47,33 +66,69 @@ function resetGroupForm() {
   clearGroupFormError();
 }
 
-$(function() {
-  fillGroupsTable();
-  fillUsersTable();
+function showGroupPopup({ mode, group = {} }) {
+  if (mode === 'edit') {
+    $('#group-popup-overlay h3').text('Edit Group');
+    $('#group-name').val(group.name).prop('disabled', true);
+    $('#group-desc').val(group.description);
+    $('#create-group-form').data('edit-group-id', group.id);
+  } else {
+    $('#group-popup-overlay h3').text('Create New Group');
+    $('#group-name').val('').prop('disabled', false);
+    $('#group-desc').val('');
+    $('#create-group-form').removeData('edit-group-id');
+  }
+  clearGroupFormError();
+  $('#group-popup-overlay').show();
+}
 
-  $('#create-group-btn').on('click', function() {
-    resetGroupForm();
-    $('#group-popup-overlay').show();
-  });
+function closeGroupPopup() {
+  $('#group-popup-overlay').hide();
+  $('#group-popup-overlay h3').text('Create New Group');
+  $('#group-name').prop('disabled', false);
+  $('#create-group-form').removeData('edit-group-id');
+  resetGroupForm();
+}
 
-  $('#cancel-group-btn').on('click', function() {
-    $('#group-popup-overlay').hide();
-    resetGroupForm();
-  });
-
-  $('#create-group-form').on('submit', function(e) {
-    e.preventDefault();
-    clearGroupFormError();
-    const name = $('#group-name').val();
-    const description = $('#group-desc').val();
+function handleGroupFormSubmit(e) {
+  e.preventDefault();
+  clearGroupFormError();
+  const name = $('#group-name').val();
+  const description = $('#group-desc').val();
+  const editId = $('#create-group-form').data('edit-group-id');
+  if (editId) {
+    // Edit mode
     $.ajax({
-      url: '/api/create-group',
+      url: '/api/group/update-group-by-id',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ id: editId, description }),
+      success: function(resp) {
+        closeGroupPopup();
+        fillGroupsTable();
+      },
+      error: function(xhr) {
+        let msg = 'Failed to update group';
+        if (xhr.responseJSON && xhr.responseJSON.error) {
+          msg = xhr.responseJSON.error;
+        } else if (xhr.responseText) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.error) msg = data.error;
+          } catch {}
+        }
+        showGroupFormError(msg);
+      }
+    });
+  } else {
+    // Create mode
+    $.ajax({
+      url: '/api/group/create',
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({ name, description }),
       success: function(resp) {
-        $('#group-popup-overlay').hide();
-        resetGroupForm();
+        closeGroupPopup();
         fillGroupsTable();
       },
       error: function(xhr) {
@@ -89,5 +144,69 @@ $(function() {
         showGroupFormError(msg);
       }
     });
+  }
+}
+
+function bindGroupEvents() {
+  // Create group button
+  $('#create-group-btn').on('click', function() {
+    showGroupPopup({ mode: 'create' });
   });
+
+  // Cancel button
+  $('#cancel-group-btn').on('click', function() {
+    closeGroupPopup();
+  });
+
+  // Edit group icon
+  $(document).on('click', '.edit-group', function() {
+    const $tr = $(this).closest('tr');
+    showGroupPopup({
+      mode: 'edit',
+      group: {
+        id: $tr.data('group-id'),
+        name: $tr.data('group-name'),
+        description: $tr.data('group-desc'),
+      }
+    });
+  });
+
+  // Delete group icon
+  $(document).on('click', '.delete-group', function() {
+    const $tr = $(this).closest('tr');
+    const groupName = $tr.data('group-name');
+    const groupId = $tr.data('group-id');
+    if (confirm(`Are you sure you want to delete group '${groupName}'?`)) {
+      $.ajax({
+        url: '/api/group/delete-group',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: groupId }),
+        success: function(resp) {
+          fillGroupsTable();
+        },
+        error: function(xhr) {
+          let msg = 'Failed to delete group';
+          if (xhr.responseJSON && xhr.responseJSON.error) {
+            msg = xhr.responseJSON.error;
+          } else if (xhr.responseText) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.error) msg = data.error;
+            } catch {}
+          }
+          alert(msg);
+        }
+      });
+    }
+  });
+
+  // Form submit
+  $('#create-group-form').on('submit', handleGroupFormSubmit);
+}
+
+$(function() {
+  fillGroupsTable();
+  fillUsersTable();
+  bindGroupEvents();
 });

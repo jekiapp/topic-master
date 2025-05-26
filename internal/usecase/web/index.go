@@ -44,6 +44,15 @@ func (u *WebUsecase) RenderIndex(w http.ResponseWriter, r *http.Request) error {
 		}
 		w.Write(data)
 		return nil
+	case ".png":
+		w.Header().Set("Content-Type", "image/png")
+		data, err := content.ReadFile(file)
+		if err != nil {
+			http.NotFound(w, r)
+			return err
+		}
+		w.Write(data)
+		return nil
 	}
 
 	tmpl, err := template.ParseFS(content, file)

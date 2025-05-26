@@ -20,6 +20,7 @@ type DeleteGroupResponse struct {
 
 type iDeleteGroupRepo interface {
 	DeleteGroupByID(id string) error
+	GetGroupByID(id string) (acl.Group, error)
 }
 
 type deleteGroupRepo struct {
@@ -28,6 +29,10 @@ type deleteGroupRepo struct {
 
 func (r *deleteGroupRepo) DeleteGroupByID(id string) error {
 	return grouprepo.DeleteGroupByID(r.db, id)
+}
+
+func (r *deleteGroupRepo) GetGroupByID(id string) (acl.Group, error) {
+	return grouprepo.GetGroupByID(r.db, id)
 }
 
 type DeleteGroupUsecase struct {
@@ -58,7 +63,18 @@ func (uc DeleteGroupUsecase) Handle(ctx context.Context, req DeleteGroupRequest)
 	if req.ID == "" {
 		return DeleteGroupResponse{Success: false}, errors.New("missing required field: id")
 	}
-	err := uc.repo.DeleteGroupByID(req.ID)
+
+	// get group by id
+	// if group is root, return error
+	group, err := uc.repo.GetGroupByID(req.ID)
+	if err != nil {
+		return DeleteGroupResponse{Success: false}, err
+	}
+	if group.Name == acl.GroupRoot {
+		return DeleteGroupResponse{Success: false}, errors.New("forbidden: root group cannot be deleted")
+	}
+
+	err = uc.repo.DeleteGroupByID(req.ID)
 	if err != nil {
 		return DeleteGroupResponse{Success: false}, err
 	}

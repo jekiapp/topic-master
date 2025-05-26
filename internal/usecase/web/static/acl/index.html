@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="/colors.css">
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="acl-container">
@@ -19,9 +20,20 @@
                         <th>Name</th>
                         <th>Description</th>
                         <th>Members</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="groups-tbody">
+                    <!-- Example row for structure -->
+                    <tr style="display:none;">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <span class="action-icon edit-group" title="Edit"><i class="fa fa-edit"></i></span>
+                            <span class="action-icon delete-group" title="Delete"><i class="fa fa-trash"></i></span>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

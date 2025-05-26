@@ -151,4 +151,8 @@ tr:last-child td {
     margin-bottom: 8px;
     font-size: 0.98em;
     display: block;
+}
+
+.action-icon {
+    cursor: pointer;
 } 

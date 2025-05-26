@@ -23,6 +23,7 @@ type GetGroupListResponse struct {
 }
 
 type GroupListItem struct {
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Members     string `json:"members"`
@@ -70,6 +71,7 @@ func (uc GetGroupListUsecase) Handle(ctx context.Context, req GetGroupListReques
 			}
 		}
 		result = append(result, GroupListItem{
+			ID:          g.ID,
 			Name:        g.Name,
 			Description: g.Description,
 			Members:     strings.Join(usernames, ","),
