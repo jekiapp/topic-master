@@ -16,9 +16,10 @@ type GroupRole struct {
 }
 
 const (
-	StatusUserActive   = "active"
-	StatusUserPending  = "pending"
-	StatusUserInactive = "inactive"
+	StatusUserActive     = "active"
+	StatusUserInApproval = "in_approval" // apply to signup, waiting for approval
+	StatusUserPending    = "pending"     // created by root, but not yet activate
+	StatusUserInactive   = "inactive"
 )
 
 // User represents a system user (master)

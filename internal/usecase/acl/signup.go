@@ -1,14 +1,9 @@
-// this is a signup usecase
-// it will receive a request from signup/new/script.js
-// it will create a new application, using the model/acl/application.go Application struct
-// select all the member of root group, then each one of them will create a new applicationAssignment
-// then select all the admin member of the requested group, then each one of them will create a new applicationAssignment
-// then create a new record of ApplicationHistory as "waiting for approval"
-
 package acl
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -21,11 +16,13 @@ import (
 )
 
 type SignupRequest struct {
-	Username  string `json:"username"`
-	Name      string `json:"name"`
-	Reason    string `json:"reason"`
-	GroupID   string `json:"group_id"`
-	GroupType string `json:"group_type"` // member or admin
+	Username        string `json:"username"`
+	Name            string `json:"name"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password"`
+	Reason          string `json:"reason"`
+	GroupID         string `json:"group_id"`
+	GroupType       string `json:"group_type"` // member or admin
 }
 
 type SignupResponse struct {
@@ -86,15 +83,22 @@ func (r SignupRequest) Validate() error {
 	if r.Name == "" {
 		return errors.New("missing name")
 	}
+	if r.Password == "" {
+		return errors.New("missing password")
+	}
+	if r.ConfirmPassword == "" {
+		return errors.New("missing confirm_password")
+	}
+	if r.Password != r.ConfirmPassword {
+		return errors.New("password and confirm_password do not match")
+	}
 	if r.GroupID == "" {
 		return errors.New("missing group_id")
 	}
 	if r.GroupType == "" {
 		return errors.New("missing group_type")
 	}
-	if r.GroupType != "member" && r.GroupType != "admin" {
-		return errors.New("invalid group_type: must be 'member' or 'admin'")
-	}
+
 	return nil
 }
 
@@ -103,11 +107,10 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, err
 	}
 	app := acl.Application{
-		ID:            uuid.NewString(),
 		Title:         fmt.Sprintf("Signup request by %s(%s)", req.Name, req.Username),
 		UserID:        acl.ActorSystem,
 		PermissionIDs: []string{"signup:" + req.Username},
-		Reason:        req.Reason,
+		Reason:        fmt.Sprintf("Request to become %s to %s", req.GroupType, req.GroupID),
 		Status:        acl.StatusWaitingForApproval,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -137,21 +140,32 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			return SignupResponse{}, err
 		}
 	}
-	// 2. Select all admin members of the requested group
-	adminIDs, err := uc.repo.GetAdminUserIDsByGroupID(req.GroupID)
-	if err != nil {
-		return SignupResponse{}, errors.New("failed to list admin group members")
+	// 2. Create a new user with status "in approval"
+	// Hash the password (SHA256)
+	hash := sha256.Sum256([]byte(req.Password))
+	hashedPassword := hex.EncodeToString(hash[:])
+	user := acl.User{
+		ID:        uuid.NewString(),
+		Username:  req.Username,
+		Name:      req.Name,
+		Password:  hashedPassword,
+		Status:    acl.StatusUserInApproval,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
-	for _, adminID := range adminIDs {
-		assignment := acl.ApplicationAssignment{
-			ID:            uuid.NewString(),
-			ApplicationID: app.ID,
-			ReviewerID:    adminID,
-			ReviewStatus:  acl.StatusPending,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
-		}
-		_ = uc.repo.CreateApplicationAssignment(assignment)
+	if err := userrepo.CreateUser(uc.repo.(*signupRepo).db, user); err != nil {
+		return SignupResponse{}, err
+	}
+	// Assign user to the requested group
+	userGroup := acl.UserGroup{
+		UserID:    user.ID,
+		GroupID:   req.GroupID,
+		Type:      req.GroupType,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	if err := userrepo.CreateUserGroup(uc.repo.(*signupRepo).db, userGroup); err != nil {
+		return SignupResponse{}, err
 	}
 	// 3. Create ApplicationHistory as "waiting for approval"
 	history := acl.ApplicationHistory{
