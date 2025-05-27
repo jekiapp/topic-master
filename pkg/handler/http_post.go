@@ -29,6 +29,15 @@ type GenericPostHandler[I any, O any] func(ctx context.Context, input I) (output
 
 func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// check method post
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			json.NewEncoder(w).Encode(Response[O]{
+				Status:  StatusError,
+				Message: "Method not allowed",
+			})
+			return
+		}
 		// Set content type header
 		w.Header().Set("Content-Type", "application/json")
 

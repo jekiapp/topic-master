@@ -11,6 +11,17 @@ type GenericQueryHandler[R any] func(ctx context.Context, input map[string]strin
 // QueryHandler handles GET requests by parsing query parameters into a map
 func QueryHandler[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// check method get
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			json.NewEncoder(w).Encode(Response[R]{
+				Status:  StatusError,
+				Message: "Method not allowed",
+			})
+			return
+		}
+		// Set content type header
+		w.Header().Set("Content-Type", "application/json")
 
 		queries := map[string]string{}
 		for key, values := range r.URL.Query() {
@@ -20,7 +31,6 @@ func QueryHandler[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 		}
 
 		resp, err := handler(r.Context(), queries)
-		w.Header().Set("Content-Type", "application/json")
 
 		var response Response[R]
 		if err != nil {
