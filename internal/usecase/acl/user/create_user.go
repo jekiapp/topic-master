@@ -66,6 +66,7 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 	if len(req.Groups) == 0 {
 		return errors.New("at least one group is required")
 	}
+	rootCount := 0
 	for i, g := range req.Groups {
 		if g.GroupID == "" {
 			return errors.New("group_id is required for group index " + string(i))
@@ -73,6 +74,12 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 		if g.Type == "" {
 			return errors.New("type is required for group index " + string(i))
 		}
+		if g.Type == "root" {
+			rootCount++
+		}
+	}
+	if rootCount > 0 && len(req.Groups) > 1 {
+		return errors.New("if a group with type 'root' is present, it must be the only group")
 	}
 	if req.Name == "" {
 		return errors.New("name is required")
