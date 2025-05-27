@@ -2,7 +2,7 @@ package acl
 
 import (
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/jekiapp/nsqper/pkg/db"
+	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 

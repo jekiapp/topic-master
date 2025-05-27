@@ -11,6 +11,7 @@ import (
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	permissionrepo "github.com/jekiapp/topic-master/internal/repository/permission"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
+	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -21,12 +22,12 @@ type CreateApplicationRequest struct {
 }
 
 type CreateApplicationResponse struct {
-	Application acl.PermissionApplication
+	Application acl.Application
 }
 
 type iApplicationRepo interface {
-	CreateApplication(app acl.PermissionApplication) error
-	GetApplicationByUserAndPermission(userID, permissionKey string) (*acl.PermissionApplication, error)
+	CreateApplication(app acl.Application) error
+	GetApplicationByUserAndPermission(userID, permissionKey string) (acl.Application, error)
 	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
 	GetGroupByName(name string) (acl.Group, error)
 	ListUserIDsByGroupID(groupID string) ([]string, error)
@@ -38,11 +39,11 @@ type applicationRepo struct {
 	db *buntdb.DB
 }
 
-func (r *applicationRepo) CreateApplication(app acl.PermissionApplication) error {
-	return apprepo.CreateApplication(r.db, app)
+func (r *applicationRepo) CreateApplication(app acl.Application) error {
+	return db.Insert(r.db, app)
 }
 
-func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionKey string) (*acl.PermissionApplication, error) {
+func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionKey string) (acl.Application, error) {
 	return apprepo.GetApplicationByUserAndPermission(r.db, userID, permissionKey)
 }
 
@@ -55,7 +56,7 @@ func (r *applicationRepo) GetGroupByName(name string) (acl.Group, error) {
 }
 
 func (r *applicationRepo) ListUserIDsByGroupID(groupID string) ([]string, error) {
-	userGroups, err := userrepo.ListUserGroupsByGroupID(r.db, groupID)
+	userGroups, err := userrepo.ListUserGroupsByGroupID(r.db, groupID, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -105,14 +106,14 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	}
 
 	// 3. Create the application
-	app := acl.PermissionApplication{
-		ID:           uuid.NewString(),
-		UserID:       req.UserID,
-		PermissionID: req.PermissionID,
-		Reason:       req.Reason,
-		Status:       "pending",
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+	app := acl.Application{
+		ID:            uuid.NewString(),
+		UserID:        req.UserID,
+		PermissionIDs: []string{req.PermissionID},
+		Reason:        req.Reason,
+		Status:        acl.StatusPending,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 	if err := uc.repo.CreateApplication(app); err != nil {
 		return CreateApplicationResponse{}, err

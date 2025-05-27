@@ -12,12 +12,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jekiapp/nsqper/internal/config"
-	"github.com/jekiapp/nsqper/internal/logic/auth"
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	usergrouprepo "github.com/jekiapp/nsqper/internal/repository/user"
-	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
-	dbPkg "github.com/jekiapp/nsqper/pkg/db"
+	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/logic/auth"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	usergrouprepo "github.com/jekiapp/topic-master/internal/repository/user"
+	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
+	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 

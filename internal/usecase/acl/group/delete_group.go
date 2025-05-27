@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	grouprepo "github.com/jekiapp/nsqper/internal/repository/user"
-	"github.com/jekiapp/nsqper/pkg/util"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	grouprepo "github.com/jekiapp/topic-master/internal/repository/user"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 

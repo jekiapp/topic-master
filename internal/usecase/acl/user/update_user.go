@@ -7,9 +7,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
-	"github.com/jekiapp/nsqper/pkg/db"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
+	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 

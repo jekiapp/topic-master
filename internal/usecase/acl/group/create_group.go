@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	grouprepo "github.com/jekiapp/nsqper/internal/repository/user"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	grouprepo "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
 )
 

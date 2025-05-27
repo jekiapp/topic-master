@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/tidwall/buntdb"
 
@@ -15,21 +14,17 @@ import (
 	"github.com/jekiapp/topic-master/internal/repository"
 )
 
-const dbfile = "topic-master.db"
-
 func main() {
-	dataDir := flag.String("data_dir", "", "Path to buntdb data directory(required)")
+	dataPath := flag.String("data_path", "", "Path to buntdb data directory(required)")
 	nsqlookupdHTTPAddr := flag.String("nsqlookupd_http_address", "", "NSQLookupd HTTP address (required if no config)")
 	port := flag.String("port", "4181", "Port to listen on")
 	flag.Parse()
-	if *dataDir == "" {
-		fmt.Println("-data_dir is required")
+	if *dataPath == "" {
+		fmt.Println("-data_path is required")
 		os.Exit(1)
 	}
 
-	dataPath := filepath.Join(*dataDir, dbfile)
-
-	db, err := buntdb.Open(dataPath)
+	db, err := buntdb.Open(*dataPath)
 	if err != nil {
 		log.Fatalf("failed to open buntdb: %v", err)
 	}

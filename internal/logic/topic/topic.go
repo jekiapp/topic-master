@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	dbPkg "github.com/jekiapp/nsqper/pkg/db"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 

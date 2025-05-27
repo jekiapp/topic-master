@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/jekiapp/nsqper/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/acl"
 )
 
 // ValidateJWT parses and validates a JWT token string.

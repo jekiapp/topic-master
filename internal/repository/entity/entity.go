@@ -3,8 +3,8 @@ package entity
 import (
 	"fmt"
 
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	"github.com/jekiapp/nsqper/pkg/db"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
