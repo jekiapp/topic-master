@@ -1,13 +1,3 @@
-// this is a signup page, 
-// create css and js files for this page
-// it will have a form with the following fields:
-// - username
-// - password
-// - confirm password
-// - groups (look at acl/index.go for the UX)
-// the groups is a auto complete field with table
-// no need to submit for now, I dont have the BE yet
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -34,19 +24,25 @@
                 <input type="password" id="signup-confirm-password" name="signup-confirm-password" required>
             </div>
             <div class="form-group">
-                <label for="signup-group-table">Groups</label>
-                <div id="signup-group-multiselect">
-                    <input list="signup-group-list" id="signup-group-name" name="signup-group-name" class="themed-input" autocomplete="off" placeholder="Type to search group...">
-                    <datalist id="signup-group-list"></datalist>
-                    <table id="signup-selected-groups-table" style="margin-top:8px;width:100%;border-collapse:collapse;">
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <label for="signup-group-name">Group</label>
+                <input list="signup-group-list" id="signup-group-name" name="signup-group-name" class="themed-input" autocomplete="off" placeholder="Type to search group...">
+                <datalist id="signup-group-list"></datalist>
+            </div>
+            <div class="form-group">
+                <label for="signup-group-type">Type</label>
+                <select id="signup-group-type" name="signup-group-type" class="themed-input" required>
+                    <option value="member" selected>Member</option>
+                    <option value="admin">Admin</option>
+                </select>
             </div>
             <div class="popup-actions">
                 <button type="submit" class="themed-btn">Sign Up</button>
             </div>
         </form>
+        <div class="signup-extra">
+            <p class="signup-message">Already have an account? <a href="/login" class="signup-link">Log in here</a>.</p>
+            <div id="signup-status-message" class="signup-status-message" style="display:none;"></div>
+        </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js"></script>
