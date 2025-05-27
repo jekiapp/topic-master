@@ -56,9 +56,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 		Username:  aclmodel.GroupRoot,
 		Name:      "Root User",
 		Password:  hashedPassword,
-		Email:     "root@localhost",
-		Type:      aclmodel.TypeAdmin,
-		Status:    "active",
+		Status:    aclmodel.StatusUserActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -73,7 +71,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	userGroup := aclmodel.UserGroup{
 		UserID:    rootUser.ID,
 		GroupID:   rootGroup.ID,
-		Type:      aclmodel.TypeAdmin,
+		Type:      aclmodel.TypeGroupAdmin,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

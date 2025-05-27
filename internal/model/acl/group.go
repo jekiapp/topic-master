@@ -19,9 +19,13 @@ type Group struct {
 }
 
 const (
-	GroupRoot     = "root"
-	TableGroup    = "group"
+	GroupRoot  = "root"
+	TableGroup = "group"
+
 	IdxGroup_Name = TableGroup + ":name"
+
+	TypeGroupAdmin  = "admin"
+	TypeGroupMember = "member"
 )
 
 func (g Group) GetPrimaryKey() string {

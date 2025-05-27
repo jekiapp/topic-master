@@ -15,15 +15,18 @@ type GroupRole struct {
 	Role      string // Role of the user in the group (e.g., admin, user)
 }
 
+const (
+	StatusUserActive   = "active"
+	StatusUserPending  = "pending"
+	StatusUserInactive = "inactive"
+)
+
 // User represents a system user (master)
 type User struct {
 	ID        string      // Unique identifier (e.g., UUID or string key)
 	Username  string      // Username
 	Name      string      // Display Name
 	Password  string      // Password hash
-	Email     string      // Email address
-	Phone     string      // Phone number
-	Type      string      // Type (e.g., admin, user, etc.)
 	Status    string      // Status (e.g., active, inactive, etc.)
 	CreatedAt time.Time   // Creation timestamp
 	UpdatedAt time.Time   // Last update timestamp
@@ -32,10 +35,8 @@ type User struct {
 
 const (
 	TableUser        = "user"
-	IdxUser_Type     = TableUser + ":type"
 	IdxUser_Status   = TableUser + ":status"
 	IdxUser_Username = TableUser + ":username"
-	IdxUser_Email    = TableUser + ":email"
 )
 
 func (u User) GetPrimaryKey() string {
@@ -49,18 +50,8 @@ func (u User) GetPrimaryKey() string {
 func (u User) GetIndexes() []db.Index {
 	return []db.Index{
 		{
-			Name:    IdxUser_Type,
-			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "type"),
-			Type:    buntdb.IndexString,
-		},
-		{
 			Name:    IdxUser_Username,
 			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "username"),
-			Type:    buntdb.IndexString,
-		},
-		{
-			Name:    IdxUser_Email,
-			Pattern: fmt.Sprintf("%s:*:%s", TableUser, "email"),
 			Type:    buntdb.IndexString,
 		},
 	}
@@ -68,9 +59,7 @@ func (u User) GetIndexes() []db.Index {
 
 func (u User) GetIndexValues() map[string]string {
 	return map[string]string{
-		"type":     u.Type,
 		"username": u.Username,
-		"email":    u.Email,
 	}
 }
 
@@ -82,8 +71,3 @@ type Authorization struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
-
-const (
-	TypeAdmin = "admin"
-	TypeUser  = "user"
-)
