@@ -12,7 +12,13 @@ document.getElementById('login-btn').addEventListener('click', async function(ev
         body: JSON.stringify({ username, password })
     });
     if (response.ok) {
-        // Handle successful login (e.g., redirect)
+        try {
+            const data = await response.json();
+            if (data && data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
+        } catch (e) {}
         window.location.href = '/';
     } else {
         let errorMsg = 'Login failed';

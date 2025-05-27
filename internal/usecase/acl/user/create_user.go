@@ -19,8 +19,6 @@ type CreateUserRequest struct {
 	Username string `json:"username"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	Email    string `json:"email"`
-	Phone    string `json:"phone"`
 	Groups   []struct {
 		GroupID string `json:"group_id"`
 		Type    string `json:"type"`
@@ -79,9 +77,6 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 	if req.Name == "" {
 		return errors.New("name is required")
 	}
-	if req.Email == "" {
-		return errors.New("email is required")
-	}
 	return nil
 }
 
@@ -113,9 +108,6 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 		Username:  req.Username,
 		Name:      req.Name,
 		Password:  hashedPassword,
-		Email:     req.Email,
-		Phone:     req.Phone,
-		Type:      "", // Not used at user level anymore
 		Status:    "pending",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

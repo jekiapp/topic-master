@@ -3,15 +3,17 @@ package user
 import (
 	"context"
 
+	"github.com/jekiapp/nsqper/internal/model/acl"
+	"github.com/jekiapp/nsqper/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
 type DeleteUserRequest struct {
-	UserID string
+	UserID string `json:"user_id"`
 }
 
 type DeleteUserResponse struct {
-	Success bool
+	Success bool `json:"success"`
 }
 
 type iUserDeleteRepo interface {
@@ -23,25 +25,7 @@ type userDeleteRepo struct {
 }
 
 func (r *userDeleteRepo) DeleteUser(userID string) error {
-	return r.db.Update(func(tx *buntdb.Tx) error {
-		// Find the user key by userID (UUID)
-		var userKey string
-		tx.AscendKeys("user:*", func(key, value string) bool {
-			// The value is a CSV, the first field is username, but we need to match by userID
-			// For this example, let's assume the key is not the UUID, so we need to scan values
-			// In production, store by UUID as key for efficiency
-			if value[:len(userID)] == userID {
-				userKey = key
-				return false
-			}
-			return true
-		})
-		if userKey == "" {
-			return buntdb.ErrNotFound
-		}
-		_, err := tx.Delete(userKey)
-		return err
-	})
+	return db.DeleteByID(r.db, acl.User{ID: userID})
 }
 
 type DeleteUserUsecase struct {

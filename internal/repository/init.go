@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/jekiapp/nsqper/internal/config"
+	"github.com/jekiapp/nsqper/internal/model/acl"
 	"github.com/jekiapp/nsqper/internal/repository/entity"
 	"github.com/jekiapp/nsqper/internal/repository/lookupd"
 	"github.com/jekiapp/nsqper/internal/repository/user"
@@ -25,6 +26,17 @@ func Init(cfg *config.Config, db *buntdb.DB) error {
 	err = user.InitIndexUserGroup(db)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func InitIndexResetPassword(db *buntdb.DB) error {
+	indexes := acl.ResetPassword{}.GetIndexes()
+	for _, index := range indexes {
+		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

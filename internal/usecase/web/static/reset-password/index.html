@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <link rel="stylesheet" href="/colors.css">
+    <link rel="stylesheet" href="reset-password/reset-password.css">
+</head>
+<body>
+    <div class="reset-container">
+        <h1>Reset Password</h1>
+        <form id="reset-form">
+            <input type="hidden" id="token" name="token">
+            <label id="username-label"></label>
+            <input type="password" id="new-password" name="new_password" placeholder="New Password" required>
+            <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirm Password" required>
+            <button id="reset-btn" type="submit">Reset Password</button>
+            <label id="reset-error" style="color:red;display:block;margin-top:10px;"></label>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="reset-password/reset-password.js"></script>
+</body>
+</html>

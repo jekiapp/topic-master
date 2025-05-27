@@ -47,7 +47,6 @@
                     <tr>
                         <th>Username</th>
                         <th>Name</th>
-                        <th>Email</th>
                         <th>Groups</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -94,10 +93,6 @@
                 <div class="form-group">
                   <label for="user-name">Name</label>
                   <input type="text" id="user-name" name="user-name" required>
-                </div>
-                <div class="form-group">
-                  <label for="user-email">Email</label>
-                  <input type="email" id="user-email" name="user-email" class="themed-input">
                 </div>
                 <div class="form-group">
                   <label for="user-group-table">Groups</label>
@@ -151,6 +146,52 @@
             <div class="popup-actions">
                 <button type="button" id="cancel-delete-group-btn">Cancel</button>
                 <button type="button" id="confirm-delete-group-btn" class="themed-btn" style="background:#d9534f;">Delete</button>
+            </div>
+        </div>
+    </div>
+    <!-- Update User popup -->
+    <div id="user-update-popup-overlay" class="popup-overlay" style="display:none;">
+        <div class="popup-form">
+            <h3>Update User</h3>
+            <form id="update-user-form">
+                <div id="user-update-form-error" class="form-error" style="display:none;"></div>
+                <div class="form-group">
+                  <label for="update-user-username">Username</label>
+                  <input type="text" id="update-user-username" name="update-user-username" readonly>
+                </div>
+                <div class="form-group">
+                  <label for="update-user-name">Name</label>
+                  <input type="text" id="update-user-name" name="update-user-name" required>
+                </div>
+                <div class="form-group">
+                  <label for="update-user-reset-password">Reset Password</label>
+                  <input type="checkbox" id="update-user-reset-password" name="update-user-reset-password">
+                </div>
+                <div class="form-group">
+                  <label for="update-user-group-table">Groups</label>
+                  <div id="update-user-group-multiselect">
+                    <input list="update-group-list" id="update-user-group-name" name="update-user-group-name" class="themed-input" autocomplete="off" placeholder="Type to search group...">
+                    <datalist id="update-group-list"></datalist>
+                    <table id="update-selected-groups-table" style="margin-top:8px;width:100%;border-collapse:collapse;">
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="popup-actions">
+                    <button type="button" id="cancel-update-user-btn">Cancel</button>
+                    <button type="submit" class="themed-btn">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Delete User confirmation popup -->
+    <div id="delete-user-popup-overlay" class="popup-overlay" style="display:none;">
+        <div class="popup-form">
+            <h3>Delete User</h3>
+            <div id="delete-user-message" style="margin-bottom: 16px;"></div>
+            <div class="popup-actions">
+                <button type="button" id="cancel-delete-user-btn">Cancel</button>
+                <button type="button" id="confirm-delete-user-btn" class="themed-btn" style="background:#d9534f;">Delete</button>
             </div>
         </div>
     </div>

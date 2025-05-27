@@ -2,6 +2,7 @@ package acl
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -9,6 +10,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/jekiapp/nsqper/internal/config"
 	"github.com/jekiapp/nsqper/internal/logic/auth"
@@ -31,7 +33,8 @@ type LoginResponse struct {
 
 type iUserLoginRepo interface {
 	GetUserByUsername(username string) (acl.User, error)
-	ListGroupsForUser(userID, userType string) ([]acl.GroupRole, error)
+	ListGroupsForUser(userID string) ([]acl.GroupRole, error)
+	InsertResetPassword(rp acl.ResetPassword) error
 }
 
 type loginRepo struct {
@@ -42,8 +45,12 @@ func (r *loginRepo) GetUserByUsername(username string) (acl.User, error) {
 	return userrepo.GetUserByUsername(r.db, username)
 }
 
-func (r *loginRepo) ListGroupsForUser(userID, userType string) ([]acl.GroupRole, error) {
-	return usergrouprepo.ListGroupsForUser(r.db, userID, userType)
+func (r *loginRepo) ListGroupsForUser(userID string) ([]acl.GroupRole, error) {
+	return usergrouprepo.ListGroupsForUser(r.db, userID)
+}
+
+func (r *loginRepo) InsertResetPassword(rp acl.ResetPassword) error {
+	return dbPkg.Insert(r.db, rp)
 }
 
 type LoginUsecase struct {
@@ -75,6 +82,45 @@ func (uc LoginUsecase) Handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	user, err := uc.repo.GetUserByUsername(req.Username)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "user not found"})
+		return
+	}
+	// Hash the provided password and compare
+	hash := sha256.Sum256([]byte(req.Password))
+	hashedPassword := hex.EncodeToString(hash[:])
+	if user.Password != hashedPassword {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid password"})
+		return
+	}
+	if user.Status == acl.StatusUserPending {
+		// Generate reset token
+		tokenBytes := make([]byte, 32)
+		if _, err := rand.Read(tokenBytes); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "failed to generate reset token"})
+			return
+		}
+		token := hex.EncodeToString(tokenBytes)
+		expiresAt := time.Now().Add(1 * time.Hour).Unix()
+		rp := acl.ResetPassword{
+			Token:     token,
+			Username:  user.Username,
+			CreatedAt: time.Now().Unix(),
+			ExpiresAt: expiresAt,
+		}
+		if err := uc.repo.InsertResetPassword(rp); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "failed to save reset token"})
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"redirect": "/reset-password?token=" + token})
+		return
+	}
+
 	resp, err := uc.doLogin(r.Context(), req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -111,8 +157,30 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 		return LoginResponse{}, errors.New("invalid password")
 	}
 
+	// password is ok, now check if user is pending
+
+	if user.Status == acl.StatusUserPending {
+		// Generate reset token
+		tokenBytes := make([]byte, 32)
+		if _, err := rand.Read(tokenBytes); err != nil {
+			return LoginResponse{}, errors.New("failed to generate reset token")
+		}
+		token := hex.EncodeToString(tokenBytes)
+		expiresAt := time.Now().Add(1 * time.Hour).Unix()
+		rp := acl.ResetPassword{
+			Token:     token,
+			Username:  user.Username,
+			CreatedAt: time.Now().Unix(),
+			ExpiresAt: expiresAt,
+		}
+		if err := dbPkg.Insert(uc.repo.(*loginRepo).db, rp); err != nil {
+			return LoginResponse{}, errors.New("failed to save reset token")
+		}
+		return LoginResponse{}, nil
+	}
+
 	// Fetch all groups for the user
-	groups, err := uc.repo.ListGroupsForUser(user.ID, user.Type)
+	groups, err := uc.repo.ListGroupsForUser(user.ID)
 	if err != nil {
 		return LoginResponse{}, errors.New("failed to fetch user groups (" + err.Error() + ")")
 	}

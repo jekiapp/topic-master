@@ -21,11 +21,19 @@ type GetUserListResponse struct {
 }
 
 type UserListItem struct {
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Groups   string `json:"groups"`
-	Status   string `json:"status"`
+	ID           string        `json:"id"`
+	Username     string        `json:"username"`
+	Name         string        `json:"name"`
+	Email        string        `json:"email"`
+	Groups       string        `json:"groups"`
+	Status       string        `json:"status"`
+	GroupDetails []GroupDetail `json:"group_details"`
+}
+
+type GroupDetail struct {
+	GroupID   string `json:"group_id"`
+	GroupName string `json:"group_name"`
+	Type      string `json:"type"`
 }
 
 type iUserDataRepo interface {
@@ -56,20 +64,27 @@ func (uc GetUserListUsecase) Handle(ctx context.Context, req GetUserListRequest)
 			log.Printf("error listing user groups: %s", err)
 		}
 		var groupNames []string
+		var groupDetails []GroupDetail
 		if err == nil {
 			for _, ug := range userGroups {
 				group, err := uc.dataRepo.GetGroupByID(ug.GroupID)
 				if err == nil {
 					groupNames = append(groupNames, group.Name)
+					groupDetails = append(groupDetails, GroupDetail{
+						GroupID:   ug.GroupID,
+						GroupName: group.Name,
+						Type:      ug.Type,
+					})
 				}
 			}
 		}
 		result = append(result, UserListItem{
-			Username: u.Username,
-			Name:     u.Name,
-			Email:    u.Email,
-			Groups:   strings.Join(groupNames, ","),
-			Status:   u.Status,
+			ID:           u.ID,
+			Username:     u.Username,
+			Name:         u.Name,
+			Groups:       strings.Join(groupNames, ","),
+			Status:       u.Status,
+			GroupDetails: groupDetails,
 		})
 	}
 	return GetUserListResponse{Users: result}, nil
