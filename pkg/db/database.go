@@ -300,12 +300,15 @@ func DeleteByID(db *buntdb.DB, record Record) error {
 		key := record.GetPrimaryKey()
 		_, err := tx.Delete(key)
 		if err != nil {
-			return err
+			return fmt.Errorf("error deleting primary key: %s, %w", key, err)
 		}
 		// delete indexes
 		for name := range record.GetIndexValues() {
 			idxKey := key + ":" + name
-			tx.Delete(idxKey)
+			_, err := tx.Delete(idxKey)
+			if err != nil {
+				return fmt.Errorf("error deleting index key: %s, %w", idxKey, err)
+			}
 		}
 		return nil
 	})
@@ -315,17 +318,36 @@ func DeleteByIndex(db *buntdb.DB, record Record, indexName string) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		idxField := strings.Split(indexName, ":")[1]
 		pivot := record.GetIndexValues()[idxField]
+		if pivot == "" {
+			return fmt.Errorf("pivot %s is empty", idxField)
+		}
+
+		var primaryKeys []string
+		var indexKeys []string
 		tx.AscendEqual(indexName, pivot, func(key string, value string) bool {
 			pk := strings.TrimSuffix(key, ":"+idxField)
-			// delete primary
-			tx.Delete(pk)
+			primaryKeys = append(primaryKeys, pk)
+
 			// delete indexes
 			for name := range record.GetIndexValues() {
 				idxKey := pk + ":" + name
-				tx.Delete(idxKey)
+				indexKeys = append(indexKeys, idxKey)
 			}
 			return true
 		})
+
+		for _, pk := range primaryKeys {
+			_, err := tx.Delete(pk)
+			if err != nil {
+				return fmt.Errorf("error deleting primary key: %s, %w", pk, err)
+			}
+		}
+		for _, idxKey := range indexKeys {
+			_, err := tx.Delete(idxKey)
+			if err != nil {
+				return fmt.Errorf("error deleting index key: %s, %w", idxKey, err)
+			}
+		}
 		return nil
 	})
 }
