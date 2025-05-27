@@ -107,6 +107,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, err
 	}
 	app := acl.Application{
+		ID:            uuid.NewString(),
 		Title:         fmt.Sprintf("Signup request by %s(%s)", req.Name, req.Username),
 		UserID:        acl.ActorSystem,
 		PermissionIDs: []string{"signup:" + req.Username},

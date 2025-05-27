@@ -14,48 +14,52 @@ import (
 )
 
 type Handler struct {
-	config              *config.Config
-	createUserUC        aclUser.CreateUserUsecase
-	updateUserUC        aclUser.UpdateUserUsecase
-	loginUC             acl.LoginUsecase
-	logoutUC            acl.LogoutUsecase
-	assignUserToGroupUC acl.AssignUserToGroupUsecase
-	deleteUserUC        aclUser.DeleteUserUsecase
-	createGroupUC       aclGroup.CreateGroupUsecase
-	createPermissionUC  acl.CreatePermissionUsecase
-	changePasswordUC    aclUser.ChangePasswordUsecase
-	syncTopicsUC        topicUC.SyncTopicsUsecase
-	webUC               *webUC.WebUsecase
-	getGroupListUC      aclGroup.GetGroupListUsecase
-	getUserListUC       aclUser.GetUserListUsecase
-	listTopicsUC        topicUC.ListTopicsUsecase
-	updateGroupByIDUC   aclGroup.UpdateGroupByIDUsecase
-	deleteGroupUC       aclGroup.DeleteGroupUsecase
-	resetPasswordUC     acl.ResetPasswordUsecase
+	config               *config.Config
+	createUserUC         aclUser.CreateUserUsecase
+	updateUserUC         aclUser.UpdateUserUsecase
+	loginUC              acl.LoginUsecase
+	logoutUC             acl.LogoutUsecase
+	assignUserToGroupUC  acl.AssignUserToGroupUsecase
+	deleteUserUC         aclUser.DeleteUserUsecase
+	createGroupUC        aclGroup.CreateGroupUsecase
+	createPermissionUC   acl.CreatePermissionUsecase
+	changePasswordUC     aclUser.ChangePasswordUsecase
+	syncTopicsUC         topicUC.SyncTopicsUsecase
+	webUC                *webUC.WebUsecase
+	getGroupListUC       aclGroup.GetGroupListUsecase
+	getGroupListSimpleUC aclGroup.GetGroupListSimpleUsecase
+	getUserListUC        aclUser.GetUserListUsecase
+	listTopicsUC         topicUC.ListTopicsUsecase
+	updateGroupByIDUC    aclGroup.UpdateGroupByIDUsecase
+	deleteGroupUC        aclGroup.DeleteGroupUsecase
+	resetPasswordUC      acl.ResetPasswordUsecase
+	signupUC             acl.SignupUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 	webUsecase := webUC.NewWebUsecase()
 
 	return Handler{
-		config:              cfg,
-		createUserUC:        aclUser.NewCreateUserUsecase(db),
-		updateUserUC:        aclUser.NewUpdateUserUsecase(db),
-		loginUC:             acl.NewLoginUsecase(db, cfg),
-		logoutUC:            acl.NewLogoutUsecase(),
-		assignUserToGroupUC: acl.NewAssignUserToGroupUsecase(db),
-		deleteUserUC:        aclUser.NewDeleteUserUsecase(db),
-		createGroupUC:       aclGroup.NewCreateGroupUsecase(db),
-		createPermissionUC:  acl.NewCreatePermissionUsecase(db),
-		changePasswordUC:    aclUser.NewChangePasswordUsecase(db),
-		syncTopicsUC:        topicUC.NewSyncTopicsUsecase(db),
-		webUC:               webUsecase,
-		getGroupListUC:      aclGroup.NewGetGroupListUsecase(db),
-		getUserListUC:       aclUser.NewGetUserListUsecase(db),
-		listTopicsUC:        topicUC.NewListTopicsUsecase(db),
-		updateGroupByIDUC:   aclGroup.NewUpdateGroupByIDUsecase(db),
-		deleteGroupUC:       aclGroup.NewDeleteGroupUsecase(db),
-		resetPasswordUC:     acl.NewResetPasswordUsecase(db),
+		config:               cfg,
+		createUserUC:         aclUser.NewCreateUserUsecase(db),
+		updateUserUC:         aclUser.NewUpdateUserUsecase(db),
+		loginUC:              acl.NewLoginUsecase(db, cfg),
+		logoutUC:             acl.NewLogoutUsecase(),
+		assignUserToGroupUC:  acl.NewAssignUserToGroupUsecase(db),
+		deleteUserUC:         aclUser.NewDeleteUserUsecase(db),
+		createGroupUC:        aclGroup.NewCreateGroupUsecase(db),
+		createPermissionUC:   acl.NewCreatePermissionUsecase(db),
+		changePasswordUC:     aclUser.NewChangePasswordUsecase(db),
+		syncTopicsUC:         topicUC.NewSyncTopicsUsecase(db),
+		webUC:                webUsecase,
+		getGroupListUC:       aclGroup.NewGetGroupListUsecase(db),
+		getGroupListSimpleUC: aclGroup.NewGetGroupListSimpleUsecase(db),
+		getUserListUC:        aclUser.NewGetUserListUsecase(db),
+		listTopicsUC:         topicUC.NewListTopicsUsecase(db),
+		updateGroupByIDUC:    aclGroup.NewUpdateGroupByIDUsecase(db),
+		deleteGroupUC:        aclGroup.NewDeleteGroupUsecase(db),
+		resetPasswordUC:      acl.NewResetPasswordUsecase(db),
+		signupUC:             acl.NewSignupUsecase(db),
 	}
 }
 
@@ -77,6 +81,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/group/create", authMiddleware(handlerPkg.HandleGenericPost(h.createGroupUC.Handle)))
 	mux.HandleFunc("/api/group/list", authMiddleware(handlerPkg.HandleGenericPost(h.getGroupListUC.Handle)))
+	mux.HandleFunc("/api/group/list-simple", handlerPkg.HandleGenericPost(h.getGroupListSimpleUC.Handle))
 	mux.HandleFunc("/api/group/update-group-by-id", authMiddleware(handlerPkg.HandleGenericPost(h.updateGroupByIDUC.Handle)))
 	mux.HandleFunc("/api/group/delete-group", authMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
@@ -93,6 +98,8 @@ func (h Handler) routes(mux *http.ServeMux) {
 		}
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	})
+
+	mux.HandleFunc("/api/signup", handlerPkg.HandleGenericPost(h.signupUC.Handle))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

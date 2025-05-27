@@ -64,7 +64,7 @@ func Insert(db *buntdb.DB, record Record) error {
 		setIndexes := make([]string, 0)
 		for name, value := range record.GetIndexValues() {
 			if value == "" {
-				return fmt.Errorf("index %s value is empty", name)
+				return fmt.Errorf("%s: index %s value is empty", key, name)
 			}
 			idxKey := key + ":" + name
 			_, _, err = tx.Set(idxKey, value, nil)
