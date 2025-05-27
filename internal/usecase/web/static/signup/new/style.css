@@ -1,0 +1,103 @@
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--background-secondary, #f7f7fa);
+}
+
+.popup-form {
+    background: var(--primary-white, #fff);
+    padding: 32px 24px 24px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    min-width: 320px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.popup-form h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+.popup-form label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.popup-form input,
+.popup-form select {
+    padding: 8px;
+    border: 1px solid var(--border-purple, #d6b4e7);
+    border-radius: 4px;
+    font-size: 1em;
+    margin-bottom: 8px;
+    background: var(--input-bg, #faf6fc);
+    color: var(--primary-purple, #2d2231);
+}
+.popup-form input:focus {
+    outline: 2px solid var(--accent-purple, #8a69c4);
+    box-shadow: 0 0 0 2px var(--shadow-focus, #e9d6f7);
+}
+.popup-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+.popup-actions button {
+    padding: 6px 18px;
+    border-radius: 4px;
+    border: none;
+    background: var(--primary, #1976d2);
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+}
+.themed-btn {
+    background: var(--accent-purple, #8a69c4);
+    color: var(--primary-white, #fff);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--shadow-btn, rgba(142,68,173,0.08));
+    transition: background 0.2s;
+}
+.themed-btn:hover {
+    background: var(--button-hover-purple, #6c3483);
+}
+.form-error {
+    color: var(--error-red, #e74c3c);
+    background: #fff0f0;
+    border: 1px solid var(--error-red, #e74c3c);
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    font-size: 0.98em;
+    display: block;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+#signup-group-multiselect {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+#signup-selected-groups-table td {
+    padding: 4px 8px;
+}
+.remove-group-row {
+    margin-left: 8px;
+    cursor: pointer;
+    color: #d9534f;
+    font-weight: bold;
+}
+.group-type-select {
+    min-width: 90px;
+} 
