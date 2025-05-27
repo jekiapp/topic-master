@@ -16,6 +16,7 @@ import (
 type Handler struct {
 	config              *config.Config
 	createUserUC        aclUser.CreateUserUsecase
+	updateUserUC        aclUser.UpdateUserUsecase
 	loginUC             acl.LoginUsecase
 	assignUserToGroupUC acl.AssignUserToGroupUsecase
 	deleteUserUC        aclUser.DeleteUserUsecase
@@ -27,10 +28,9 @@ type Handler struct {
 	getGroupListUC      aclGroup.GetGroupListUsecase
 	getUserListUC       aclUser.GetUserListUsecase
 	listTopicsUC        topicUC.ListTopicsUsecase
-
-	// Attachments
-	updateGroupByIDUC aclGroup.UpdateGroupByIDUsecase
-	deleteGroupUC     aclGroup.DeleteGroupUsecase
+	updateGroupByIDUC   aclGroup.UpdateGroupByIDUsecase
+	deleteGroupUC       aclGroup.DeleteGroupUsecase
+	resetPasswordUC     acl.ResetPasswordUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -39,6 +39,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 	return Handler{
 		config:              cfg,
 		createUserUC:        aclUser.NewCreateUserUsecase(db),
+		updateUserUC:        aclUser.NewUpdateUserUsecase(db),
 		loginUC:             acl.NewLoginUsecase(db, cfg),
 		assignUserToGroupUC: acl.NewAssignUserToGroupUsecase(db),
 		deleteUserUC:        aclUser.NewDeleteUserUsecase(db),
@@ -52,6 +53,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		listTopicsUC:        topicUC.NewListTopicsUsecase(db),
 		updateGroupByIDUC:   aclGroup.NewUpdateGroupByIDUsecase(db),
 		deleteGroupUC:       aclGroup.NewDeleteGroupUsecase(db),
+		resetPasswordUC:     acl.NewResetPasswordUsecase(db),
 	}
 }
 
@@ -62,6 +64,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/user/list", handlerPkg.HandleGenericPost(h.getUserListUC.Handle))
 	mux.HandleFunc("/api/user/create", authMiddleware(handlerPkg.HandleGenericPost(h.createUserUC.Handle)))
+	mux.HandleFunc("/api/user/update", authMiddleware(handlerPkg.HandleGenericPost(h.updateUserUC.Handle)))
 	mux.HandleFunc("/api/user/assign-to-group", authMiddleware(handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle)))
 	mux.HandleFunc("/api/user/delete", authMiddleware(handlerPkg.HandleGenericPost(h.deleteUserUC.Handle)))
 
@@ -75,6 +78,18 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/group/delete-group", authMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
 	mux.HandleFunc("/api/topic/list-topics", authMiddleware(handlerPkg.QueryHandler(h.listTopicsUC.HandleQuery)))
+
+	mux.HandleFunc("/api/reset-password", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			handlerPkg.QueryHandler(h.resetPasswordUC.HandleGet)(w, r)
+			return
+		}
+		if r.Method == http.MethodPost {
+			handlerPkg.HandleGenericPost(h.resetPasswordUC.HandlePost)(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	})
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
