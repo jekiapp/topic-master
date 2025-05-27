@@ -18,6 +18,7 @@ type Handler struct {
 	createUserUC        aclUser.CreateUserUsecase
 	updateUserUC        aclUser.UpdateUserUsecase
 	loginUC             acl.LoginUsecase
+	logoutUC            acl.LogoutUsecase
 	assignUserToGroupUC acl.AssignUserToGroupUsecase
 	deleteUserUC        aclUser.DeleteUserUsecase
 	createGroupUC       aclGroup.CreateGroupUsecase
@@ -41,6 +42,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		createUserUC:        aclUser.NewCreateUserUsecase(db),
 		updateUserUC:        aclUser.NewUpdateUserUsecase(db),
 		loginUC:             acl.NewLoginUsecase(db, cfg),
+		logoutUC:            acl.NewLogoutUsecase(),
 		assignUserToGroupUC: acl.NewAssignUserToGroupUsecase(db),
 		deleteUserUC:        aclUser.NewDeleteUserUsecase(db),
 		createGroupUC:       aclGroup.NewCreateGroupUsecase(db),
@@ -61,6 +63,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	authMiddleware := handlerPkg.InitJWTMiddleware(string(h.config.SecretKey))
 
 	mux.HandleFunc("/api/login", h.loginUC.Handle)
+	mux.HandleFunc("/api/logout", h.logoutUC.Handle)
 
 	mux.HandleFunc("/api/user/list", handlerPkg.HandleGenericPost(h.getUserListUC.Handle))
 	mux.HandleFunc("/api/user/create", authMiddleware(handlerPkg.HandleGenericPost(h.createUserUC.Handle)))
