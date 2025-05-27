@@ -82,7 +82,7 @@ func GetAdminUserIDsByGroupID(dbConn *buntdb.DB, groupID string) ([]string, erro
 	}
 	var adminIDs []string
 	for _, userGroup := range userGroups {
-		if userGroup.Type == "admin" {
+		if userGroup.Role == acl.RoleGroupAdmin {
 			adminIDs = append(adminIDs, userGroup.UserID)
 		}
 	}

@@ -24,8 +24,8 @@ const (
 
 	IdxGroup_Name = TableGroup + ":name"
 
-	TypeGroupAdmin  = "admin"
-	TypeGroupMember = "member"
+	RoleGroupAdmin  = "admin"
+	RoleGroupMember = "member"
 )
 
 func (g Group) GetPrimaryKey() string {

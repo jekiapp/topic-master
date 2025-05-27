@@ -59,6 +59,7 @@ $(document).ready(function() {
                 password: password,
                 confirm_password: confirm,
                 group_id: groupId,
+                group_name: groupName,
                 group_role: groupRole
             }),
             success: function(resp) {

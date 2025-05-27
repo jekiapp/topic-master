@@ -262,7 +262,7 @@ function showUserPopup() {
   $('#create-user-form')[0].reset();
   // Populate group datalist with names only
   $.ajax({
-    url: '/api/group/list',
+    url: '/api/group/list-simple',
     method: 'POST',
     contentType: 'application/json',
     data: '{}',
@@ -333,8 +333,9 @@ function collectGroupMappings() {
   var groups = [];
   $('#selected-groups-table tbody tr').each(function() {
     var group_id = $(this).data('group-id');
+    var group_name = window._groupIdToName ? window._groupIdToName[group_id] : '';
     var role = $(this).find('.group-role-select').val();
-    groups.push({ group_id: group_id, role: role });
+    groups.push({ group_id: group_id, name: group_name, role: role });
   });
   return groups;
 }
@@ -489,7 +490,7 @@ function showUpdateUserPopup(userId) {
   $('#update-user-reset-password').prop('checked', false);
   // Populate group datalist
   $.ajax({
-    url: '/api/group/list',
+    url: '/api/group/list-simple',
     method: 'POST',
     contentType: 'application/json',
     data: '{}',
@@ -575,8 +576,9 @@ function collectUpdateGroupMappings() {
   var groups = [];
   $('#update-selected-groups-table tbody tr').each(function() {
     var group_id = $(this).data('group-id');
+    var group_name = window._updateGroupIdToName ? window._updateGroupIdToName[group_id] : '';
     var role = $(this).find('.update-group-role-select').val();
-    groups.push({ group_id: group_id, role: role });
+    groups.push({ group_id: group_id,name: group_name, role: role });
   });
   return groups;
 }

@@ -62,7 +62,7 @@ func ListGroupsForUser(dbConn *buntdb.DB, userID string) ([]acl.GroupRole, error
 		if err == nil {
 			groupName = group.Name
 		}
-		groups = append(groups, acl.GroupRole{GroupName: groupName, Role: ug.Type})
+		groups = append(groups, acl.GroupRole{GroupName: groupName, Role: ug.Role})
 	}
 	return groups, nil
 }

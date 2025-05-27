@@ -20,6 +20,7 @@ type UpdateUserRequest struct {
 	Groups        []struct {
 		GroupID string `json:"group_id"`
 		Role    string `json:"role"`
+		Name    string `json:"name"`
 	} `json:"groups"`
 }
 
@@ -62,10 +63,10 @@ func validateUpdateUserRequest(req UpdateUserRequest) error {
 		if g.GroupID == "" {
 			return errors.New("group_id is required for group index " + string(rune(i+'0')))
 		}
-		if g.Type == "" {
-			return errors.New("type is required for group index " + string(rune(i+'0')))
+		if g.Role == "" {
+			return errors.New("role is required for group index " + string(rune(i+'0')))
 		}
-		if g.Type == "root" {
+		if g.Name == acl.GroupRoot {
 			rootCount++
 		}
 	}

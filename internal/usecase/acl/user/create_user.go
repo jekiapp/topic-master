@@ -21,7 +21,8 @@ type CreateUserRequest struct {
 	Password string `json:"password"`
 	Groups   []struct {
 		GroupID string `json:"group_id"`
-		Type    string `json:"type"`
+		Role    string `json:"role"`
+		Name    string `json:"name"`
 	} `json:"groups"`
 }
 
@@ -71,10 +72,10 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 		if g.GroupID == "" {
 			return errors.New("group_id is required for group index " + string(i))
 		}
-		if g.Type == "" {
-			return errors.New("type is required for group index " + string(i))
+		if g.Role == "" {
+			return errors.New("role is required for group index " + string(i))
 		}
-		if g.Type == "root" {
+		if g.Name == acl.GroupRoot {
 			rootCount++
 		}
 	}
@@ -128,7 +129,7 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 		userGroup := acl.UserGroup{
 			UserID:    user.ID,
 			GroupID:   group.GroupID,
-			Type:      group.Type,
+			Role:      group.Role,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}

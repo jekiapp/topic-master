@@ -71,7 +71,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	userGroup := aclmodel.UserGroup{
 		UserID:    rootUser.ID,
 		GroupID:   rootGroup.ID,
-		Type:      aclmodel.TypeGroupAdmin,
+		Role:      aclmodel.RoleGroupAdmin,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
