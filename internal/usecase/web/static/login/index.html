@@ -10,12 +10,14 @@
 <body>
     <div class="login-container">
         <h1>Login</h1>
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <button id="login-btn">Login</button>
-        <label id="login-error" style="color:red;display:block;margin-top:10px;"></label>
+        <form id="login-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button id="login-btn" type="submit">Login</button>
+            <label id="login-error" style="color:red;display:block;margin-top:10px;"></label>
+        </form>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/js/global-ajax-handler.js"></script>

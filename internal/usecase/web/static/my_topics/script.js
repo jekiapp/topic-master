@@ -13,7 +13,8 @@ $(function() {
     xhrFields: { withCredentials: true },
     success: function(resp) {
       if (resp.error) {
-        $('#topics-table tbody').html(`<tr><td colspan="7" style="color: var(--error-red);">${resp.error}</td></tr>`);
+        let msg = resp.error === "record not found" ? "You have no eligible topics" : resp.error;
+        $('#topics-table tbody').html(`<tr><td colspan="7" style="color: var(--error-red);">${msg}</td></tr>`);
         return;
       }
       const topics = resp.data && resp.data.topics ? resp.data.topics : [];

@@ -414,6 +414,7 @@ function bindUserEvents() {
     const pwd = $('#created-password').text();
     if (pwd) {
       navigator.clipboard.writeText(pwd);
+      alert('Password copied to clipboard');
     }
   });
   // Bind edit-user button

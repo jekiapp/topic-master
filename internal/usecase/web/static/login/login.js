@@ -1,4 +1,4 @@
-document.getElementById('login-btn').addEventListener('click', async function(event) {
+document.getElementById('login-form').addEventListener('submit', async function(event) {
     event.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -30,4 +30,4 @@ document.getElementById('login-btn').addEventListener('click', async function(ev
         } catch (e) {}
         errorLabel.textContent = errorMsg;
     }
-}); 
+});

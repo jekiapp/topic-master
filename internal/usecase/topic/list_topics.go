@@ -7,6 +7,7 @@ import (
 	"github.com/jekiapp/nsqper/internal/model/acl"
 	"github.com/jekiapp/nsqper/internal/model/topic"
 	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
+	dbPkg "github.com/jekiapp/nsqper/pkg/db"
 	"github.com/jekiapp/nsqper/pkg/util"
 	"github.com/tidwall/buntdb"
 )
@@ -63,13 +64,13 @@ func (uc ListTopicsUsecase) HandleQuery(ctx context.Context, params map[string]s
 	} else {
 		for _, group := range usergroups {
 			t, err := uc.repo.ListNsqTopicEntitiesByGroup(group.GroupName)
-			if err != nil {
+			if err != nil && err != dbPkg.ErrNotFound {
 				return ListTopicsResponse{}, err
 			}
 			topicEntities = append(topicEntities, t...)
 		}
 	}
-	if err != nil {
+	if err != nil && err != dbPkg.ErrNotFound {
 		return ListTopicsResponse{}, err
 	}
 	topics := make([]topic.Topic, len(topicEntities))
