@@ -77,4 +77,14 @@ $(function() {
     $(this).addClass('active');
     showAccessControl();
   });
+
+  // Add logout handler
+  $('#logout-link').on('click', function(e) {
+    e.preventDefault();
+    $.get('/api/logout', function(resp) {
+      if (resp && resp.redirect) {
+        window.location.href = resp.redirect;
+      }
+    });
+  });
 }); 
