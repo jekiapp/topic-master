@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jekiapp/nsqper/internal/config"
+	"github.com/jekiapp/topic-master/internal/config"
 )
 
 var lookupdAddr string

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	aclmodel "github.com/jekiapp/nsqper/internal/model/acl"
-	usergroup "github.com/jekiapp/nsqper/internal/repository/user"
+	aclmodel "github.com/jekiapp/topic-master/internal/model/acl"
+	usergroup "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
 )
 

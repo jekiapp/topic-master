@@ -3,13 +3,13 @@ package main
 import (
 	"net/http"
 
-	"github.com/jekiapp/nsqper/internal/config"
-	acl "github.com/jekiapp/nsqper/internal/usecase/acl"
-	aclGroup "github.com/jekiapp/nsqper/internal/usecase/acl/group"
-	aclUser "github.com/jekiapp/nsqper/internal/usecase/acl/user"
-	topicUC "github.com/jekiapp/nsqper/internal/usecase/topic"
-	webUC "github.com/jekiapp/nsqper/internal/usecase/web"
-	handlerPkg "github.com/jekiapp/nsqper/pkg/handler"
+	"github.com/jekiapp/topic-master/internal/config"
+	acl "github.com/jekiapp/topic-master/internal/usecase/acl"
+	aclGroup "github.com/jekiapp/topic-master/internal/usecase/acl/group"
+	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
+	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
+	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
+	handlerPkg "github.com/jekiapp/topic-master/pkg/handler"
 	"github.com/tidwall/buntdb"
 )
 

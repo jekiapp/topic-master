@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	"github.com/jekiapp/nsqper/internal/model/topic"
-	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
-	dbPkg "github.com/jekiapp/nsqper/pkg/db"
-	"github.com/jekiapp/nsqper/pkg/util"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/topic"
+	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
+	dbPkg "github.com/jekiapp/topic-master/pkg/db"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 

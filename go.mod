@@ -1,4 +1,4 @@
-module github.com/jekiapp/nsqper
+module github.com/jekiapp/topic-master
 
 go 1.23
 

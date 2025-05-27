@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tidwall/buntdb"
 
-	"github.com/jekiapp/nsqper/pkg/db"
+	"github.com/jekiapp/topic-master/pkg/db"
 )
 
 type Entity struct {

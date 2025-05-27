@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch NSQper",
+            "name": "Launch topic-master",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -17,7 +17,7 @@
             ]
         },
         {
-            "name": "Debug NSQper",
+            "name": "Debug topic-master",
             "type": "go",
             "request": "launch",
             "mode": "debug",

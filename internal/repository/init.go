@@ -1,11 +1,11 @@
 package repository
 
 import (
-	"github.com/jekiapp/nsqper/internal/config"
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	"github.com/jekiapp/nsqper/internal/repository/entity"
-	"github.com/jekiapp/nsqper/internal/repository/lookupd"
-	"github.com/jekiapp/nsqper/internal/repository/user"
+	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/repository/entity"
+	"github.com/jekiapp/topic-master/internal/repository/lookupd"
+	"github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
 )
 

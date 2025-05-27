@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	permissionrepo "github.com/jekiapp/nsqper/internal/repository/permission"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	permissionrepo "github.com/jekiapp/topic-master/internal/repository/permission"
 	"github.com/tidwall/buntdb"
 )
 

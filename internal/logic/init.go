@@ -1,7 +1,7 @@
 package logic
 
 import (
-	"github.com/jekiapp/nsqper/internal/config"
+	"github.com/jekiapp/topic-master/internal/config"
 )
 
 func Init(cfg *config.Config) error {

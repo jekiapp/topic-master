@@ -5,8 +5,8 @@ package util
 import (
 	"context"
 
-	"github.com/jekiapp/nsqper/internal/model"
-	"github.com/jekiapp/nsqper/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model"
+	"github.com/jekiapp/topic-master/internal/model/acl"
 )
 
 func GetUserInfo(ctx context.Context) *acl.User {

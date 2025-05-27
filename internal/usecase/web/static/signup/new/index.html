@@ -1,0 +1,54 @@
+// this is a signup page, 
+// create css and js files for this page
+// it will have a form with the following fields:
+// - username
+// - password
+// - confirm password
+// - groups (look at acl/index.go for the UX)
+// the groups is a auto complete field with table
+// no need to submit for now, I dont have the BE yet
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/colors.css">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="signup-container">
+        <form id="signup-form" class="popup-form" autocomplete="off">
+            <h3>Sign Up</h3>
+            <div id="signup-form-error" class="form-error" style="display:none;"></div>
+            <div class="form-group">
+                <label for="signup-username">Username</label>
+                <input type="text" id="signup-username" name="signup-username" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" name="signup-password" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-confirm-password">Confirm Password</label>
+                <input type="password" id="signup-confirm-password" name="signup-confirm-password" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-group-table">Groups</label>
+                <div id="signup-group-multiselect">
+                    <input list="signup-group-list" id="signup-group-name" name="signup-group-name" class="themed-input" autocomplete="off" placeholder="Type to search group...">
+                    <datalist id="signup-group-list"></datalist>
+                    <table id="signup-selected-groups-table" style="margin-top:8px;width:100%;border-collapse:collapse;">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button type="submit" class="themed-btn">Sign Up</button>
+            </div>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

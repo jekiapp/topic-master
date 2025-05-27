@@ -10,12 +10,12 @@ import (
 
 	// Correct internal imports
 
-	aclmodel "github.com/jekiapp/nsqper/internal/model/acl"
-	usergroup "github.com/jekiapp/nsqper/internal/repository/user"
-	dbPkg "github.com/jekiapp/nsqper/pkg/db"
+	aclmodel "github.com/jekiapp/topic-master/internal/model/acl"
+	usergroup "github.com/jekiapp/topic-master/internal/repository/user"
+	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 )
 
-const configKey = "nsqper_config"
+const configKey = "topic-master_config"
 
 type Config struct {
 	NSQLookupdHTTPAddr string
@@ -31,7 +31,7 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 		var err error
 		raw, err = tx.Get(configKey)
 		if err == buntdb.ErrNotFound {
-			return errors.New("nsqper_config not found in buntDB")
+			return errors.New("topic-master_config not found in buntDB")
 		} else if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 
 	// Unmarshal using msgpack
 	if err := msgpack.Unmarshal([]byte(raw), &cfg); err != nil {
-		return nil, errors.New("failed to unmarshal nsqper_config: " + err.Error())
+		return nil, errors.New("failed to unmarshal topic-master_config: " + err.Error())
 	}
 
 	return &cfg, nil

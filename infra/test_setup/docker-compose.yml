@@ -57,4 +57,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${GOPATH}/src/github.com/jekiapp/nsqper/infra/test_setup/data
+      device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/data

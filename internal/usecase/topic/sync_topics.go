@@ -11,10 +11,10 @@ package topic
 import (
 	"context"
 
-	"github.com/jekiapp/nsqper/internal/logic/topic"
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	entity "github.com/jekiapp/nsqper/internal/repository/entity"
-	lookupd "github.com/jekiapp/nsqper/internal/repository/lookupd"
+	"github.com/jekiapp/topic-master/internal/logic/topic"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	entity "github.com/jekiapp/topic-master/internal/repository/entity"
+	lookupd "github.com/jekiapp/topic-master/internal/repository/lookupd"
 	"github.com/tidwall/buntdb"
 )
 

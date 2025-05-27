@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jekiapp/nsqper/internal/model/acl"
-	apprepo "github.com/jekiapp/nsqper/internal/repository/application"
-	entityrepo "github.com/jekiapp/nsqper/internal/repository/entity"
-	permissionrepo "github.com/jekiapp/nsqper/internal/repository/permission"
-	userrepo "github.com/jekiapp/nsqper/internal/repository/user"
+	"github.com/jekiapp/topic-master/internal/model/acl"
+	apprepo "github.com/jekiapp/topic-master/internal/repository/application"
+	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
+	permissionrepo "github.com/jekiapp/topic-master/internal/repository/permission"
+	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
 )
 

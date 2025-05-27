@@ -11,11 +11,11 @@ import (
 
 	"github.com/tidwall/buntdb"
 
-	"github.com/jekiapp/nsqper/internal/config"
-	"github.com/jekiapp/nsqper/internal/repository"
+	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/repository"
 )
 
-const dbfile = "nsqper.db"
+const dbfile = "topic-master.db"
 
 func main() {
 	dataDir := flag.String("data_dir", "", "Path to buntdb data directory(required)")
@@ -65,7 +65,7 @@ func main() {
 	}
 
 	// Start the server
-	fmt.Printf("NSQper is running on port %s...\n", *port)
+	fmt.Printf("topic-master is running on port %s...\n", *port)
 	if err := http.ListenAndServe(":"+*port, mux); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
