@@ -33,7 +33,7 @@ type UserListItem struct {
 type GroupDetail struct {
 	GroupID   string `json:"group_id"`
 	GroupName string `json:"group_name"`
-	Type      string `json:"type"`
+	Role      string `json:"role"`
 }
 
 type iUserDataRepo interface {
@@ -73,7 +73,7 @@ func (uc GetUserListUsecase) Handle(ctx context.Context, req GetUserListRequest)
 					groupDetails = append(groupDetails, GroupDetail{
 						GroupID:   ug.GroupID,
 						GroupName: group.Name,
-						Type:      ug.Type,
+						Role:      ug.Role,
 					})
 				}
 			}

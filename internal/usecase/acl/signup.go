@@ -22,7 +22,8 @@ type SignupRequest struct {
 	ConfirmPassword string `json:"confirm_password"`
 	Reason          string `json:"reason"`
 	GroupID         string `json:"group_id"`
-	GroupType       string `json:"group_type"` // member or admin
+	GroupName       string `json:"group_name"`
+	GroupRole       string `json:"group_role"` // member or admin
 }
 
 type SignupResponse struct {
@@ -95,8 +96,8 @@ func (r SignupRequest) Validate() error {
 	if r.GroupID == "" {
 		return errors.New("missing group_id")
 	}
-	if r.GroupType == "" {
-		return errors.New("missing group_type")
+	if r.GroupRole == "" {
+		return errors.New("missing group_role")
 	}
 
 	return nil
@@ -111,7 +112,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		Title:         fmt.Sprintf("Signup request by %s(%s)", req.Name, req.Username),
 		UserID:        acl.ActorSystem,
 		PermissionIDs: []string{"signup:" + req.Username},
-		Reason:        fmt.Sprintf("Request to become %s to %s", req.GroupType, req.GroupID),
+		Reason:        fmt.Sprintf("Request to become %s of group %s", req.GroupRole, req.GroupName),
 		Status:        acl.StatusWaitingForApproval,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -161,7 +162,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	userGroup := acl.UserGroup{
 		UserID:    user.ID,
 		GroupID:   req.GroupID,
-		Type:      req.GroupType,
+		Role:      req.GroupRole,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

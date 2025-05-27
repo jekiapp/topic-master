@@ -19,7 +19,7 @@ type UpdateUserRequest struct {
 	ResetPassword bool   `json:"reset_password"`
 	Groups        []struct {
 		GroupID string `json:"group_id"`
-		Type    string `json:"type"`
+		Role    string `json:"role"`
 	} `json:"groups"`
 }
 
@@ -121,7 +121,7 @@ func (uc UpdateUserUsecase) Handle(ctx context.Context, req UpdateUserRequest) (
 		userGroup := acl.UserGroup{
 			UserID:    existingUser.ID,
 			GroupID:   group.GroupID,
-			Type:      group.Type,
+			Role:      group.Role,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}

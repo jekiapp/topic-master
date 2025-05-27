@@ -57,7 +57,7 @@ type UserGroup struct {
 	ID        string // Unique identifier for the mapping
 	UserID    string // Reference to User.ID
 	GroupID   string // Reference to Group.ID
-	Type      string // Type of user group (admin, member, etc.)
+	Role      string // Role of user group (admin, member, etc.)
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -67,7 +67,7 @@ const (
 	IdxUserGroup_ID      = TableUserGroup + ":usergroup_id"
 	IdxUserGroup_UserID  = TableUserGroup + ":user_id"
 	IdxUserGroup_GroupID = TableUserGroup + ":group_id"
-	IdxUserGroup_Type    = TableUserGroup + ":type"
+	IdxUserGroup_Role    = TableUserGroup + ":role"
 )
 
 func (ug UserGroup) GetPrimaryKey() string {
@@ -96,8 +96,8 @@ func (ug UserGroup) GetIndexes() []db.Index {
 			Type:    buntdb.IndexString,
 		},
 		{
-			Name:    IdxUserGroup_Type,
-			Pattern: fmt.Sprintf("%s:*:%s", TableUserGroup, "type"),
+			Name:    IdxUserGroup_Role,
+			Pattern: fmt.Sprintf("%s:*:%s", TableUserGroup, "role"),
 			Type:    buntdb.IndexString,
 		},
 	}
@@ -108,6 +108,6 @@ func (ug UserGroup) GetIndexValues() map[string]string {
 		"usergroup_id": fmt.Sprintf("%s:%s", ug.GroupID, ug.UserID),
 		"user_id":      ug.UserID,
 		"group_id":     ug.GroupID,
-		"type":         ug.Type,
+		"role":         ug.Role,
 	}
 }
