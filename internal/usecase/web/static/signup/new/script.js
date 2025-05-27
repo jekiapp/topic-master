@@ -33,7 +33,7 @@ $(document).ready(function() {
         const password = $('#signup-password').val();
         const confirm = $('#signup-confirm-password').val();
         const groupName = $('#signup-group-name').val();
-        const groupType = $('#signup-group-type').val();
+        const groupRole = $('#signup-group-role').val();
         const groupId = window._groupNameToId[groupName];
         if (password !== confirm) {
             $('#signup-form-error').text('Passwords do not match.').show();
@@ -59,7 +59,7 @@ $(document).ready(function() {
                 password: password,
                 confirm_password: confirm,
                 group_id: groupId,
-                group_type: groupType
+                group_role: groupRole
             }),
             success: function(resp) {
                 $('#signup-form :input').prop('disabled', false);

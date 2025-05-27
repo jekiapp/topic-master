@@ -302,7 +302,7 @@ $(document).on('change', '#user-group-name', function() {
             <span class="remove-group-row" style="margin-left:8px;cursor:pointer;color:#d9534f;font-weight:bold;">&times;</span>
           </td>
           <td style="padding:4px 8px;">
-            <select class="group-type-select themed-input" style="min-width:90px;">
+            <select class="group-role-select themed-input" style="min-width:90px;">
               <option value="member" selected>member</option>
               <option value="admin">admin</option>
             </select>
@@ -333,8 +333,8 @@ function collectGroupMappings() {
   var groups = [];
   $('#selected-groups-table tbody tr').each(function() {
     var group_id = $(this).data('group-id');
-    var type = $(this).find('.group-type-select').val();
-    groups.push({ group_id: group_id, type: type });
+    var role = $(this).find('.group-role-select').val();
+    groups.push({ group_id: group_id, role: role });
   });
   return groups;
 }
@@ -519,9 +519,9 @@ function showUpdateUserPopup(userId) {
                 <span class="remove-update-group-row" style="margin-left:8px;cursor:pointer;color:#d9534f;font-weight:bold;">&times;</span>
               </td>
               <td style="padding:4px 8px;">
-                <select class="update-group-type-select themed-input" style="min-width:90px;">
-                  <option value="member"${g.type === 'member' ? ' selected' : ''}>member</option>
-                  <option value="admin"${g.type === 'admin' ? ' selected' : ''}>admin</option>
+                <select class="update-group-role-select themed-input" style="min-width:90px;">
+                  <option value="member"${g.role === 'member' ? ' selected' : ''}>member</option>
+                  <option value="admin"${g.role === 'admin' ? ' selected' : ''}>admin</option>
                 </select>
               </td>
             </tr>`
@@ -549,7 +549,7 @@ $(document).on('change', '#update-user-group-name', function() {
             <span class="remove-update-group-row" style="margin-left:8px;cursor:pointer;color:#d9534f;font-weight:bold;">&times;</span>
           </td>
           <td style="padding:4px 8px;">
-            <select class="update-group-type-select themed-input" style="min-width:90px;">
+            <select class="update-group-role-select themed-input" style="min-width:90px;">
               <option value="member" selected>member</option>
               <option value="admin">admin</option>
             </select>
@@ -575,8 +575,8 @@ function collectUpdateGroupMappings() {
   var groups = [];
   $('#update-selected-groups-table tbody tr').each(function() {
     var group_id = $(this).data('group-id');
-    var type = $(this).find('.update-group-type-select').val();
-    groups.push({ group_id: group_id, type: type });
+    var role = $(this).find('.update-group-role-select').val();
+    groups.push({ group_id: group_id, role: role });
   });
   return groups;
 }
