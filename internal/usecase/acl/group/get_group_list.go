@@ -65,7 +65,7 @@ func (uc GetGroupListUsecase) Handle(ctx context.Context, req GetGroupListReques
 		if err == nil {
 			for _, ug := range userGroups {
 				user, err := uc.userGroupRepo.GetUserByID(ug.UserID)
-				if err == nil {
+				if err == nil && user.Status == acl.StatusUserActive {
 					usernames = append(usernames, user.Username)
 				}
 			}

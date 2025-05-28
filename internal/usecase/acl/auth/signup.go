@@ -37,6 +37,7 @@ type iSignupRepo interface {
 	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
 	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
 	CreateApplicationHistory(history acl.ApplicationHistory) error
+	GetUserByID(userID string) (acl.User, error)
 }
 
 type signupRepo struct {
@@ -65,6 +66,10 @@ func (r *signupRepo) CreateApplicationAssignment(assignment acl.ApplicationAssig
 
 func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) error {
 	return db.Insert(r.db, history)
+}
+
+func (r *signupRepo) GetUserByID(userID string) (acl.User, error) {
+	return db.GetByID[acl.User](r.db, userID)
 }
 
 type SignupUsecase struct {
@@ -131,6 +136,15 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, errors.New("failed to list root group members")
 	}
 	for _, member := range rootMembers {
+		// check if the user status is "active"
+		user, err := uc.repo.GetUserByID(member.UserID)
+		if err != nil {
+			return SignupResponse{}, err
+		}
+		if user.Status != acl.StatusUserActive {
+			continue
+		}
+
 		assignment := acl.ApplicationAssignment{
 			ID:            uuid.NewString(),
 			ApplicationID: app.ID,
@@ -139,6 +153,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
 		}
+
 		if err := uc.repo.CreateApplicationAssignment(assignment); err != nil {
 			return SignupResponse{}, err
 		}
