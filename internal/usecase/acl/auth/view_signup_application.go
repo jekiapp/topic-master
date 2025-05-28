@@ -32,6 +32,7 @@ type ViewSignupApplicationResponse struct {
 type assignee struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
+	Name     string `json:"name"`
 	Status   string `json:"status"`
 }
 
@@ -106,6 +107,7 @@ func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req map[strin
 		assignees = append(assignees, assignee{
 			UserID:   user.ID,
 			Username: user.Username,
+			Name:     user.Name,
 			Status:   assignment.ReviewStatus,
 		})
 	}

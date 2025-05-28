@@ -21,6 +21,7 @@ $(function() {
             $('#detail-grouprole').text(group.role || '');
             $('#detail-reason').text(data.application.reason || '');
             $('#detail-status').text(data.application.status || '');
+            $('#detail-createdat').text(formatDateTime(data.application.created_at));
 
             // Assignees
             let assignees = data.assignee || [];
@@ -30,7 +31,7 @@ $(function() {
                 $assigneeTbody.append('<tr><td colspan="2">No assignees.</td></tr>');
             } else {
                 assignees.forEach(function(a) {
-                    $assigneeTbody.append(`<tr><td>${a.username || ''}</td><td>${a.status || ''}</td></tr>`);
+                    $assigneeTbody.append(`<tr><td>${a.name || a.username || ''}</td><td>${a.status || ''}</td></tr>`);
                 });
             }
 
@@ -42,11 +43,22 @@ $(function() {
                 $historyTbody.append('<tr><td colspan="2">No history.</td></tr>');
             } else {
                 histories.forEach(function(h) {
-                    $historyTbody.append(`<tr><td>${h.Action || ''}</td><td>${h.Comment || ''}</td></tr>`);
+                    $historyTbody.append(`<tr><td>${h.action || ''}</td><td>${h.comment || ''}</td><td>${formatDateTime(h.created_at) || ''}</td></tr>`);
                 });
             }
         })
         .fail(function() {
             $('#application-section').text('Failed to load application detail.');
         });
-}); 
+});
+
+function formatDateTime(dt) {
+    if (!dt) return '';
+    var d = new Date(dt);
+    if (isNaN(d.getTime())) return dt;
+    return String(d.getHours()).padStart(2,'0') + ':' +
+           String(d.getMinutes()).padStart(2,'0') + ' ' +
+           String(d.getDate()).padStart(2,'0') + '/' +
+           String(d.getMonth()+1).padStart(2,'0') + '/' +
+           d.getFullYear();
+} 

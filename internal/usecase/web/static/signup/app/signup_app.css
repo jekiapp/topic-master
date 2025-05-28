@@ -1,33 +1,82 @@
-.app-detail-container {
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     background: var(--primary-bg);
+    margin: 0;
+    padding: 0;
+}
+
+.app-detail-container {
+    background: var(--primary-white);
     color: var(--primary-purple);
     max-width: 700px;
-    margin: 40px auto;
-    padding: 32px 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px var(--shadow-purple);
+    margin: 48px auto;
+    padding: 40px 32px;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px var(--shadow-purple);
 }
+
 .detail-section {
     background: var(--primary-white);
     border: 1px solid var(--border-purple);
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 4px var(--shadow-purple);
+    border-radius: 12px;
+    padding: 20px 18px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px var(--shadow-purple);
 }
+
 h2, h3 {
     color: var(--accent-purple);
+    margin-top: 0;
+    letter-spacing: 0.5px;
 }
+
+.detail-section > div {
+    margin-bottom: 10px;
+    font-size: 1.08em;
+}
+
+/* Table Styles */
 table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 8px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 12px;
+    background: var(--primary-white);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px var(--shadow-purple);
 }
-td, th {
-    border: 1px solid var(--border-purple);
-    padding: 6px 10px;
+th, td {
+    border: none;
+    padding: 12px 14px;
     text-align: left;
+    font-size: 1em;
 }
 th {
     background: var(--input-bg);
+    color: var(--accent-purple);
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+tbody tr {
+    transition: background 0.2s;
+}
+tbody tr:hover {
+    background: var(--shadow-focus);
+}
+tbody tr:not(:last-child) td {
+    border-bottom: 1px solid var(--border-purple);
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+    .app-detail-container {
+        padding: 18px 4vw;
+    }
+    .detail-section {
+        padding: 12px 2vw;
+    }
+    th, td {
+        padding: 8px 6px;
+    }
 } 
