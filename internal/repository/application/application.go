@@ -34,3 +34,26 @@ func GetApplicationByUserAndPermission(db *buntdb.DB, userID, permissionID strin
 func CreateApplicationAssignment(db *buntdb.DB, assignment acl.ApplicationAssignment) error {
 	return dbpkg.Insert(db, assignment)
 }
+
+// InitIndexApplication registers indexes for Application, ApplicationAssignment, and ApplicationHistory
+func InitIndexApplication(db *buntdb.DB) error {
+	appIndexes := acl.Application{}.GetIndexes()
+	for _, index := range appIndexes {
+		if err := db.CreateIndex(index.Name, index.Pattern, index.Type); err != nil {
+			return err
+		}
+	}
+	assignmentIndexes := acl.ApplicationAssignment{}.GetIndexes()
+	for _, index := range assignmentIndexes {
+		if err := db.CreateIndex(index.Name, index.Pattern, index.Type); err != nil {
+			return err
+		}
+	}
+	historyIndexes := acl.ApplicationHistory{}.GetIndexes()
+	for _, index := range historyIndexes {
+		if err := db.CreateIndex(index.Name, index.Pattern, index.Type); err != nil {
+			return err
+		}
+	}
+	return nil
+}

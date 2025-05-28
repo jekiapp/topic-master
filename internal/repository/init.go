@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/jekiapp/topic-master/internal/config"
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/repository/application"
 	"github.com/jekiapp/topic-master/internal/repository/entity"
 	"github.com/jekiapp/topic-master/internal/repository/lookupd"
 	"github.com/jekiapp/topic-master/internal/repository/user"
@@ -15,6 +16,13 @@ func Init(cfg *config.Config, db *buntdb.DB) error {
 	if err != nil {
 		return err
 	}
+
+	// Register application-related indexes
+	err = application.InitIndexApplication(db)
+	if err != nil {
+		return err
+	}
+
 	err = user.InitIndexUser(db)
 	if err != nil {
 		return err
