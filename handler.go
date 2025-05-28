@@ -104,6 +104,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	})
 
 	mux.HandleFunc("/api/signup", handlerPkg.HandleGenericPost(h.signupUC.Handle))
+	mux.HandleFunc("/api/signup/app", handlerPkg.QueryHandler(h.viewSignupApplicationUC.Handle))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

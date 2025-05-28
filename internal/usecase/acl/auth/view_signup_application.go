@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
@@ -22,10 +23,16 @@ type ViewSignupApplicationRequest struct {
 }
 
 type ViewSignupApplicationResponse struct {
-	Application acl.Application             `json:"application"`
-	User        acl.User                    `json:"user"`
-	Assignments []acl.ApplicationAssignment `json:"assignments"`
-	Histories   []acl.ApplicationHistory    `json:"histories"`
+	Application acl.Application          `json:"application"`
+	User        acl.User                 `json:"user"`
+	Assignee    []assignee               `json:"assignee"`
+	Histories   []acl.ApplicationHistory `json:"histories"`
+}
+
+type assignee struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Status   string `json:"status"`
 }
 
 type iViewSignupApplicationRepo interface {
@@ -75,8 +82,9 @@ func NewViewSignupApplicationUsecase(db *buntdb.DB) ViewSignupApplicationUsecase
 	}
 }
 
-func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req ViewSignupApplicationRequest) (ViewSignupApplicationResponse, error) {
-	app, err := uc.repo.GetApplicationByID(req.ApplicationID)
+func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req map[string]string) (ViewSignupApplicationResponse, error) {
+	appID := req["id"]
+	app, err := uc.repo.GetApplicationByID(appID)
 	if err != nil {
 		return ViewSignupApplicationResponse{}, errors.New("application not found")
 	}
@@ -85,18 +93,31 @@ func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req ViewSignu
 		return ViewSignupApplicationResponse{}, errors.New("user not found")
 	}
 
-	assignments, err := uc.repo.ListAssignmentsByApplicationID(app.ID)
+	assignments, err := uc.repo.ListAssignmentsByApplicationID(appID)
 	if err != nil {
 		return ViewSignupApplicationResponse{}, fmt.Errorf("assignments not found: %w", err)
 	}
-	histories, err := uc.repo.ListHistoriesByApplicationID(app.ID)
+	assignees := []assignee{}
+	for _, assignment := range assignments {
+		user, err := uc.repo.GetUserByID(assignment.ReviewerID)
+		if err != nil {
+			log.Println("error getting username by user id", err)
+		}
+		assignees = append(assignees, assignee{
+			UserID:   user.ID,
+			Username: user.Username,
+			Status:   assignment.ReviewStatus,
+		})
+	}
+
+	histories, err := uc.repo.ListHistoriesByApplicationID(appID)
 	if err != nil {
 		return ViewSignupApplicationResponse{}, fmt.Errorf("histories not found: %w", err)
 	}
 	return ViewSignupApplicationResponse{
 		Application: app,
 		User:        user,
-		Assignments: assignments,
+		Assignee:    assignees,
 		Histories:   histories,
 	}, nil
 }

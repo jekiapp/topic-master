@@ -27,7 +27,7 @@ type SignupRequest struct {
 }
 
 type SignupResponse struct {
-	Application acl.Application
+	ApplicationID string `json:"application_id"`
 }
 
 type iSignupRepo interface {
@@ -107,10 +107,11 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	if err := req.Validate(); err != nil {
 		return SignupResponse{}, err
 	}
+	userID := uuid.NewString()
 	app := acl.Application{
 		ID:            uuid.NewString(),
 		Title:         fmt.Sprintf("Signup request by %s(%s)", req.Name, req.Username),
-		UserID:        acl.ActorSystem,
+		UserID:        userID,
 		PermissionIDs: []string{"signup:" + req.Username},
 		Reason:        fmt.Sprintf("Request to become %s of group %s", req.GroupRole, req.GroupName),
 		Status:        acl.StatusWaitingForApproval,
@@ -134,7 +135,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			ID:            uuid.NewString(),
 			ApplicationID: app.ID,
 			ReviewerID:    member.UserID,
-			ReviewStatus:  acl.StatusPending,
+			ReviewStatus:  acl.ActionWaitingForApproval,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
 		}
@@ -147,11 +148,18 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	hash := sha256.Sum256([]byte(req.Password))
 	hashedPassword := hex.EncodeToString(hash[:])
 	user := acl.User{
-		ID:        uuid.NewString(),
-		Username:  req.Username,
-		Name:      req.Name,
-		Password:  hashedPassword,
-		Status:    acl.StatusUserInApproval,
+		ID:       userID,
+		Username: req.Username,
+		Name:     req.Name,
+		Password: hashedPassword,
+		Status:   acl.StatusUserInApproval,
+		Groups: []acl.GroupRole{
+			{
+				GroupID:   req.GroupID,
+				GroupName: req.GroupName,
+				Role:      req.GroupRole,
+			},
+		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -160,7 +168,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	}
 	// Assign user to the requested group
 	userGroup := acl.UserGroup{
-		UserID:    user.ID,
+		UserID:    userID,
 		GroupID:   req.GroupID,
 		Role:      req.GroupRole,
 		CreatedAt: time.Now(),
@@ -171,13 +179,13 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	}
 	// 3. Create ApplicationHistory as "waiting for approval"
 	history := acl.ApplicationHistory{
-		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
-		Action:        acl.ActionWaitingForApproval,
-		ActorID:       acl.ActorSystem,
+		Action:        "Create ticket",
+		ActorID:       userID,
+		Comment:       fmt.Sprintf("Initial signup by %s", user.Name),
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
 	_ = uc.repo.CreateApplicationHistory(history)
-	return SignupResponse{Application: app}, nil
+	return SignupResponse{ApplicationID: app.ID}, nil
 }
