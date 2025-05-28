@@ -111,3 +111,11 @@ func (ug UserGroup) GetIndexValues() map[string]string {
 		"role":         ug.Role,
 	}
 }
+
+func (g *Group) SetID(id string) {
+	g.ID = id
+}
+
+func (ug *UserGroup) SetID(id string) {
+	ug.ID = id
+}

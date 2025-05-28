@@ -25,7 +25,7 @@ type userDeleteRepo struct {
 }
 
 func (r *userDeleteRepo) DeleteUser(userID string) error {
-	return db.DeleteByID(r.db, acl.User{ID: userID})
+	return db.DeleteByID[acl.User](r.db, userID)
 }
 
 type DeleteUserUsecase struct {

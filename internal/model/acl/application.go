@@ -28,14 +28,14 @@ const (
 // Application represents a user's request to obtain a permission.
 // or a new signup request
 type Application struct {
-	ID            string    // UUID
-	Title         string    // Title of the application
-	UserID        string    // Reference to User.ID (the applicant)
-	PermissionIDs []string  // Reference to Permission.ID (the requested permission)
-	Reason        string    // Reason for the application
-	Status        string    // Overall status (e.g., pending, approved, rejected)
-	CreatedAt     time.Time // When the application was created
-	UpdatedAt     time.Time // Last update timestamp
+	ID            string    `json:"id"`             // UUID
+	Title         string    `json:"title"`          // Title of the application
+	UserID        string    `json:"user_id"`        // Reference to User.ID (the applicant)
+	PermissionIDs []string  `json:"permission_ids"` // Reference to Permission.ID (the requested permission)
+	Reason        string    `json:"reason"`         // Reason for the application
+	Status        string    `json:"status"`         // Overall status (e.g., pending, approved, rejected)
+	CreatedAt     time.Time `json:"created_at"`     // When the application was created
+	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
 }
 
 func (a Application) GetPrimaryKey() string {
@@ -85,14 +85,14 @@ const (
 )
 
 type ApplicationAssignment struct {
-	ID            string    // UUID
-	ApplicationID string    // Reference to Application.ID
-	ReviewerID    string    // Reference to User.ID (the reviewer)
-	ReviewStatus  string    // Status (e.g., pending, approved, rejected)
-	ReviewComment string    // Optional comment from the reviewer
-	ReviewedAt    time.Time // When the review was made
-	CreatedAt     time.Time // When the mapping was created
-	UpdatedAt     time.Time // Last update timestamp
+	ID            string    `json:"id"`             // UUID
+	ApplicationID string    `json:"application_id"` // Reference to Application.ID
+	ReviewerID    string    `json:"reviewer_id"`    // Reference to User.ID (the reviewer)
+	ReviewStatus  string    `json:"review_status"`  // Status (e.g., pending, approved, rejected)
+	ReviewComment string    `json:"review_comment"` // Optional comment from the reviewer
+	ReviewedAt    time.Time `json:"reviewed_at"`    // When the review was made
+	CreatedAt     time.Time `json:"created_at"`     // When the mapping was created
+	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
 }
 
 func (aa ApplicationAssignment) GetPrimaryKey() string {
@@ -183,4 +183,16 @@ func (ah ApplicationHistory) GetIndexValues() map[string]string {
 		"actor_id":       ah.ActorID,
 		"action":         ah.Action,
 	}
+}
+
+func (a *Application) SetID(id string) {
+	a.ID = id
+}
+
+func (aa *ApplicationAssignment) SetID(id string) {
+	aa.ID = id
+}
+
+func (ah *ApplicationHistory) SetID(id string) {
+	ah.ID = id
 }

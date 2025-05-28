@@ -21,8 +21,7 @@ func InitIndexEntity(db *buntdb.DB) error {
 
 // format id = nsqtopic:topic_name
 func GetEntityByID(dbConn *buntdb.DB, id string) (*acl.Entity, error) {
-	tmp := acl.Entity{ID: id}
-	entity, err := db.GetByID[acl.Entity](dbConn, tmp)
+	entity, err := db.GetByID[acl.Entity](dbConn, id)
 	if err != nil {
 		return nil, err
 	}

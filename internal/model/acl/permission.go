@@ -72,3 +72,7 @@ func (gp GroupPermission) GetPrefix() string {
 func (gp GroupPermission) GetKey() string {
 	return fmt.Sprintf("%s%s:%s", gp.GetPrefix(), gp.GroupID, gp.PermissionID)
 }
+
+func (p *Permission) SetID(id string) {
+	p.ID = id
+}

@@ -107,3 +107,7 @@ func (e Entity) GetIndexValues() map[string]string {
 const (
 	EntityType_NSQTopic = "nsq_topic"
 )
+
+func (e *Entity) SetID(id string) {
+	e.ID = id
+}

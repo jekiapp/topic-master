@@ -22,8 +22,7 @@ func CreatePermission(dbConn *buntdb.DB, permission acl.Permission) error {
 }
 
 func GetPermissionByNameEntity(dbConn *buntdb.DB, name string, entityID string) (*acl.Permission, error) {
-	tmp := acl.Permission{Name: name, EntityID: entityID}
-	perm, err := db.SelectOne[acl.Permission](dbConn, tmp, acl.IdxPermission_NameEntity)
+	perm, err := db.SelectOne[acl.Permission](dbConn, name, acl.IdxPermission_NameEntity)
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +30,7 @@ func GetPermissionByNameEntity(dbConn *buntdb.DB, name string, entityID string) 
 }
 
 func GetPermissionByID(dbConn *buntdb.DB, id string) (*acl.Permission, error) {
-	tmp := acl.Permission{ID: id}
-	perm, err := db.GetByID[acl.Permission](dbConn, tmp)
+	perm, err := db.GetByID[acl.Permission](dbConn, id)
 	if err != nil {
 		return nil, err
 	}

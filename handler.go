@@ -5,8 +5,10 @@ import (
 
 	"github.com/jekiapp/topic-master/internal/config"
 	acl "github.com/jekiapp/topic-master/internal/usecase/acl"
+	aclAuth "github.com/jekiapp/topic-master/internal/usecase/acl/auth"
 	aclGroup "github.com/jekiapp/topic-master/internal/usecase/acl/group"
 	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
+	aclUserGroup "github.com/jekiapp/topic-master/internal/usecase/acl/usergroup"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
 	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
 	handlerPkg "github.com/jekiapp/topic-master/pkg/handler"
@@ -14,52 +16,54 @@ import (
 )
 
 type Handler struct {
-	config               *config.Config
-	createUserUC         aclUser.CreateUserUsecase
-	updateUserUC         aclUser.UpdateUserUsecase
-	loginUC              acl.LoginUsecase
-	logoutUC             acl.LogoutUsecase
-	assignUserToGroupUC  acl.AssignUserToGroupUsecase
-	deleteUserUC         aclUser.DeleteUserUsecase
-	createGroupUC        aclGroup.CreateGroupUsecase
-	createPermissionUC   acl.CreatePermissionUsecase
-	changePasswordUC     aclUser.ChangePasswordUsecase
-	syncTopicsUC         topicUC.SyncTopicsUsecase
-	webUC                *webUC.WebUsecase
-	getGroupListUC       aclGroup.GetGroupListUsecase
-	getGroupListSimpleUC aclGroup.GetGroupListSimpleUsecase
-	getUserListUC        aclUser.GetUserListUsecase
-	listTopicsUC         topicUC.ListTopicsUsecase
-	updateGroupByIDUC    aclGroup.UpdateGroupByIDUsecase
-	deleteGroupUC        aclGroup.DeleteGroupUsecase
-	resetPasswordUC      acl.ResetPasswordUsecase
-	signupUC             acl.SignupUsecase
+	config                  *config.Config
+	createUserUC            aclUser.CreateUserUsecase
+	updateUserUC            aclUser.UpdateUserUsecase
+	loginUC                 aclAuth.LoginUsecase
+	logoutUC                aclAuth.LogoutUsecase
+	assignUserToGroupUC     aclUserGroup.AssignUserToGroupUsecase
+	deleteUserUC            aclUser.DeleteUserUsecase
+	createGroupUC           aclGroup.CreateGroupUsecase
+	createPermissionUC      acl.CreatePermissionUsecase
+	changePasswordUC        aclUser.ChangePasswordUsecase
+	syncTopicsUC            topicUC.SyncTopicsUsecase
+	webUC                   *webUC.WebUsecase
+	getGroupListUC          aclGroup.GetGroupListUsecase
+	getGroupListSimpleUC    aclGroup.GetGroupListSimpleUsecase
+	getUserListUC           aclUser.GetUserListUsecase
+	listTopicsUC            topicUC.ListTopicsUsecase
+	updateGroupByIDUC       aclGroup.UpdateGroupByIDUsecase
+	deleteGroupUC           aclGroup.DeleteGroupUsecase
+	resetPasswordUC         aclAuth.ResetPasswordUsecase
+	signupUC                aclAuth.SignupUsecase
+	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 	webUsecase := webUC.NewWebUsecase()
 
 	return Handler{
-		config:               cfg,
-		createUserUC:         aclUser.NewCreateUserUsecase(db),
-		updateUserUC:         aclUser.NewUpdateUserUsecase(db),
-		loginUC:              acl.NewLoginUsecase(db, cfg),
-		logoutUC:             acl.NewLogoutUsecase(),
-		assignUserToGroupUC:  acl.NewAssignUserToGroupUsecase(db),
-		deleteUserUC:         aclUser.NewDeleteUserUsecase(db),
-		createGroupUC:        aclGroup.NewCreateGroupUsecase(db),
-		createPermissionUC:   acl.NewCreatePermissionUsecase(db),
-		changePasswordUC:     aclUser.NewChangePasswordUsecase(db),
-		syncTopicsUC:         topicUC.NewSyncTopicsUsecase(db),
-		webUC:                webUsecase,
-		getGroupListUC:       aclGroup.NewGetGroupListUsecase(db),
-		getGroupListSimpleUC: aclGroup.NewGetGroupListSimpleUsecase(db),
-		getUserListUC:        aclUser.NewGetUserListUsecase(db),
-		listTopicsUC:         topicUC.NewListTopicsUsecase(db),
-		updateGroupByIDUC:    aclGroup.NewUpdateGroupByIDUsecase(db),
-		deleteGroupUC:        aclGroup.NewDeleteGroupUsecase(db),
-		resetPasswordUC:      acl.NewResetPasswordUsecase(db),
-		signupUC:             acl.NewSignupUsecase(db),
+		config:                  cfg,
+		createUserUC:            aclUser.NewCreateUserUsecase(db),
+		updateUserUC:            aclUser.NewUpdateUserUsecase(db),
+		loginUC:                 aclAuth.NewLoginUsecase(db, cfg),
+		logoutUC:                aclAuth.NewLogoutUsecase(),
+		assignUserToGroupUC:     aclUserGroup.NewAssignUserToGroupUsecase(db),
+		deleteUserUC:            aclUser.NewDeleteUserUsecase(db),
+		createGroupUC:           aclGroup.NewCreateGroupUsecase(db),
+		createPermissionUC:      acl.NewCreatePermissionUsecase(db),
+		changePasswordUC:        aclUser.NewChangePasswordUsecase(db),
+		syncTopicsUC:            topicUC.NewSyncTopicsUsecase(db),
+		webUC:                   webUsecase,
+		getGroupListUC:          aclGroup.NewGetGroupListUsecase(db),
+		getGroupListSimpleUC:    aclGroup.NewGetGroupListSimpleUsecase(db),
+		getUserListUC:           aclUser.NewGetUserListUsecase(db),
+		listTopicsUC:            topicUC.NewListTopicsUsecase(db),
+		updateGroupByIDUC:       aclGroup.NewUpdateGroupByIDUsecase(db),
+		deleteGroupUC:           aclGroup.NewDeleteGroupUsecase(db),
+		resetPasswordUC:         aclAuth.NewResetPasswordUsecase(db),
+		signupUC:                aclAuth.NewSignupUsecase(db),
+		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
 	}
 }
 

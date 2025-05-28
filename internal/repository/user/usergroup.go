@@ -33,12 +33,8 @@ func CreateUserGroup(dbConn *buntdb.DB, userGroup acl.UserGroup) error {
 }
 
 func GetUserGroup(dbConn *buntdb.DB, userID, groupID string) (acl.UserGroup, error) {
-	tmp := acl.UserGroup{UserID: userID, GroupID: groupID}
-	userGroup, err := db.SelectOne[acl.UserGroup](dbConn, tmp, acl.IdxUserGroup_ID)
-	if err != nil {
-		return acl.UserGroup{}, err
-	}
-	return userGroup, nil
+	pivot := groupID + ":" + userID
+	return db.SelectOne[acl.UserGroup](dbConn, pivot, acl.IdxUserGroup_ID)
 }
 
 func CreateGroup(dbConn *buntdb.DB, group acl.Group) error {
@@ -46,26 +42,15 @@ func CreateGroup(dbConn *buntdb.DB, group acl.Group) error {
 }
 
 func GetGroupByID(dbConn *buntdb.DB, id string) (acl.Group, error) {
-	tmp := acl.Group{ID: id}
-	group, err := db.GetByID[acl.Group](dbConn, tmp)
-	if err != nil {
-		return acl.Group{}, err
-	}
-	return group, nil
+	return db.GetByID[acl.Group](dbConn, id)
 }
 
 func GetGroupByName(dbConn *buntdb.DB, name string) (acl.Group, error) {
-	tmp := acl.Group{Name: name}
-	group, err := db.SelectOne[acl.Group](dbConn, tmp, acl.IdxGroup_Name)
-	if err != nil {
-		return acl.Group{}, err
-	}
-	return group, nil
+	return db.SelectOne[acl.Group](dbConn, name, acl.IdxGroup_Name)
 }
 
 func ListUserGroupsByGroupID(dbConn *buntdb.DB, groupID string, limit int) ([]acl.UserGroup, error) {
-	pivot := acl.UserGroup{GroupID: groupID}
-	all, err := db.SelectPaginated[acl.UserGroup](dbConn, pivot, acl.IdxUserGroup_GroupID, &db.Pagination{Limit: limit})
+	all, err := db.SelectPaginated[acl.UserGroup](dbConn, groupID, acl.IdxUserGroup_GroupID, &db.Pagination{Limit: limit})
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +75,5 @@ func GetAdminUserIDsByGroupID(dbConn *buntdb.DB, groupID string) ([]string, erro
 }
 
 func ListUserGroupsByUserID(dbConn *buntdb.DB, userID string) ([]acl.UserGroup, error) {
-	pivot := acl.UserGroup{UserID: userID}
-	return db.SelectAll[acl.UserGroup](dbConn, pivot, acl.IdxUserGroup_UserID)
+	return db.SelectAll[acl.UserGroup](dbConn, userID, acl.IdxUserGroup_UserID)
 }

@@ -9,8 +9,7 @@ import (
 )
 
 func GetAllGroups(dbConn *buntdb.DB) ([]acl.Group, error) {
-	pivot := acl.Group{} // empty pivot to select all
-	return db.SelectAll[acl.Group](dbConn, pivot, acl.IdxGroup_Name)
+	return db.SelectAll[acl.Group](dbConn, "", acl.IdxGroup_Name)
 }
 
 // DeleteGroupByID deletes a group by its ID
@@ -18,8 +17,7 @@ func DeleteGroupByID(dbConn *buntdb.DB, id string) error {
 	if id == "" {
 		return fmt.Errorf("missing group id")
 	}
-	group := acl.Group{ID: id}
-	return db.DeleteByID(dbConn, group)
+	return db.DeleteByID[acl.Group](dbConn, id)
 }
 
 // UpdateGroup updates a group by its ID

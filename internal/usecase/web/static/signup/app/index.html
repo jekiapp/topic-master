@@ -1,18 +1,24 @@
 // this is an application detail page.
-// it will show the detail page with the following fields:
-// - title
-// - username
-// - Full Name
-// - reason
-// - group name
-// - group role
-// - status
-// - Approver
-// - description
-// - groups
-// the groups is a auto complete field with table
-// no need to submit for now, I dont have the BE yet
-
+// it will show detail of this backend view_signup_application.go
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Application Detail</title>
+    <link rel="stylesheet" href="/colors.css">
+    <link rel="stylesheet" href="signup_app.css">
+</head>
+<body>
+    <div class="app-detail-container">
+        <h2>Application Detail</h2>
+        <div id="application-section" class="detail-section"></div>
+        <h3>User</h3>
+        <div id="user-section" class="detail-section"></div>
+        <h3>Assignments</h3>
+        <div id="assignments-section" class="detail-section"></div>
+        <h3>Histories</h3>
+        <div id="histories-section" class="detail-section"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="signup_app.js"></script>
+</body>
+</html>

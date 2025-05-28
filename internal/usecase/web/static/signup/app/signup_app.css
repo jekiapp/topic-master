@@ -1,0 +1,33 @@
+.app-detail-container {
+    background: var(--primary-bg);
+    color: var(--primary-purple);
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 32px 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px var(--shadow-purple);
+}
+.detail-section {
+    background: var(--primary-white);
+    border: 1px solid var(--border-purple);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px var(--shadow-purple);
+}
+h2, h3 {
+    color: var(--accent-purple);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+td, th {
+    border: 1px solid var(--border-purple);
+    padding: 6px 10px;
+    text-align: left;
+}
+th {
+    background: var(--input-bg);
+} 

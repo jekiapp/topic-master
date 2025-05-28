@@ -50,8 +50,7 @@ type resetPasswordRepo struct {
 }
 
 func (r *resetPasswordRepo) GetResetPasswordByToken(token string) (acl.ResetPassword, error) {
-	tmp := acl.ResetPassword{Token: token}
-	rp, err := db.GetByID[acl.ResetPassword](r.db, tmp)
+	rp, err := db.GetByID[acl.ResetPassword](r.db, token)
 	if err != nil {
 		return acl.ResetPassword{}, err
 	}
@@ -59,8 +58,7 @@ func (r *resetPasswordRepo) GetResetPasswordByToken(token string) (acl.ResetPass
 }
 
 func (r *resetPasswordRepo) GetResetPasswordByUsername(username string) (acl.ResetPassword, error) {
-	tmp := acl.ResetPassword{Username: username}
-	rp, err := db.SelectOne[acl.ResetPassword](r.db, tmp, acl.IdxResetPassword_Username)
+	rp, err := db.SelectOne[acl.ResetPassword](r.db, username, acl.IdxResetPassword_Username)
 	if err != nil {
 		return acl.ResetPassword{}, err
 	}
@@ -68,8 +66,7 @@ func (r *resetPasswordRepo) GetResetPasswordByUsername(username string) (acl.Res
 }
 
 func (r *resetPasswordRepo) DeleteResetPasswordByToken(token string) error {
-	tmp := acl.ResetPassword{Token: token}
-	return db.DeleteByID(r.db, tmp)
+	return db.DeleteByID[acl.ResetPassword](r.db, token)
 }
 
 type userRepo struct {

@@ -46,3 +46,7 @@ func (r ResetPassword) GetIndexValues() map[string]string {
 		"username": r.Username,
 	}
 }
+
+func (r *ResetPassword) SetID(id string) {
+	r.Token = id
+}

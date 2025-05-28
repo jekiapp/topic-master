@@ -11,8 +11,9 @@ import (
 
 // GroupRole represents a user's role in a group
 type GroupRole struct {
-	GroupName string // Name of the group
-	Role      string // Role of the user in the group (e.g., admin, user)
+	GroupID   string `json:"group_id"`   // ID of the group
+	GroupName string `json:"group_name"` // Name of the group
+	Role      string `json:"role"`       // Role of the user in the group (e.g., admin, user)
 }
 
 const (
@@ -24,14 +25,14 @@ const (
 
 // User represents a system user (master)
 type User struct {
-	ID        string      // Unique identifier (e.g., UUID or string key)
-	Username  string      // Username
-	Name      string      // Display Name
-	Password  string      // Password hash
-	Status    string      // Status (e.g., active, inactive, etc.)
-	CreatedAt time.Time   // Creation timestamp
-	UpdatedAt time.Time   // Last update timestamp
-	Groups    []GroupRole // List of groups and roles
+	ID        string      `json:"id"`         // Unique identifier (e.g., UUID or string key)
+	Username  string      `json:"username"`   // Username
+	Name      string      `json:"name"`       // Display Name
+	Password  string      `json:"password"`   // Password hash
+	Status    string      `json:"status"`     // Status (e.g., active, inactive, etc.)
+	CreatedAt time.Time   `json:"created_at"` // Creation timestamp
+	UpdatedAt time.Time   `json:"updated_at"` // Last update timestamp
+	Groups    []GroupRole `json:"groups"`     // List of groups and roles
 }
 
 const (
@@ -66,9 +67,13 @@ func (u User) GetIndexValues() map[string]string {
 
 // Authorization maps a user to a permission (for access control checks)
 type Authorization struct {
-	ID           string // Unique identifier for the mapping
-	UserID       string // Reference to User.ID
-	PermissionID string // Reference to Permission.ID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           string    `json:"id"`            // Unique identifier for the mapping
+	UserID       string    `json:"user_id"`       // Reference to User.ID
+	PermissionID string    `json:"permission_id"` // Reference to Permission.ID
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+func (u *User) SetID(id string) {
+	u.ID = id
 }

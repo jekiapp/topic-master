@@ -22,12 +22,7 @@ func CreateUser(dbConn *buntdb.DB, user acl.User) error {
 }
 
 func GetUserByID(dbConn *buntdb.DB, id string) (acl.User, error) {
-	tmp := acl.User{ID: id}
-	user, err := db.GetByID[acl.User](dbConn, tmp)
-	if err != nil {
-		return acl.User{}, err
-	}
-	return user, nil
+	return db.GetByID[acl.User](dbConn, id)
 }
 
 func UpdateUser(dbConn *buntdb.DB, user acl.User) error {
@@ -39,19 +34,13 @@ func UpsertUser(dbConn *buntdb.DB, user acl.User) error {
 }
 
 func GetUserByUsername(dbConn *buntdb.DB, username string) (acl.User, error) {
-	tmp := acl.User{Username: username}
-	user, err := db.SelectOne[acl.User](dbConn, tmp, acl.IdxUser_Username)
-	if err != nil {
-		return acl.User{}, err
-	}
-	return user, nil
+	return db.SelectOne[acl.User](dbConn, username, acl.IdxUser_Username)
 }
 
 // ListGroupsForUser fetches all groups for a user and returns []acl.GroupRole
 func ListGroupsForUser(dbConn *buntdb.DB, userID string) ([]acl.GroupRole, error) {
 	// Fetch all user groups for the user
-	ugPivot := acl.UserGroup{UserID: userID}
-	userGroups, err := db.SelectAll[acl.UserGroup](dbConn, ugPivot, acl.IdxUserGroup_UserID)
+	userGroups, err := db.SelectAll[acl.UserGroup](dbConn, userID, acl.IdxUserGroup_UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +51,11 @@ func ListGroupsForUser(dbConn *buntdb.DB, userID string) ([]acl.GroupRole, error
 		if err == nil {
 			groupName = group.Name
 		}
-		groups = append(groups, acl.GroupRole{GroupName: groupName, Role: ug.Role})
+		groups = append(groups, acl.GroupRole{GroupID: ug.GroupID, GroupName: groupName, Role: ug.Role})
 	}
 	return groups, nil
 }
 
 func GetAllUsers(dbConn *buntdb.DB) ([]acl.User, error) {
-	pivot := acl.User{} // empty pivot to select all
-	return db.SelectAll[acl.User](dbConn, pivot, acl.IdxUser_Username)
+	return db.SelectAll[acl.User](dbConn, "", acl.IdxUser_Username)
 }

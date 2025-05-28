@@ -26,8 +26,8 @@ func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) 
 }
 
 func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
-	tmp := acl.Entity{TypeID: acl.EntityType_NSQTopic, Name: topic}
-	entity, err := db.SelectOne[acl.Entity](dbConn, tmp, acl.IdxEntity_TypeName)
+	pivot := acl.EntityType_NSQTopic + ":" + topic
+	entity, err := db.SelectOne[acl.Entity](dbConn, pivot, acl.IdxEntity_TypeName)
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,7 @@ func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
 }
 
 func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]acl.Entity, error) {
-	tmp := acl.Entity{TypeID: acl.EntityType_NSQTopic}
-	entities, err := db.SelectAll[acl.Entity](dbConn, tmp, acl.IdxEntity_TypeID)
+	entities, err := db.SelectAll[acl.Entity](dbConn, acl.EntityType_NSQTopic, acl.IdxEntity_TypeID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +49,8 @@ func DeleteNsqTopicEntity(dbConn *buntdb.DB, topic string) error {
 
 // ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is acl.GroupRoot, returns all topics.
 func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]acl.Entity, error) {
-	tmp := acl.Entity{GroupOwner: group, TypeID: acl.EntityType_NSQTopic}
-	entities, err := db.SelectAll[acl.Entity](dbConn, tmp, acl.IdxEntity_GroupType)
+	pivot := group + ":" + acl.EntityType_NSQTopic
+	entities, err := db.SelectAll[acl.Entity](dbConn, pivot, acl.IdxEntity_GroupType)
 	if err != nil {
 		return nil, err
 	}

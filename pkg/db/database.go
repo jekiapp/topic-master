@@ -29,10 +29,23 @@ type IndexItem struct {
 	Type IndexType
 }
 
-type Record interface {
-	GetPrimaryKey() string
+type Table interface {
 	GetIndexes() []Index
+}
+
+type GetRecordByIndexes interface {
+	GetPrimaryKey() string
 	GetIndexValues() map[string]string
+}
+
+type GetRecordByID interface {
+	SetID(id string)
+	GetPrimaryKey() string
+}
+
+type DeleteRecordByID interface {
+	GetRecordByID
+	Table
 }
 
 type Pagination struct {
@@ -40,7 +53,7 @@ type Pagination struct {
 	Limit int
 }
 
-func Insert(db *buntdb.DB, record Record) error {
+func Insert(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		key := record.GetPrimaryKey()
 		msgpackValue, err := msgpack.Marshal(record)
@@ -83,7 +96,7 @@ func Insert(db *buntdb.DB, record Record) error {
 	})
 }
 
-func Update(db *buntdb.DB, record Record) error {
+func Update(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		key := record.GetPrimaryKey()
 		msgpackValue, err := msgpack.Marshal(record)
@@ -122,7 +135,7 @@ func Update(db *buntdb.DB, record Record) error {
 	})
 }
 
-func Upsert(db *buntdb.DB, record Record) error {
+func Upsert(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		key := record.GetPrimaryKey()
 		msgpackValue, err := msgpack.Marshal(record)
@@ -162,19 +175,16 @@ func Upsert(db *buntdb.DB, record Record) error {
 
 type processFunc func(key string, value string) bool
 
-func SelectAll[T any](db *buntdb.DB, record Record, indexName string) ([]T, error) {
-	return SelectPaginated[T](db, record, indexName, nil)
+func SelectAll[T any](db *buntdb.DB, pivot string, indexName string) ([]T, error) {
+	return SelectPaginated[T](db, pivot, indexName, nil)
 }
 
-func SelectPaginated[T any](db *buntdb.DB, record Record, indexName string, pagination *Pagination) ([]T, error) {
+func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagination *Pagination) ([]T, error) {
 	var results []T
 
 	// get index field name
 	// tablename:indexname
 	idxField := strings.Split(indexName, ":")[1]
-
-	// get index value for pivot
-	pivot := record.GetIndexValues()[idxField]
 
 	var skip, limit int
 	if pagination != nil && pagination.Limit > 0 {
@@ -234,18 +244,15 @@ func SelectPaginated[T any](db *buntdb.DB, record Record, indexName string, pagi
 	return results, nil
 }
 
-func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error) {
-	var result T
+func SelectOne[Y any](db *buntdb.DB, pivot string, indexName string) (Y, error) {
+	result := new(Y)
 
 	// get index field name
 	// tablename:indexname
 	idxField := strings.Split(indexName, ":")[1]
 
-	// get index value for pivot
-	pivot := record.GetIndexValues()[idxField]
-
 	if pivot == "" {
-		return result, fmt.Errorf("pivot %s is empty", idxField)
+		return *result, fmt.Errorf("pivot %s is empty", idxField)
 	}
 
 	found := false
@@ -271,18 +278,23 @@ func SelectOne[T any](db *buntdb.DB, record Record, indexName string) (T, error)
 		return nil
 	})
 	if !found {
-		return result, ErrNotFound
+		return *result, ErrNotFound
 	}
-	return result, err
+	return *result, err
 }
 
 // make sure the id in the primary key is not empty
-func GetByID[T any](db *buntdb.DB, record Record) (T, error) {
-	var result T
-	key := record.GetPrimaryKey()
-	id := strings.Split(key, ":")[1]
+func GetByID[Y any](db *buntdb.DB, id string) (Y, error) {
+	result := new(Y)
+	rec, ok := any(result).(GetRecordByID)
+	if !ok {
+		return *result, fmt.Errorf("type %T is not implement Record interface", result)
+	}
+
+	rec.SetID(id)
+	key := rec.GetPrimaryKey()
 	if id == "" {
-		return result, fmt.Errorf("id is empty")
+		return *result, fmt.Errorf("id is empty")
 	}
 
 	err := db.View(func(tx *buntdb.Tx) error {
@@ -290,21 +302,28 @@ func GetByID[T any](db *buntdb.DB, record Record) (T, error) {
 		if err != nil {
 			return err
 		}
-		return msgpack.Unmarshal([]byte(val), &result)
+		return msgpack.Unmarshal([]byte(val), result)
 	})
-	return result, err
+	return *result, err
 }
 
-func DeleteByID(db *buntdb.DB, record Record) error {
+func DeleteByID[Y any](db *buntdb.DB, id string) error {
+	result := new(Y)
+	rec, ok := any(result).(DeleteRecordByID)
+	if !ok {
+		return fmt.Errorf("type %T is not implement Record interface", result)
+	}
+
+	rec.SetID(id)
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := record.GetPrimaryKey()
+		key := rec.GetPrimaryKey()
 		_, err := tx.Delete(key)
 		if err != nil {
 			return fmt.Errorf("error deleting primary key: %s, %w", key, err)
 		}
 		// delete indexes
-		for name := range record.GetIndexValues() {
-			idxKey := key + ":" + name
+		for _, index := range rec.GetIndexes() {
+			idxKey := key + ":" + index.Name
 			_, err := tx.Delete(idxKey)
 			if err != nil {
 				return fmt.Errorf("error deleting index key: %s, %w", idxKey, err)
@@ -314,7 +333,7 @@ func DeleteByID(db *buntdb.DB, record Record) error {
 	})
 }
 
-func DeleteByIndex(db *buntdb.DB, record Record, indexName string) error {
+func DeleteByIndex(db *buntdb.DB, record GetRecordByIndexes, indexName string) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		idxField := strings.Split(indexName, ":")[1]
 		pivot := record.GetIndexValues()[idxField]
