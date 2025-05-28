@@ -140,13 +140,13 @@ const (
 )
 
 type ApplicationHistory struct {
-	ID            string    // Unique identifier for the history record
-	ApplicationID string    // Reference to Application.ID
-	Action        string    // Action taken (e.g., submitted, reviewed, approved, rejected)
-	ActorID       string    // Reference to User.ID (who performed the action)
-	Comment       string    // Optional comment or reason for the action
-	CreatedAt     time.Time // When the action was taken
-	UpdatedAt     time.Time // Last update timestamp
+	ID            string    `json:"id"`             // Unique identifier for the history record
+	ApplicationID string    `json:"application_id"` // Reference to Application.ID
+	Action        string    `json:"action"`         // Action taken (e.g., submitted, reviewed, approved, rejected)
+	ActorID       string    `json:"actor_id"`       // Reference to User.ID (who performed the action)
+	Comment       string    `json:"comment"`        // Optional comment or reason for the action
+	CreatedAt     time.Time `json:"created_at"`     // When the action was taken
+	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
 }
 
 func (ah ApplicationHistory) GetPrimaryKey() string {
