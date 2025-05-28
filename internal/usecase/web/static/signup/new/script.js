@@ -43,7 +43,7 @@ $(document).ready(function() {
             $('#signup-form-error').text('Please select a valid group.').show();
             return false;
         }
-        if (!username || !name || !password || !confirm || !groupType) {
+        if (!username || !name || !password || !confirm || !groupRole) {
             $('#signup-form-error').text('Please fill in all required fields.').show();
             return false;
         }
@@ -65,8 +65,13 @@ $(document).ready(function() {
             success: function(resp) {
                 $('#signup-form :input').prop('disabled', false);
                 $('#signup-form-error').hide().text('');
-                $('#signup-status-message').text('Signup submitted! Please wait for approval.').show();
-                $('#signup-form')[0].reset();
+                let appId = resp && resp.data && resp.data.application_id;
+                if (appId) {
+                    window.location.href = '/signup/app/?id=' + encodeURIComponent(appId);
+                } else {
+                    $('#signup-status-message').text('Signup submitted! Please wait for approval.').show();
+                    $('#signup-form')[0].reset();
+                }
             },
             error: function(xhr) {
                 $('#signup-form :input').prop('disabled', false);
@@ -83,5 +88,11 @@ $(document).ready(function() {
             }
         });
         return false;
+    });
+
+    // Add explicit onclick listener for the submit button
+    $('#signup-submit-btn').on('click', function(e) {
+        e.preventDefault();
+        $('#signup-form').submit();
     });
 }); 

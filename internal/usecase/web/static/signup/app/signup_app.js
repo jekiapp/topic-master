@@ -3,55 +3,48 @@ function getQueryParam(name) {
     return url.searchParams.get(name);
 }
 
-function renderObject(obj, $container) {
-    if (!obj) return;
-    const $table = $('<table></table>');
-    $.each(obj, function(key, value) {
-        const $row = $('<tr></tr>');
-        $row.append($('<th></th>').text(key));
-        $row.append($('<td></td>').text(value));
-        $table.append($row);
-    });
-    $container.empty().append($table);
-}
-
-function renderArray(arr, $container) {
-    if (!arr || arr.length === 0) {
-        $container.text('No data.');
-        return;
-    }
-    const $table = $('<table></table>');
-    const $thead = $('<thead></thead>');
-    const $headerRow = $('<tr></tr>');
-    $.each(Object.keys(arr[0]), function(_, key) {
-        $headerRow.append($('<th></th>').text(key));
-    });
-    $thead.append($headerRow);
-    $table.append($thead);
-    const $tbody = $('<tbody></tbody>');
-    $.each(arr, function(_, item) {
-        const $row = $('<tr></tr>');
-        $.each(item, function(_, val) {
-            $row.append($('<td></td>').text(val));
-        });
-        $tbody.append($row);
-    });
-    $table.append($tbody);
-    $container.empty().append($table);
-}
-
 $(function() {
     const id = getQueryParam('id');
     if (!id) {
         $('#application-section').text('No application ID provided.');
         return;
     }
-    $.get(`/api/signup/application`, { id: id })
-        .done(function(data) {
-            renderObject(data.application, $('#application-section'));
-            renderObject(data.user, $('#user-section'));
-            renderArray(data.assignments, $('#assignments-section'));
-            renderArray(data.histories, $('#histories-section'));
+    $.get(`/api/signup/app`, { id: id })
+        .done(function(response) {
+            var data = response.data || response;
+            // Application Detail
+            $('#detail-title').text(data.application.title || '');
+            $('#detail-username').text(data.user.username || '');
+            $('#detail-name').text(data.user.name || '');
+            let group = (data.user.groups && data.user.groups.length > 0) ? data.user.groups[0] : {};
+            $('#detail-groupname').text(group.group_name || '');
+            $('#detail-grouprole').text(group.role || '');
+            $('#detail-reason').text(data.application.reason || '');
+            $('#detail-status').text(data.application.status || '');
+
+            // Assignees
+            let assignees = data.assignee || [];
+            let $assigneeTbody = $('#assignee-table tbody');
+            $assigneeTbody.empty();
+            if (assignees.length === 0) {
+                $assigneeTbody.append('<tr><td colspan="2">No assignees.</td></tr>');
+            } else {
+                assignees.forEach(function(a) {
+                    $assigneeTbody.append(`<tr><td>${a.username || ''}</td><td>${a.status || ''}</td></tr>`);
+                });
+            }
+
+            // Histories
+            let histories = data.histories || [];
+            let $historyTbody = $('#history-table tbody');
+            $historyTbody.empty();
+            if (histories.length === 0) {
+                $historyTbody.append('<tr><td colspan="2">No history.</td></tr>');
+            } else {
+                histories.forEach(function(h) {
+                    $historyTbody.append(`<tr><td>${h.Action || ''}</td><td>${h.Comment || ''}</td></tr>`);
+                });
+            }
         })
         .fail(function() {
             $('#application-section').text('Failed to load application detail.');

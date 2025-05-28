@@ -1,5 +1,3 @@
-// this is an application detail page.
-// it will show detail of this backend view_signup_application.go
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,14 +7,30 @@
 </head>
 <body>
     <div class="app-detail-container">
-        <h2>Application Detail</h2>
-        <div id="application-section" class="detail-section"></div>
-        <h3>User</h3>
-        <div id="user-section" class="detail-section"></div>
-        <h3>Assignments</h3>
-        <div id="assignments-section" class="detail-section"></div>
-        <h3>Histories</h3>
-        <div id="histories-section" class="detail-section"></div>
+        <h2 id="app-title">Application Detail</h2>
+        <div id="application-section" class="detail-section">
+            <div><strong>Title:</strong> <span id="detail-title"></span></div>
+            <div><strong>Username:</strong> <span id="detail-username"></span></div>
+            <div><strong>Name:</strong> <span id="detail-name"></span></div>
+            <div><strong>Group Name:</strong> <span id="detail-groupname"></span></div>
+            <div><strong>Group Role:</strong> <span id="detail-grouprole"></span></div>
+            <div><strong>Reason:</strong> <span id="detail-reason"></span></div>
+            <div><strong>Status:</strong> <span id="detail-status"></span></div>
+        </div>
+        <h3>Assignee(s)</h3>
+        <div id="assignees-section" class="detail-section">
+            <table id="assignee-table">
+                <thead><tr><th>Username</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <h3>History</h3>
+        <div id="histories-section" class="detail-section">
+            <table id="history-table">
+                <thead><tr><th>Action</th><th>Comment</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="signup_app.js"></script>
