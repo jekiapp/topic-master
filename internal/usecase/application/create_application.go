@@ -101,7 +101,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 
 	// 2. Check for duplicate pending application
 	existing, err := uc.repo.GetApplicationByUserAndPermission(req.UserID, req.PermissionID)
-	if err == nil && existing != nil && existing.Status == "pending" {
+	if err == nil && existing.Status == "pending" {
 		return CreateApplicationResponse{}, errors.New("application already exists for this user and permission and is pending")
 	}
 

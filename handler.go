@@ -9,6 +9,7 @@ import (
 	aclGroup "github.com/jekiapp/topic-master/internal/usecase/acl/group"
 	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
 	aclUserGroup "github.com/jekiapp/topic-master/internal/usecase/acl/usergroup"
+	"github.com/jekiapp/topic-master/internal/usecase/application"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
 	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
 	handlerPkg "github.com/jekiapp/topic-master/pkg/handler"
@@ -37,6 +38,7 @@ type Handler struct {
 	resetPasswordUC         aclAuth.ResetPasswordUsecase
 	signupUC                aclAuth.SignupUsecase
 	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
+	listMyAssignmentUC      application.ListMyAssignmentUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -105,6 +107,8 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/signup", handlerPkg.HandleGenericPost(h.signupUC.Handle))
 	mux.HandleFunc("/api/signup/app", handlerPkg.QueryHandler(h.viewSignupApplicationUC.Handle))
+
+	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.HandleGenericPost(h.listMyAssignmentUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

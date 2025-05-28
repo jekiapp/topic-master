@@ -25,3 +25,24 @@ func ListApplicationsByUserID(db *buntdb.DB, userID string) ([]acl.Application, 
 	}
 	return apps, nil
 }
+
+// ListAssignmentsByReviewerID returns all ApplicationAssignments for a given reviewerID.
+func ListAssignmentsByReviewerID(db *buntdb.DB, reviewerID string) ([]acl.ApplicationAssignment, error) {
+	var assignments []acl.ApplicationAssignment
+	prefix := "app_assign:"
+	err := db.View(func(tx *buntdb.Tx) error {
+		return tx.AscendKeys(prefix+"*", func(key, value string) bool {
+			var assignment acl.ApplicationAssignment
+			if err := json.Unmarshal([]byte(value), &assignment); err == nil {
+				if assignment.ReviewerID == reviewerID {
+					assignments = append(assignments, assignment)
+				}
+			}
+			return true
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return assignments, nil
+}
