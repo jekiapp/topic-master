@@ -323,7 +323,8 @@ func DeleteByID[Y any](db *buntdb.DB, id string) error {
 		}
 		// delete indexes
 		for _, index := range rec.GetIndexes() {
-			idxKey := key + ":" + index.Name
+			field := strings.Split(index.Name, ":")[1]
+			idxKey := key + ":" + field
 			_, err := tx.Delete(idxKey)
 			if err != nil {
 				return fmt.Errorf("error deleting index key: %s, %w", idxKey, err)
