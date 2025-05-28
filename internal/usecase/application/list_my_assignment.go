@@ -7,6 +7,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
@@ -47,8 +48,11 @@ func NewListMyAssignmentUsecase(db *buntdb.DB) ListMyAssignmentUsecase {
 	}
 }
 
-func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req ListMyAssignmentRequest) (ListMyAssignmentResponse, error) {
+func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req map[string]string) (ListMyAssignmentResponse, error) {
 	user := util.GetUserInfo(ctx)
+	if user == nil {
+		return ListMyAssignmentResponse{}, fmt.Errorf("unauthorized: user info not found")
+	}
 	assignments, err := uc.repo.ListAssignmentsByReviewerID(user.ID)
 	if err != nil {
 		return ListMyAssignmentResponse{}, err

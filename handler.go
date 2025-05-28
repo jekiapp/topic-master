@@ -66,6 +66,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		resetPasswordUC:         aclAuth.NewResetPasswordUsecase(db),
 		signupUC:                aclAuth.NewSignupUsecase(db),
 		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
+		listMyAssignmentUC:      application.NewListMyAssignmentUsecase(db),
 	}
 }
 
@@ -108,7 +109,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/signup", handlerPkg.HandleGenericPost(h.signupUC.Handle))
 	mux.HandleFunc("/api/signup/app", handlerPkg.QueryHandler(h.viewSignupApplicationUC.Handle))
 
-	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.HandleGenericPost(h.listMyAssignmentUC.Handle)))
+	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.QueryHandler(h.listMyAssignmentUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

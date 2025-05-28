@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Assignments</title>
+    <link rel="stylesheet" href="/colors.css">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="assignments-container">
+        <div class="table-wrapper">
+            <div class="table-header">
+                <h2>My Assignments</h2>
+            </div>
+            <table id="assignments-table">
+                <thead>
+                    <tr>
+                        <th>Application ID</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="assignments-tbody">
+                    <!-- Example row for structure -->
+                    <tr style="display:none;">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <span class="action-icon view-assignment" title="View"><i class="fa fa-eye"></i></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/js/global-ajax-handler.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
