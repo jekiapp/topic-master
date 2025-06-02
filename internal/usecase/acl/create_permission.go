@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	permissionrepo "github.com/jekiapp/topic-master/internal/repository/permission"
 	"github.com/tidwall/buntdb"
@@ -66,6 +67,7 @@ func (uc CreatePermissionUsecase) Handle(ctx context.Context, req CreatePermissi
 			continue
 		}
 		permission := acl.Permission{
+			ID:        uuid.NewString(),
 			Name:      action,
 			EntityID:  req.EntityID,
 			Type:      req.Type,

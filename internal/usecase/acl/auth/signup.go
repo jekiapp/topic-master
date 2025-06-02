@@ -183,6 +183,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	}
 	// Assign user to the requested group
 	userGroup := acl.UserGroup{
+		ID:        uuid.NewString(),
 		UserID:    userID,
 		GroupID:   req.GroupID,
 		Role:      req.GroupRole,
@@ -194,6 +195,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	}
 	// 3. Create ApplicationHistory as "waiting for approval"
 	history := acl.ApplicationHistory{
+		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
 		Action:        "Create ticket",
 		ActorID:       userID,

@@ -127,6 +127,7 @@ func (uc CreateUserUsecase) Handle(ctx context.Context, req CreateUserRequest) (
 	// create user group mappings for each group
 	for _, group := range req.Groups {
 		userGroup := acl.UserGroup{
+			ID:        uuid.NewString(),
 			UserID:    user.ID,
 			GroupID:   group.GroupID,
 			Role:      group.Role,

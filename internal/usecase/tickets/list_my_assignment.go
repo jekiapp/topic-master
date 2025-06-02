@@ -3,11 +3,12 @@
 // learn from get_group_list.go for the pattern
 // get the assignment by reviewer id see application.go
 
-package application
+package tickets
 
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
@@ -31,7 +32,7 @@ type assignmentRepoImpl struct {
 }
 
 func (r *assignmentRepoImpl) ListAssignmentsByReviewerID(reviewerID string) ([]acl.ApplicationAssignment, error) {
-	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, reviewerID, acl.IdxAppAssign_ReviewerID)
+	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, "="+reviewerID, acl.IdxAppAssign_ReviewerID)
 }
 
 func (r *assignmentRepoImpl) GetApplicationByID(appID string) (acl.Application, error) {
@@ -54,7 +55,7 @@ func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req map[string]str
 		return ListMyAssignmentResponse{}, fmt.Errorf("unauthorized: user info not found")
 	}
 	assignments, err := uc.repo.ListAssignmentsByReviewerID(user.ID)
-	if err != nil {
+	if err != nil && err != dbpkg.ErrNotFound {
 		return ListMyAssignmentResponse{}, err
 	}
 	var apps []acl.Application
@@ -62,6 +63,8 @@ func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req map[string]str
 		app, err := uc.repo.GetApplicationByID(assign.ApplicationID)
 		if err == nil {
 			apps = append(apps, app)
+		} else {
+			log.Println("error getting application by id", err)
 		}
 	}
 	return ListMyAssignmentResponse{Applications: apps}, nil

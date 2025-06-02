@@ -66,11 +66,11 @@ func (r *viewSignupApplicationRepo) GetUserGroup(userID, groupID string) (acl.Us
 }
 
 func (r *viewSignupApplicationRepo) ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error) {
-	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, appID, acl.IdxAppAssign_ApplicationID)
+	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, "="+appID, acl.IdxAppAssign_ApplicationID)
 }
 
 func (r *viewSignupApplicationRepo) ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error) {
-	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, appID, acl.IdxAppHistory_ApplicationID)
+	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "="+appID, acl.IdxAppHistory_ApplicationID)
 }
 
 type ViewSignupApplicationUsecase struct {

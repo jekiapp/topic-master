@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/jekiapp/topic-master/pkg/db"
@@ -120,6 +121,7 @@ func (uc UpdateUserUsecase) Handle(ctx context.Context, req UpdateUserRequest) (
 	// Create new user group mappings
 	for _, group := range req.Groups {
 		userGroup := acl.UserGroup{
+			ID:        uuid.NewString(),
 			UserID:    existingUser.ID,
 			GroupID:   group.GroupID,
 			Role:      group.Role,
