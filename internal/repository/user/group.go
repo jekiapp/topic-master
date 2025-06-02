@@ -9,7 +9,7 @@ import (
 )
 
 func GetAllGroups(dbConn *buntdb.DB) ([]acl.Group, error) {
-	return db.SelectAll[acl.Group](dbConn, "", acl.IdxGroup_Name)
+	return db.SelectAll[acl.Group](dbConn, "*", acl.IdxGroup_Name)
 }
 
 // DeleteGroupByID deletes a group by its ID

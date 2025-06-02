@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
@@ -10,6 +11,7 @@ import (
 
 func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
 	entity := &acl.Entity{
+		ID:         uuid.NewString(),
 		TypeID:     acl.EntityType_NSQTopic,
 		Name:       topic,
 		Resource:   "NSQ",
@@ -35,7 +37,7 @@ func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
 }
 
 func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]acl.Entity, error) {
-	entities, err := db.SelectAll[acl.Entity](dbConn, acl.EntityType_NSQTopic, acl.IdxEntity_TypeID)
+	entities, err := db.SelectAll[acl.Entity](dbConn, "="+acl.EntityType_NSQTopic, acl.IdxEntity_TypeID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +52,7 @@ func DeleteNsqTopicEntity(dbConn *buntdb.DB, topic string) error {
 // ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is acl.GroupRoot, returns all topics.
 func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]acl.Entity, error) {
 	pivot := group + ":" + acl.EntityType_NSQTopic
-	entities, err := db.SelectAll[acl.Entity](dbConn, pivot, acl.IdxEntity_GroupType)
+	entities, err := db.SelectAll[acl.Entity](dbConn, "="+pivot, acl.IdxEntity_GroupType)
 	if err != nil {
 		return nil, err
 	}

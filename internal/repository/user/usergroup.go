@@ -50,7 +50,7 @@ func GetGroupByName(dbConn *buntdb.DB, name string) (acl.Group, error) {
 }
 
 func ListUserGroupsByGroupID(dbConn *buntdb.DB, groupID string, limit int) ([]acl.UserGroup, error) {
-	all, err := db.SelectPaginated[acl.UserGroup](dbConn, groupID, acl.IdxUserGroup_GroupID, &db.Pagination{Limit: limit})
+	all, err := db.SelectPaginated[acl.UserGroup](dbConn, "="+groupID, acl.IdxUserGroup_GroupID, &db.Pagination{Limit: limit})
 	if err != nil {
 		return nil, err
 	}
@@ -75,5 +75,5 @@ func GetAdminUserIDsByGroupID(dbConn *buntdb.DB, groupID string) ([]string, erro
 }
 
 func ListUserGroupsByUserID(dbConn *buntdb.DB, userID string) ([]acl.UserGroup, error) {
-	return db.SelectAll[acl.UserGroup](dbConn, userID, acl.IdxUserGroup_UserID)
+	return db.SelectAll[acl.UserGroup](dbConn, "="+userID, acl.IdxUserGroup_UserID)
 }
