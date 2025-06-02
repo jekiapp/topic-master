@@ -9,7 +9,7 @@ import (
 	aclGroup "github.com/jekiapp/topic-master/internal/usecase/acl/group"
 	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
 	aclUserGroup "github.com/jekiapp/topic-master/internal/usecase/acl/usergroup"
-	"github.com/jekiapp/topic-master/internal/usecase/application"
+	"github.com/jekiapp/topic-master/internal/usecase/tickets"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
 	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
 	handlerPkg "github.com/jekiapp/topic-master/pkg/handler"
@@ -38,7 +38,7 @@ type Handler struct {
 	resetPasswordUC         aclAuth.ResetPasswordUsecase
 	signupUC                aclAuth.SignupUsecase
 	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
-	listMyAssignmentUC      application.ListMyAssignmentUsecase
+	listMyAssignmentUC      tickets.ListMyAssignmentUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -66,7 +66,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		resetPasswordUC:         aclAuth.NewResetPasswordUsecase(db),
 		signupUC:                aclAuth.NewSignupUsecase(db),
 		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
-		listMyAssignmentUC:      application.NewListMyAssignmentUsecase(db),
+		listMyAssignmentUC:      tickets.NewListMyAssignmentUsecase(db),
 	}
 }
 

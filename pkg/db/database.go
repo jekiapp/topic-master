@@ -56,6 +56,10 @@ type Pagination struct {
 func Insert(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		key := record.GetPrimaryKey()
+		id := strings.Split(key, ":")[1]
+		if id == "" {
+			return fmt.Errorf("id is empty")
+		}
 		msgpackValue, err := msgpack.Marshal(record)
 		if err != nil {
 			return err
@@ -228,12 +232,42 @@ func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagin
 	}
 
 	err := db.View(func(tx *buntdb.Tx) error {
-		if pivot == "" {
+		if pivot == "*" {
 			tx.Ascend(indexName, process(tx))
 			return nil
 		}
-		tx.AscendEqual(indexName, pivot, process(tx))
-		return nil
+
+		if strings.HasPrefix(pivot, "=") {
+			pivot = strings.TrimPrefix(pivot, "=")
+			tx.AscendEqual(indexName, pivot, process(tx))
+			return nil
+		}
+
+		if strings.HasPrefix(pivot, "-<=") {
+			pivot = strings.TrimPrefix(pivot, "-<=")
+			tx.DescendLessOrEqual(indexName, pivot, process(tx))
+			return nil
+		}
+
+		if strings.HasPrefix(pivot, ">=") {
+			pivot = strings.TrimPrefix(pivot, ">=")
+			tx.AscendGreaterOrEqual(indexName, pivot, process(tx))
+			return nil
+		}
+
+		if strings.HasPrefix(pivot, "<") {
+			pivot = strings.TrimPrefix(pivot, "<")
+			tx.AscendLessThan(indexName, pivot, process(tx))
+			return nil
+		}
+
+		if strings.HasPrefix(pivot, ">=") {
+			pivot = strings.TrimPrefix(pivot, ">=")
+			tx.AscendGreaterOrEqual(indexName, pivot, process(tx))
+			return nil
+		}
+
+		return fmt.Errorf("pivot %s is not valid", pivot)
 	})
 	if err != nil {
 		return nil, err
