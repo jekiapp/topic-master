@@ -3,7 +3,6 @@ package acl
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/tidwall/buntdb"
 
 	"github.com/jekiapp/topic-master/pkg/db"
@@ -51,11 +50,7 @@ const (
 )
 
 func (e Entity) GetPrimaryKey() string {
-	id := e.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return TableEntity + ":" + id
+	return TableEntity + ":" + e.ID
 }
 
 func (e Entity) GetIndexes() []db.Index {

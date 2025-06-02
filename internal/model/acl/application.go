@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -39,11 +38,7 @@ type Application struct {
 }
 
 func (a Application) GetPrimaryKey() string {
-	id := a.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TableApplication, id)
+	return fmt.Sprintf("%s:%s", TableApplication, a.ID)
 }
 
 func (a Application) GetIndexes() []db.Index {
@@ -96,11 +91,7 @@ type ApplicationAssignment struct {
 }
 
 func (aa ApplicationAssignment) GetPrimaryKey() string {
-	id := aa.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TableApplicationAssignment, id)
+	return fmt.Sprintf("%s:%s", TableApplicationAssignment, aa.ID)
 }
 
 func (aa ApplicationAssignment) GetIndexes() []db.Index {
@@ -126,7 +117,7 @@ func (aa ApplicationAssignment) GetIndexes() []db.Index {
 func (aa ApplicationAssignment) GetIndexValues() map[string]string {
 	return map[string]string{
 		"application_id": aa.ApplicationID,
-		"reviewer_id":    aa.ReviewerID,
+		"reviewer_id":    fmt.Sprintf("%s:%d", aa.ReviewerID, aa.CreatedAt.Unix()),
 		"review_status":  aa.ReviewStatus,
 	}
 }
@@ -150,11 +141,7 @@ type ApplicationHistory struct {
 }
 
 func (ah ApplicationHistory) GetPrimaryKey() string {
-	id := ah.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TableApplicationHistory, id)
+	return fmt.Sprintf("%s:%s", TableApplicationHistory, ah.ID)
 }
 
 func (ah ApplicationHistory) GetIndexes() []db.Index {

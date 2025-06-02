@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -42,11 +41,7 @@ const (
 )
 
 func (u User) GetPrimaryKey() string {
-	id := u.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TableUser, id)
+	return fmt.Sprintf("%s:%s", TableUser, u.ID)
 }
 
 func (u User) GetIndexes() []db.Index {

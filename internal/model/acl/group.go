@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -29,11 +28,7 @@ const (
 )
 
 func (g Group) GetPrimaryKey() string {
-	id := g.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TableGroup, id)
+	return fmt.Sprintf("%s:%s", TableGroup, g.ID)
 }
 
 func (g Group) GetIndexes() []db.Index {
@@ -71,11 +66,7 @@ const (
 )
 
 func (ug UserGroup) GetPrimaryKey() string {
-	id := ug.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TableUserGroup, id)
+	return fmt.Sprintf("%s:%s", TableUserGroup, ug.ID)
 }
 
 func (ug UserGroup) GetIndexes() []db.Index {

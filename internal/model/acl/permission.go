@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -42,11 +41,7 @@ func (p Permission) GetIndexes() []db.Index {
 }
 
 func (p Permission) GetPrimaryKey() string {
-	id := p.ID
-	if id == "" {
-		id = uuid.NewString()
-	}
-	return fmt.Sprintf("%s:%s", TablePermission, id)
+	return fmt.Sprintf("%s:%s", TablePermission, p.ID)
 }
 
 func (p Permission) GetIndexValues() map[string]string {
