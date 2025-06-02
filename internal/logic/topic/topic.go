@@ -17,7 +17,7 @@ type ISyncTopics interface {
 }
 
 func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
-	// Get the list of topics from the source (e.g., config, external system)
+	// Get the list of topics from the source (e.g., nsqlookupd)
 	topics, err := iSyncTopics.GetAllTopics()
 	if err != nil {
 		return err

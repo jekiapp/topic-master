@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	aclmodel "github.com/jekiapp/topic-master/internal/model/acl"
 	usergroup "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
@@ -53,6 +54,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	hash := sha256.Sum256([]byte(password))
 	hashedPassword := hex.EncodeToString(hash[:])
 	rootUser := aclmodel.User{
+		ID:        uuid.NewString(),
 		Username:  aclmodel.GroupRoot,
 		Name:      "Root User",
 		Password:  hashedPassword,
@@ -60,8 +62,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	// fill it now, so that we can use it in the next step
-	rootUser.ID = rootUser.GetPrimaryKey()
+
 	err = usergroup.CreateUser(db, rootUser)
 	if err != nil {
 		return errors.New("failed to create root user: " + err.Error())
