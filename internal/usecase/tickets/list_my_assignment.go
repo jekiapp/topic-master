@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
@@ -32,7 +33,8 @@ type assignmentRepoImpl struct {
 }
 
 func (r *assignmentRepoImpl) ListAssignmentsByReviewerID(reviewerID string) ([]acl.ApplicationAssignment, error) {
-	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, "="+reviewerID, acl.IdxAppAssign_ReviewerID)
+	pivot := fmt.Sprintf("%s:%d", reviewerID, time.Now().Unix())
+	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, "-<="+pivot, acl.IdxAppAssign_ReviewerID)
 }
 
 func (r *assignmentRepoImpl) GetApplicationByID(appID string) (acl.Application, error) {

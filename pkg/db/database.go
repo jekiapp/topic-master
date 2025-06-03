@@ -203,8 +203,24 @@ func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagin
 	idx := 0
 	collected := 0
 
+	// handle composite index value
+	parts := strings.Split(pivot, ":")
+	prefix := ""
+	if len(parts) > 1 {
+		// get all the strings until the last ":"
+		parts = parts[:len(parts)-1]
+		// join the parts with ":"
+		prefix = strings.Join(parts, ":")
+	}
+	rangeOp := false
+
 	process := func(tx *buntdb.Tx) processFunc {
 		return func(key string, value string) bool {
+			if rangeOp && prefix != "" {
+				if !strings.HasPrefix(value, prefix) {
+					return false
+				}
+			}
 			if skip > 0 && idx < skip {
 				idx++
 				return true

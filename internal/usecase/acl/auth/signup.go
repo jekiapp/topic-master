@@ -115,7 +115,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	userID := uuid.NewString()
 	app := acl.Application{
 		ID:            uuid.NewString(),
-		Title:         fmt.Sprintf("Signup request by %s(%s)", req.Name, req.Username),
+		Title:         fmt.Sprintf("Signup request by %s (%s)", req.Name, req.Username),
 		UserID:        userID,
 		PermissionIDs: []string{"signup:" + req.Username},
 		Reason:        fmt.Sprintf("Request to become %s of group %s", req.GroupRole, req.GroupName),

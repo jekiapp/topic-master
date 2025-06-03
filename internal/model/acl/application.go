@@ -104,7 +104,7 @@ func (aa ApplicationAssignment) GetIndexes() []db.Index {
 		{
 			Name:    IdxAppAssign_ReviewerID,
 			Pattern: fmt.Sprintf("%s:*:%s", TableApplicationAssignment, "reviewer_id"),
-			Type:    buntdb.IndexString,
+			Type:    buntdb.IndexBinary,
 		},
 		{
 			Name:    IdxAppAssign_ReviewStatus,
