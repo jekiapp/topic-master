@@ -16,12 +16,29 @@ const (
 	// Status constants
 	StatusWaitingForApproval = "waiting for approval"
 	StatusPending            = "pending"
+	StatusCompleted          = "completed"
 
 	// Action constants
 	ActionWaitingForApproval = "waiting for approval"
+	ActionApprove            = "approve"
+	ActionReject             = "reject"
 
 	// Actor constants
 	ActorSystem = "system"
+
+	// Assignment review statuses
+	ReviewStatusApproved = "approved"
+	ReviewStatusRejected = "rejected"
+	ReviewStatusPassed   = "passed"
+	ReviewStatusWaiting  = "waiting for approval"
+)
+
+// User statuses (move if not already present)
+const (
+	UserStatusActive     = "active"
+	UserStatusInApproval = "in_approval"
+	UserStatusPending    = "pending"
+	UserStatusInactive   = "inactive"
 )
 
 // Application represents a user's request to obtain a permission.
@@ -191,6 +208,6 @@ type AppAction struct {
 }
 
 var (
-	AppActionApprove = AppAction{"approve", "#22c55e"} // modern green
-	AppActionReject  = AppAction{"reject", "#ef4444"}  // modern red
+	AppActionApprove = AppAction{ActionApprove, "#22c55e"} // modern green
+	AppActionReject  = AppAction{ActionReject, "#ef4444"}  // modern red
 )

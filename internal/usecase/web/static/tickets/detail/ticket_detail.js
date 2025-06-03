@@ -95,6 +95,23 @@ $(function() {
                             'background': color,
                             'color': '#fff',
                             'margin-left': '10px'
+                        })
+                        .on('click', function() {
+                            $.ajax({
+                                url: '/api/tickets/action',
+                                method: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    action: action.action,
+                                    application_id: ticketId
+                                }),
+                                success: function() {
+                                    location.reload();
+                                },
+                                error: function(xhr) {
+                                    alert('Action failed: ' + (xhr.responseText || xhr.status));
+                                }
+                            });
                         });
                     $actionButtons.append(btn);
                 });

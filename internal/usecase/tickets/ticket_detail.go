@@ -101,6 +101,10 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 		})
 	}
 
+	if app.Status == acl.StatusCompleted {
+		eligible = false
+	}
+
 	eligibleActions := []acl.AppAction{}
 	if eligible {
 		eligibleActions = append(eligibleActions, acl.AppActionApprove)

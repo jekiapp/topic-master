@@ -45,15 +45,17 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 		return ActionResponse{}, err
 	}
 	for _, permID := range app.PermissionIDs {
-		perm, err := ac.repo.GetPermissionByID(permID)
-		if err != nil {
-			return ActionResponse{}, err
-		}
-		if strings.Contains(perm.Name, "signup") {
+		if strings.Contains(permID, "signup") {
 			if ac.signupHandler != nil {
 				return ac.signupHandler.HandleSignup(ctx, req)
 			}
 		}
+
+		// perm, err := ac.repo.GetPermissionByID(permID)
+		// if err != nil {
+		// 	return ActionResponse{}, err
+		// }
+
 		// else: handle other permissions as needed (placeholder)
 	}
 	return ActionResponse{Status: "success", Message: "Action completed"}, nil

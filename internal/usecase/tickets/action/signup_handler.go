@@ -34,9 +34,9 @@ func NewSignupHandler(db *buntdb.DB) *SignupHandler {
 
 func (h *SignupHandler) HandleSignup(ctx context.Context, req ActionRequest) (ActionResponse, error) {
 	switch req.Action {
-	case "approve":
+	case acl.ActionApprove:
 		return h.handleApprove(ctx, req)
-	case "reject":
+	case acl.ActionReject:
 		return h.handleReject(ctx, req)
 	default:
 		return ActionResponse{Status: "error", Message: fmt.Sprintf("Invalid action: %s", req.Action)}, nil
@@ -51,7 +51,7 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 	}
 
 	// 2. Mark application as completed
-	app.Status = "completed"
+	app.Status = acl.StatusCompleted
 	app.UpdatedAt = time.Now()
 	if err := h.repo.UpdateApplication(app); err != nil {
 		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
@@ -71,11 +71,11 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 
 	for i, assignment := range assignments {
 		if assignment.ReviewerID == user.ID {
-			assignments[i].ReviewStatus = "approved"
+			assignments[i].ReviewStatus = acl.ReviewStatusApproved
 			assignments[i].ReviewedAt = time.Now()
 			assignments[i].UpdatedAt = time.Now()
 		} else {
-			assignments[i].ReviewStatus = "passed"
+			assignments[i].ReviewStatus = acl.ReviewStatusPassed
 			assignments[i].UpdatedAt = time.Now()
 		}
 		if err := h.repo.UpdateApplicationAssignment(assignments[i]); err != nil {
@@ -87,7 +87,7 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 	history := acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
-		Action:        "approved",
+		Action:        acl.ActionApprove,
 		ActorID:       user.ID,
 		Comment:       "Signup approved",
 		CreatedAt:     time.Now(),
@@ -100,7 +100,7 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 	// 6. Mark user as active
 	applicant, err := h.repo.GetUserByID(app.UserID)
 	if err == nil {
-		applicant.Status = "active"
+		applicant.Status = acl.UserStatusActive
 		applicant.UpdatedAt = time.Now()
 		if err = h.repo.UpdateUser(applicant); err != nil {
 			return ActionResponse{Status: "error", Message: "Failed to update user"}, err
@@ -118,7 +118,7 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 	}
 
 	// 2. Mark application as completed
-	app.Status = "completed"
+	app.Status = acl.StatusCompleted
 	app.UpdatedAt = time.Now()
 	if err := h.repo.UpdateApplication(app); err != nil {
 		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
@@ -138,11 +138,11 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 
 	for i, assignment := range assignments {
 		if assignment.ReviewerID == user.ID {
-			assignments[i].ReviewStatus = "rejected"
+			assignments[i].ReviewStatus = acl.ReviewStatusRejected
 			assignments[i].ReviewedAt = time.Now()
 			assignments[i].UpdatedAt = time.Now()
 		} else {
-			assignments[i].ReviewStatus = "passed"
+			assignments[i].ReviewStatus = acl.ReviewStatusPassed
 			assignments[i].UpdatedAt = time.Now()
 		}
 		if err := h.repo.UpdateApplicationAssignment(assignments[i]); err != nil {
@@ -154,7 +154,7 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 	history := acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
-		Action:        "rejected",
+		Action:        acl.ActionReject,
 		ActorID:       user.ID,
 		Comment:       "Signup rejected",
 		CreatedAt:     time.Now(),
