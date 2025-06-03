@@ -79,4 +79,42 @@ tbody tr:not(:last-child) td {
     th, td {
         padding: 8px 6px;
     }
+}
+
+/* Copy URL section styles */
+.copy-url-section {
+    margin: 18px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.copy-url-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 1.08rem;
+    color: #2d3a4a;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.copy-url-btn {
+    padding: 7px 18px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: none;
+    background: #1976d2;
+    color: #fff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-weight: 500;
+}
+.copy-url-btn:hover {
+    background: #125ea7;
+}
+.copy-url-msg {
+    display: none;
+    color: #388e3c;
+    margin-top: 8px;
+    font-size: 0.98rem;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-weight: 500;
 } 

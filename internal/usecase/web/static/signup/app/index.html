@@ -6,6 +6,27 @@
     <link rel="stylesheet" href="signup_app.css">
 </head>
 <body>
+    <!-- show button to copy the current url -->
+    <div class="copy-url-section">
+      <label class="copy-url-label">Copy this page URL and give to the Assginee(s) listed in the table below</label>
+      <button id="copy-url-btn" type="button" class="copy-url-btn">Copy URL</button>
+      <span id="copy-url-msg" class="copy-url-msg">Copied!</span>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('copy-url-btn');
+        var msg = document.getElementById('copy-url-msg');
+        if (btn) {
+          btn.addEventListener('click', function() {
+            navigator.clipboard.writeText(window.location.href).then(function() {
+              msg.style.display = 'inline';
+              setTimeout(function() { msg.style.display = 'none'; }, 1200);
+            });
+          });
+        }
+      });
+    </script>
+    <!-- "Copy this page url and give to the reviewer below" -->
     <div class="app-detail-container">
         <h2 id="app-title">Application Detail</h2>
         <div id="application-section" class="detail-section">

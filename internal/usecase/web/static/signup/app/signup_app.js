@@ -5,6 +5,22 @@ function getQueryParam(name) {
 
 $(function() {
     const id = getQueryParam('id');
+    // Session check
+    $.ajax({
+        url: '/api/user/get-username',
+        method: 'GET',
+        dataType: 'json',
+    }).done(function(resp) {
+        // If authorized, redirect
+        if (id) {
+            window.location.href = '/#ticket-detail?id=' + encodeURIComponent(id);
+        }
+    }).fail(function(jqxhr) {
+        if (jqxhr.status === 401) {
+            // Unauthorized: do nothing
+            return;
+        }
+    });
     if (!id) {
         $('#application-section').text('No application ID provided.');
         return;
