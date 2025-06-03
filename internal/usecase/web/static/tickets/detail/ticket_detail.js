@@ -1,8 +1,15 @@
 $(function() {
     // Helper to get query param
     function getQueryParam(name) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(name);
+        // Support URLs like http://localhost:4181/#ticket-detail?id=xxx
+        let query = '';
+        if (window.parent.location.hash && window.parent.location.hash.indexOf('?') !== -1) {
+            query = window.parent.location.hash.substring(window.parent.location.hash.indexOf('?'));
+        } else {
+            query = window.parent.location.search;
+        }
+        const params = new URLSearchParams(query);
+        return params.get(name);
     }
 
     const ticketId = getQueryParam('id');
@@ -15,9 +22,16 @@ $(function() {
         url: '/api/tickets/detail?id=' + encodeURIComponent(ticketId),
         method: 'GET',
         success: function(data) {
+            // Unwrap if response is wrapped in {status, message, data}
+            if (data && data.data) data = data.data;
+
             // Title and created time
             $('#detail-title').text(data.ticket.title || data.ticket.id);
-            $('#created-time').text(data.created_at || '');
+            if (data.created_at) {
+                $('#created-time').text('Created at: ' + data.created_at);
+            } else {
+                $('#created-time').text('');
+            }
             // Applicant
             $('#detail-applicant').text(data.applicant.name + ' (' + data.applicant.username + ')');
             // Permissions
@@ -52,7 +66,16 @@ $(function() {
             $historyTbody.empty();
             if (data.histories && data.histories.length > 0) {
                 data.histories.forEach(function(h) {
-                    $historyTbody.append('<tr><td>' + h.action + '</td><td>' + (h.comment || '-') + '</td><td>' + (h.created_at ? new Date(h.created_at).toLocaleString() : '-') + '</td></tr>');
+                    $historyTbody.append(
+                        '<tr>' +
+                        '<td>' + h.action + '</td>' +
+                        '<td>' + (h.comment || '-') + '</td>' +
+                        '<td>' +
+                            h.actor + '<br>' +
+                            '<span class="history-meta">' + h.created_at + '</span>' +
+                        '</td>' +
+                        '</tr>'
+                    );
                 });
             } else {
                 $historyTbody.append('<tr><td colspan="3">-</td></tr>');
@@ -61,5 +84,11 @@ $(function() {
         error: function(xhr) {
             alert('Failed to load ticket detail: ' + (xhr.responseText || xhr.status));
         }
+    });
+
+    // Back link handler
+    $('#back-link').on('click', function(e) {
+        e.preventDefault();
+        window.parent.location.hash = '#tickets';
     });
 }); 

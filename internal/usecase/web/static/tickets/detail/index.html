@@ -6,8 +6,11 @@
     <link rel="stylesheet" href="ticket_detail.css">
 </head>
 <body>
+    <!-- create a arrow left link to go back to tickets page -->
+    <a href="javascript:void(0)" class="back-link" id="back-link">&#8592; Back </a>
     <div class="app-detail-container">
-        <h2 id="app-title">Ticket Detail <span id="created-time" style="float:right;font-size:small;color:#888"></span></h2> <!-- TODO: add create time here (float right, small text)-->
+        <div id="created-time" style="float:right;font-size:small;color:#888"></div>
+        <h2 id="app-title">Ticket Detail </h2>
         <div id="application-section" class="detail-section">
             <div><strong>Title:</strong> <span id="detail-title"></span></div>
             <div><strong>Applicant:</strong> <span id="detail-applicant"></span></div>
@@ -27,7 +30,7 @@
         <h3>History</h3>
         <div id="histories-section" class="detail-section">
             <table id="history-table">
-                <thead><tr><th>Action</th><th>Comment</th><th>Time</th></tr></thead>
+                <thead><tr><th>Action</th><th>Comment</th><th>By</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>

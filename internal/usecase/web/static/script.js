@@ -41,7 +41,7 @@ $(function() {
     $('.menu li a').removeClass('active');
     if (hash === '#access') {
       accessControlMenu.addClass('active');
-    } else if (hash === '#tickets') {
+    } else if (hash === '#tickets' || hash.startsWith('#ticket-detail')) {
       ticketsMenu.addClass('active');
     } else {
       myTopicsMenu.addClass('active');
@@ -67,6 +67,21 @@ $(function() {
     }
   }
 
+  function showTicketDetail() {
+    let iframe = iframeContainer.find('iframe');
+    if (iframe.length === 0) {
+      iframe = $('<iframe>', {
+        src: 'tickets/detail/index.html',
+        style: 'width:100%;height:100%;border:none;min-height:600px;',
+        frameborder: 0,
+        allowfullscreen: true
+      });
+      iframeContainer.empty().append(iframe);
+    } else if (iframe.attr('src') !== 'tickets/detail/index.html') {
+      iframe.attr('src', 'tickets/detail/index.html');
+    }
+  }
+
   // Add event listener for Tickets menu
   $(window).on('hashchange', handleHashChange);
 
@@ -86,6 +101,8 @@ $(function() {
       showAccessControl();
     } else if (hash === '#tickets') {
       showTickets();
+    } else if (hash.startsWith('#ticket-detail')) {
+      showTicketDetail();
     } else {
       showMyTopics();
     }

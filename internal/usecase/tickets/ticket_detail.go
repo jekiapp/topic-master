@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
@@ -23,11 +24,18 @@ type TicketDetailRequest struct {
 }
 
 type TicketDetailResponse struct {
-	Ticket    ticketResponse           `json:"ticket"`
-	Applicant acl.User                 `json:"applicant"`
-	Assignees []TicketAssignee         `json:"assignees"`
-	Histories []acl.ApplicationHistory `json:"histories"`
-	CreatedAt string                   `json:"created_at"`
+	Ticket    ticketResponse    `json:"ticket"`
+	Applicant acl.User          `json:"applicant"`
+	Assignees []TicketAssignee  `json:"assignees"`
+	Histories []historyResponse `json:"histories"`
+	CreatedAt string            `json:"created_at"`
+}
+
+type historyResponse struct {
+	Action    string `json:"action"`
+	Actor     string `json:"actor"`
+	Comment   string `json:"comment"`
+	CreatedAt string `json:"created_at"`
 }
 
 type ticketResponse struct {
@@ -125,6 +133,21 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	if err != nil {
 		return TicketDetailResponse{}, fmt.Errorf("histories not found: %w", err)
 	}
+
+	historiesResponse := []historyResponse{}
+	for _, history := range histories {
+		actor, err := uc.repo.GetUserByID(history.ActorID)
+		if err != nil {
+			log.Println("error getting username by user id", err)
+		}
+		historiesResponse = append(historiesResponse, historyResponse{
+			Action:    history.Action,
+			Actor:     actor.Name,
+			Comment:   history.Comment,
+			CreatedAt: history.CreatedAt.Format(time.RFC822Z),
+		})
+	}
+
 	response := TicketDetailResponse{
 		Ticket: ticketResponse{
 			ID:     app.ID,
@@ -134,7 +157,8 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 		},
 		Applicant: user,
 		Assignees: assignees,
-		Histories: histories,
+		Histories: historiesResponse,
+		CreatedAt: app.CreatedAt.Format(time.RFC822Z),
 	}
 
 	permissions := []permissionResponse{}
