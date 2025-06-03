@@ -8,14 +8,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/jekiapp/topic-master/internal/config"
 	"github.com/jekiapp/topic-master/internal/logic/auth"
 	"github.com/jekiapp/topic-master/internal/model/acl"
-	usergrouprepo "github.com/jekiapp/topic-master/internal/repository/user"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
@@ -46,7 +45,7 @@ func (r *loginRepo) GetUserByUsername(username string) (acl.User, error) {
 }
 
 func (r *loginRepo) ListGroupsForUser(userID string) ([]acl.GroupRole, error) {
-	return usergrouprepo.ListGroupsForUser(r.db, userID)
+	return userrepo.ListGroupsForUser(r.db, userID)
 }
 
 func (r *loginRepo) InsertResetPassword(rp acl.ResetPassword) error {
@@ -73,7 +72,7 @@ func (uc LoginUsecase) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req LoginRequest
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
