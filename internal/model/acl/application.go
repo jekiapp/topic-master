@@ -143,8 +143,6 @@ func (aa ApplicationAssignment) GetIndexValues() map[string]string {
 const (
 	TableApplicationHistory     = "app_history"
 	IdxAppHistory_ApplicationID = TableApplicationHistory + ":application_id"
-	IdxAppHistory_ActorID       = TableApplicationHistory + ":actor_id"
-	IdxAppHistory_Action        = TableApplicationHistory + ":action"
 )
 
 type ApplicationHistory struct {
@@ -168,24 +166,12 @@ func (ah ApplicationHistory) GetIndexes() []db.Index {
 			Pattern: fmt.Sprintf("%s:*:%s", TableApplicationHistory, "application_id"),
 			Type:    buntdb.IndexString,
 		},
-		{
-			Name:    IdxAppHistory_ActorID,
-			Pattern: fmt.Sprintf("%s:*:%s", TableApplicationHistory, "actor_id"),
-			Type:    buntdb.IndexString,
-		},
-		{
-			Name:    IdxAppHistory_Action,
-			Pattern: fmt.Sprintf("%s:*:%s", TableApplicationHistory, "action"),
-			Type:    buntdb.IndexString,
-		},
 	}
 }
 
 func (ah ApplicationHistory) GetIndexValues() map[string]string {
 	return map[string]string{
-		"application_id": ah.ApplicationID,
-		"actor_id":       ah.ActorID,
-		"action":         ah.Action,
+		"application_id": fmt.Sprintf("%s:%d", ah.ApplicationID, ah.CreatedAt.Unix()),
 	}
 }
 

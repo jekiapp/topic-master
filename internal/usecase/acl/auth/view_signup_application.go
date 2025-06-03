@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
@@ -75,7 +76,8 @@ func (r *viewSignupApplicationRepo) ListAssignmentsByApplicationID(appID string)
 }
 
 func (r *viewSignupApplicationRepo) ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error) {
-	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "="+appID, acl.IdxAppHistory_ApplicationID)
+	appID = fmt.Sprintf("%s:%d", appID, time.Now().Unix())
+	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "-<="+appID, acl.IdxAppHistory_ApplicationID)
 }
 
 type ViewSignupApplicationUsecase struct {

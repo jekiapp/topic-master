@@ -203,7 +203,7 @@ func (r *ticketDetailRepo) ListAssignmentsByApplicationID(appID string) ([]acl.A
 }
 
 func (r *ticketDetailRepo) ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error) {
-	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "="+appID, acl.IdxAppHistory_ApplicationID)
+	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "-<="+appID, acl.IdxAppHistory_ApplicationID)
 }
 
 func (r *ticketDetailRepo) GetPermissionByID(id string) (acl.Permission, error) {
