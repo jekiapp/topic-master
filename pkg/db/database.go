@@ -261,25 +261,25 @@ func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagin
 
 		if strings.HasPrefix(pivot, "-<=") {
 			pivot = strings.TrimPrefix(pivot, "-<=")
+			prefix = strings.TrimPrefix(prefix, "-<=")
+			rangeOp = true
 			tx.DescendLessOrEqual(indexName, pivot, process(tx))
 			return nil
 		}
 
 		if strings.HasPrefix(pivot, ">=") {
 			pivot = strings.TrimPrefix(pivot, ">=")
+			prefix = strings.TrimPrefix(prefix, ">=")
+			rangeOp = true
 			tx.AscendGreaterOrEqual(indexName, pivot, process(tx))
 			return nil
 		}
 
 		if strings.HasPrefix(pivot, "<") {
 			pivot = strings.TrimPrefix(pivot, "<")
+			prefix = strings.TrimPrefix(prefix, "<")
+			rangeOp = true
 			tx.AscendLessThan(indexName, pivot, process(tx))
-			return nil
-		}
-
-		if strings.HasPrefix(pivot, ">=") {
-			pivot = strings.TrimPrefix(pivot, ">=")
-			tx.AscendGreaterOrEqual(indexName, pivot, process(tx))
 			return nil
 		}
 
