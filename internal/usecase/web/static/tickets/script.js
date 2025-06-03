@@ -7,7 +7,15 @@ $(document).ready(function() {
             success: function(response) {
                 var tbody = $('#assignments-tbody');
                 tbody.empty();
-                response.data.applications.forEach(function(app) {
+                var apps = response.data.applications;
+                if (!Array.isArray(apps) || apps.length === 0) {
+                    var emptyRow = $('<tr>').append(
+                        $('<td colspan="4" style="text-align:center;">').text('No assignments found')
+                    );
+                    tbody.append(emptyRow);
+                    return;
+                }
+                apps.forEach(function(app) {
                     var row = $('<tr>').attr('data-app-id', app.id);
                     row.append($('<td>').text(app.title));
                     row.append($('<td>').text(app.status));
