@@ -13,6 +13,7 @@ body {
     padding: 40px 32px;
     border-radius: 18px;
     box-shadow: 0 4px 24px var(--shadow-purple);
+    position: relative;
 }
 
 .detail-section {
@@ -141,4 +142,31 @@ tbody tr:not(:last-child) td {
     background: var(--shadow-focus);
     color: var(--primary-purple);
     text-decoration: underline;
+}
+
+/* Action buttons container */
+#action-buttons {
+    position: absolute;
+    top: 24px;
+    right: 36px;
+    z-index: 2;
+}
+
+/* Action button style */
+.action-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 22px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 10px;
+    box-shadow: 0 2px 8px var(--shadow-purple);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    outline: none;
+}
+.action-btn:hover {
+    filter: brightness(0.95);
+    box-shadow: 0 4px 16px var(--shadow-purple);
+    transform: translateY(-1px) scale(1.03);
 } 

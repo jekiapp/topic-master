@@ -14,6 +14,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -24,11 +25,12 @@ type TicketDetailRequest struct {
 }
 
 type TicketDetailResponse struct {
-	Ticket    ticketResponse    `json:"ticket"`
-	Applicant acl.User          `json:"applicant"`
-	Assignees []TicketAssignee  `json:"assignees"`
-	Histories []historyResponse `json:"histories"`
-	CreatedAt string            `json:"created_at"`
+	Ticket          ticketResponse    `json:"ticket"`
+	Applicant       acl.User          `json:"applicant"`
+	Assignees       []TicketAssignee  `json:"assignees"`
+	Histories       []historyResponse `json:"histories"`
+	CreatedAt       string            `json:"created_at"`
+	EligibleActions []acl.AppAction   `json:"eligible_actions"`
 }
 
 type historyResponse struct {
@@ -56,6 +58,110 @@ type TicketAssignee struct {
 	Username string `json:"username"`
 	Name     string `json:"name"`
 	Status   string `json:"status"`
+}
+
+func NewTicketDetailUsecase(db *buntdb.DB) TicketDetailUsecase {
+	return TicketDetailUsecase{
+		repo: &ticketDetailRepo{db: db},
+	}
+}
+
+func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string) (TicketDetailResponse, error) {
+	iam := util.GetUserInfo(ctx)
+
+	ticketID := req["id"]
+	app, err := uc.repo.GetApplicationByID(ticketID)
+	if err != nil {
+		return TicketDetailResponse{}, errors.New("ticket not found")
+	}
+	user, err := uc.repo.GetUserByID(app.UserID)
+	if err != nil {
+		return TicketDetailResponse{}, errors.New("user not found")
+	}
+
+	assignments, err := uc.repo.ListAssignmentsByApplicationID(ticketID)
+	if err != nil {
+		return TicketDetailResponse{}, fmt.Errorf("assignments not found: %w", err)
+	}
+
+	eligible := false
+	assignees := []TicketAssignee{}
+	for _, assignment := range assignments {
+		user, err := uc.repo.GetUserByID(assignment.ReviewerID)
+		if err != nil {
+			log.Println("error getting username by user id", err)
+		}
+		if user.ID == iam.ID {
+			eligible = true
+		}
+		assignees = append(assignees, TicketAssignee{
+			UserID:   user.ID,
+			Username: user.Username,
+			Name:     user.Name,
+			Status:   assignment.ReviewStatus,
+		})
+	}
+
+	eligibleActions := []acl.AppAction{}
+	if eligible {
+		eligibleActions = append(eligibleActions, acl.AppActionApprove)
+		eligibleActions = append(eligibleActions, acl.AppActionReject)
+	}
+
+	histories, err := uc.repo.ListHistoriesByApplicationID(ticketID)
+	if err != nil {
+		return TicketDetailResponse{}, fmt.Errorf("histories not found: %w", err)
+	}
+
+	historiesResponse := []historyResponse{}
+	for _, history := range histories {
+		actor, err := uc.repo.GetUserByID(history.ActorID)
+		if err != nil {
+			log.Println("error getting username by user id", err)
+		}
+		historiesResponse = append(historiesResponse, historyResponse{
+			Action:    history.Action,
+			Actor:     actor.Name,
+			Comment:   history.Comment,
+			CreatedAt: history.CreatedAt.Format(time.RFC822Z),
+		})
+	}
+
+	response := TicketDetailResponse{
+		Ticket: ticketResponse{
+			ID:     app.ID,
+			Title:  app.Title,
+			Reason: app.Reason,
+			Status: app.Status,
+		},
+		Applicant:       user,
+		Assignees:       assignees,
+		Histories:       historiesResponse,
+		CreatedAt:       app.CreatedAt.Format(time.RFC822Z),
+		EligibleActions: eligibleActions,
+	}
+
+	permissions := []permissionResponse{}
+	for _, permissionID := range app.PermissionIDs {
+		if strings.Contains(permissionID, "signup") {
+			permissions = append(permissions, permissionResponse{
+				Name:        permissionID,
+				Description: "Signup application",
+			})
+			continue
+		}
+
+		permission, err := uc.repo.GetPermissionByID(permissionID)
+		if err != nil {
+			return TicketDetailResponse{}, fmt.Errorf("permission not found: %w", err)
+		}
+		permissions = append(permissions, permissionResponse{
+			Name:        permission.Name,
+			Description: permission.Description,
+		})
+	}
+	response.Ticket.Permissions = permissions
+	return response, nil
 }
 
 type iTicketDetailRepo interface {
@@ -92,94 +198,4 @@ func (r *ticketDetailRepo) GetPermissionByID(id string) (acl.Permission, error) 
 
 type TicketDetailUsecase struct {
 	repo iTicketDetailRepo
-}
-
-func NewTicketDetailUsecase(db *buntdb.DB) TicketDetailUsecase {
-	return TicketDetailUsecase{
-		repo: &ticketDetailRepo{db: db},
-	}
-}
-
-func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string) (TicketDetailResponse, error) {
-	ticketID := req["id"]
-	app, err := uc.repo.GetApplicationByID(ticketID)
-	if err != nil {
-		return TicketDetailResponse{}, errors.New("ticket not found")
-	}
-	user, err := uc.repo.GetUserByID(app.UserID)
-	if err != nil {
-		return TicketDetailResponse{}, errors.New("user not found")
-	}
-
-	assignments, err := uc.repo.ListAssignmentsByApplicationID(ticketID)
-	if err != nil {
-		return TicketDetailResponse{}, fmt.Errorf("assignments not found: %w", err)
-	}
-	assignees := []TicketAssignee{}
-	for _, assignment := range assignments {
-		user, err := uc.repo.GetUserByID(assignment.ReviewerID)
-		if err != nil {
-			log.Println("error getting username by user id", err)
-		}
-		assignees = append(assignees, TicketAssignee{
-			UserID:   user.ID,
-			Username: user.Username,
-			Name:     user.Name,
-			Status:   assignment.ReviewStatus,
-		})
-	}
-
-	histories, err := uc.repo.ListHistoriesByApplicationID(ticketID)
-	if err != nil {
-		return TicketDetailResponse{}, fmt.Errorf("histories not found: %w", err)
-	}
-
-	historiesResponse := []historyResponse{}
-	for _, history := range histories {
-		actor, err := uc.repo.GetUserByID(history.ActorID)
-		if err != nil {
-			log.Println("error getting username by user id", err)
-		}
-		historiesResponse = append(historiesResponse, historyResponse{
-			Action:    history.Action,
-			Actor:     actor.Name,
-			Comment:   history.Comment,
-			CreatedAt: history.CreatedAt.Format(time.RFC822Z),
-		})
-	}
-
-	response := TicketDetailResponse{
-		Ticket: ticketResponse{
-			ID:     app.ID,
-			Title:  app.Title,
-			Reason: app.Reason,
-			Status: app.Status,
-		},
-		Applicant: user,
-		Assignees: assignees,
-		Histories: historiesResponse,
-		CreatedAt: app.CreatedAt.Format(time.RFC822Z),
-	}
-
-	permissions := []permissionResponse{}
-	for _, permissionID := range app.PermissionIDs {
-		if strings.Contains(permissionID, "signup") {
-			permissions = append(permissions, permissionResponse{
-				Name:        permissionID,
-				Description: "Signup application",
-			})
-			continue
-		}
-
-		permission, err := uc.repo.GetPermissionByID(permissionID)
-		if err != nil {
-			return TicketDetailResponse{}, fmt.Errorf("permission not found: %w", err)
-		}
-		permissions = append(permissions, permissionResponse{
-			Name:        permission.Name,
-			Description: permission.Description,
-		})
-	}
-	response.Ticket.Permissions = permissions
-	return response, nil
 }

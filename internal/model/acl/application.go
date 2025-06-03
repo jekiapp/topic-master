@@ -183,3 +183,14 @@ func (aa *ApplicationAssignment) SetID(id string) {
 func (ah *ApplicationHistory) SetID(id string) {
 	ah.ID = id
 }
+
+// AppAction represents an action that can be taken on an application (e.g., approve, reject) with a color for UI.
+type AppAction struct {
+	Action string `json:"action"`
+	Color  string `json:"color"`
+}
+
+var (
+	AppActionApprove = AppAction{"approve", "#22c55e"} // modern green
+	AppActionReject  = AppAction{"reject", "#ef4444"}  // modern red
+)

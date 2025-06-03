@@ -80,6 +80,25 @@ $(function() {
             } else {
                 $historyTbody.append('<tr><td colspan="3">-</td></tr>');
             }
+
+            // Action buttons
+            const $actionButtons = $('#action-buttons');
+            $actionButtons.empty();
+            if (data.eligible_actions && data.eligible_actions.length > 0) {
+                data.eligible_actions.forEach(function(action) {
+                    // Use action.color if present, fallback to gray
+                    const color = action.color || (action.action === 'approve' ? 'green' : action.action === 'reject' ? 'red' : '#888');
+                    const btn = $('<button></button>')
+                        .addClass('action-btn')
+                        .text(action.action.charAt(0).toUpperCase() + action.action.slice(1))
+                        .css({
+                            'background': color,
+                            'color': '#fff',
+                            'margin-left': '10px'
+                        });
+                    $actionButtons.append(btn);
+                });
+            }
         },
         error: function(xhr) {
             alert('Failed to load ticket detail: ' + (xhr.responseText || xhr.status));
