@@ -203,6 +203,7 @@ func (r *ticketDetailRepo) ListAssignmentsByApplicationID(appID string) ([]acl.A
 }
 
 func (r *ticketDetailRepo) ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error) {
+	appID = fmt.Sprintf("%s:%d", appID, time.Now().Unix())
 	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "-<="+appID, acl.IdxAppHistory_ApplicationID)
 }
 
