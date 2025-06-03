@@ -42,6 +42,7 @@ type Handler struct {
 	listMyAssignmentUC      tickets.ListMyAssignmentUsecase
 	ticketDetailUC          tickets.TicketDetailUsecase
 	actionCoordinatorUC     *action.ActionCoordinator
+	getUsernameUC           aclAuth.GetUsernameUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -72,6 +73,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		listMyAssignmentUC:      tickets.NewListMyAssignmentUsecase(db),
 		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
 		actionCoordinatorUC:     action.NewActionCoordinator(db),
+		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
 	}
 }
 
@@ -117,6 +119,8 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.QueryHandler(h.listMyAssignmentUC.Handle)))
 	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.QueryHandler(h.ticketDetailUC.Handle)))
 	mux.HandleFunc("/api/tickets/action", authMiddleware(handlerPkg.HandleGenericPost(h.actionCoordinatorUC.Handle)))
+
+	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.QueryHandler(h.getUsernameUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

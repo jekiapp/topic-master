@@ -16,6 +16,7 @@ func GetUserInfo(ctx context.Context) *acl.User {
 	}
 	user := &acl.User{
 		ID:       claims.UserID,
+		Name:     claims.Name,
 		Username: claims.Username,
 		Groups:   claims.Groups,
 	}

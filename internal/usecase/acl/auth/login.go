@@ -188,6 +188,7 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 	// Prepare JWT claims
 	claims := &acl.JWTClaims{
 		UserID:           user.ID,
+		Name:             user.Name,
 		Username:         user.Username,
 		Groups:           groups,
 		RegisteredClaims: auth.DefaultRegisteredClaims(user.ID),

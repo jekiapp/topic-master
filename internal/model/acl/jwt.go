@@ -8,6 +8,7 @@ import (
 
 type JWTClaims struct {
 	UserID   string      `json:"user_id"`
+	Name     string      `json:"name"`
 	Username string      `json:"username"`
 	Groups   []GroupRole `json:"groups"`
 	jwt.RegisteredClaims

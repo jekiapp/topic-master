@@ -1,4 +1,28 @@
 $(function() {
+  // Session check and user info update
+  function checkSessionAndUpdateUser() {
+    return $.ajax({
+      url: '/api/user/get-username',
+      method: 'GET',
+      dataType: 'json',
+    }).done(function(resp) {
+      var userData = resp && resp.data;
+      if (userData && userData.name) {
+        $('.user-name').text(userData.name + ' ▼');
+      } else {
+        $('.user-name').text('Unknown User ▼');
+      }
+    }).fail(function(jqxhr) {
+      if (jqxhr.status === 401) {
+        alert('Session expired or unauthorized. Please log in again.');
+        window.top.location.href = '/login';
+      }
+    });
+  }
+
+  // Call on page load
+  checkSessionAndUpdateUser();
+
   const iframeContainer = $('.iframe-container');
   const myTopicsMenu = $('.menu li a').filter(function() {
     return $(this).text().trim() === 'My Topics';
