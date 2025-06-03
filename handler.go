@@ -10,6 +10,7 @@ import (
 	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
 	aclUserGroup "github.com/jekiapp/topic-master/internal/usecase/acl/usergroup"
 	"github.com/jekiapp/topic-master/internal/usecase/tickets"
+	"github.com/jekiapp/topic-master/internal/usecase/tickets/action"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
 	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
 	handlerPkg "github.com/jekiapp/topic-master/pkg/handler"
@@ -40,6 +41,7 @@ type Handler struct {
 	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
 	listMyAssignmentUC      tickets.ListMyAssignmentUsecase
 	ticketDetailUC          tickets.TicketDetailUsecase
+	actionCoordinatorUC     *action.ActionCoordinator
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -69,6 +71,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
 		listMyAssignmentUC:      tickets.NewListMyAssignmentUsecase(db),
 		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
+		actionCoordinatorUC:     action.NewActionCoordinator(db),
 	}
 }
 
@@ -113,6 +116,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.QueryHandler(h.listMyAssignmentUC.Handle)))
 	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.QueryHandler(h.ticketDetailUC.Handle)))
+	mux.HandleFunc("/api/tickets/action", authMiddleware(handlerPkg.HandleGenericPost(h.actionCoordinatorUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
