@@ -6,16 +6,26 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <nav class="top-navbar">
+        <div class="navbar-title">Topic Master</div>
+        <div class="navbar-user">
+            <div class="user-dropdown">
+                <span class="user-name">John Doe ▼</span>
+                <div class="dropdown-content">
+                    <a href="#">Profile</a>
+                    <a href="#" id="logout-link">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="dashboard-container">
         <nav class="sidebar">
-            <h2>Topic Master</h2>
             <ul class="menu">
                 <li><a href="#" class="active">My Topics</a></li>
                 <li><a href="#">All Topics</a></li>
                 <li><a href="#">Tickets</a></li>
                 <li><a href="#">Access Control</a></li>
                 <li><a href="#">Settings</a></li>
-                <li><a href="#" id="logout-link">Logout</a></li>
             </ul>
         </nav>
         <main class="main-content">
