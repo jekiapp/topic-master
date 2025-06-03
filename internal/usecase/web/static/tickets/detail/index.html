@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ticket Detail</title>
+    <link rel="stylesheet" href="/colors.css">
+    <link rel="stylesheet" href="ticket_detail.css">
+</head>
+<body>
+    <div class="app-detail-container">
+        <h2 id="app-title">Ticket Detail <span id="created-time" style="float:right;font-size:small;color:#888"></span></h2> <!-- TODO: add create time here (float right, small text)-->
+        <div id="application-section" class="detail-section">
+            <div><strong>Title:</strong> <span id="detail-title"></span></div>
+            <div><strong>Applicant:</strong> <span id="detail-applicant"></span></div>
+            <div><strong>Permissions:</strong> 
+                <ul id="detail-permissions-list" style="margin:0;padding-left:20px"></ul>
+            </div>
+            <div><strong>Reason:</strong> <span id="detail-reason"></span></div>
+            <div><strong>Status:</strong> <span id="detail-status"></span></div>
+        </div>
+        <h3>Assignee(s)</h3>
+        <div id="assignees-section" class="detail-section">
+            <table id="assignee-table">
+                <thead><tr><th>Name</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <h3>History</h3>
+        <div id="histories-section" class="detail-section">
+            <table id="history-table">
+                <thead><tr><th>Action</th><th>Comment</th><th>Time</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="ticket_detail.js"></script>
+</body>
+</html>

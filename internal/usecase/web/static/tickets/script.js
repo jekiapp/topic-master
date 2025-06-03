@@ -31,5 +31,14 @@ $(document).ready(function() {
 
     loadAssignments();
 
+    // Make each row clickable
+    $('#assignments-tbody').on('click', 'tr', function() {
+        // Ignore the example row
+        if ($(this).is(':hidden')) return;
+        // Trigger view action (replace with your actual view logic)
+        const title = $(this).find('td').eq(0).text();
+        alert('View assignment: ' + title);
+    });
+
     // Add more event handlers as needed
 });

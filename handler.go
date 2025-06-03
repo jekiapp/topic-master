@@ -39,6 +39,7 @@ type Handler struct {
 	signupUC                aclAuth.SignupUsecase
 	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
 	listMyAssignmentUC      tickets.ListMyAssignmentUsecase
+	ticketDetailUC          tickets.TicketDetailUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -67,6 +68,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		signupUC:                aclAuth.NewSignupUsecase(db),
 		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
 		listMyAssignmentUC:      tickets.NewListMyAssignmentUsecase(db),
+		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
 	}
 }
 
@@ -110,6 +112,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/signup/app", handlerPkg.QueryHandler(h.viewSignupApplicationUC.Handle))
 
 	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.QueryHandler(h.listMyAssignmentUC.Handle)))
+	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.QueryHandler(h.ticketDetailUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
