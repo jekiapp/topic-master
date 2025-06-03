@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
-	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
@@ -73,7 +72,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	if err != nil {
 		return TicketDetailResponse{}, fmt.Errorf("ticket %s not found", ticketID)
 	}
-	user, err := uc.repo.GetUserByID(app.UserID)
+	applicant, err := uc.repo.GetUserPendingByID(app.UserID)
 	if err != nil {
 		return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
 	}
@@ -121,6 +120,13 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 		actor, err := uc.repo.GetUserByID(history.ActorID)
 		if err != nil {
 			log.Println("error getting username by user id", err)
+			// fallback to pending user
+			pendingActor, err := uc.repo.GetUserPendingByID(history.ActorID)
+			if err != nil {
+				log.Println("error getting username by user id", err)
+			} else {
+				actor = pendingActor.User
+			}
 		}
 		historiesResponse = append(historiesResponse, historyResponse{
 			Action:    history.Action,
@@ -137,7 +143,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 			Reason: app.Reason,
 			Status: app.Status,
 		},
-		Applicant:       user,
+		Applicant:       applicant.User,
 		Assignees:       assignees,
 		Histories:       historiesResponse,
 		CreatedAt:       app.CreatedAt.Format(time.RFC822Z),
@@ -170,6 +176,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 type iTicketDetailRepo interface {
 	GetApplicationByID(id string) (acl.Application, error)
 	GetUserByID(id string) (acl.User, error)
+	GetUserPendingByID(id string) (acl.UserPending, error)
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
 	ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error)
 	GetPermissionByID(id string) (acl.Permission, error)
@@ -184,7 +191,11 @@ func (r *ticketDetailRepo) GetApplicationByID(id string) (acl.Application, error
 }
 
 func (r *ticketDetailRepo) GetUserByID(id string) (acl.User, error) {
-	return userrepo.GetUserByID(r.db, id)
+	return dbpkg.GetByID[acl.User](r.db, id)
+}
+
+func (r *ticketDetailRepo) GetUserPendingByID(id string) (acl.UserPending, error) {
+	return dbpkg.GetByID[acl.UserPending](r.db, id)
 }
 
 func (r *ticketDetailRepo) ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error) {

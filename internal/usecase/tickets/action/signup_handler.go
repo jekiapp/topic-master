@@ -19,8 +19,8 @@ type iSignupRepo interface {
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
 	UpdateApplicationAssignment(assignment acl.ApplicationAssignment) error
 	CreateApplicationHistory(history acl.ApplicationHistory) error
-	GetUserByID(userID string) (acl.User, error)
-	UpdateUser(user acl.User) error
+	GetUserPendingByID(userID string) (acl.UserPending, error)
+	CreateUser(user acl.User) error
 	DeleteUserByID(userID string) error
 }
 
@@ -97,13 +97,14 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 		log.Println("Failed to create application history", err)
 	}
 
-	// 6. Mark user as active
-	applicant, err := h.repo.GetUserByID(app.UserID)
+	// 6. Create user from pending user
+	applicant, err := h.repo.GetUserPendingByID(app.UserID)
 	if err == nil {
 		applicant.Status = acl.UserStatusActive
+		applicant.CreatedAt = time.Now()
 		applicant.UpdatedAt = time.Now()
-		if err = h.repo.UpdateUser(applicant); err != nil {
-			return ActionResponse{Status: "error", Message: "Failed to update user"}, err
+		if err = h.repo.CreateUser(applicant.User); err != nil {
+			return ActionResponse{Status: "error", Message: "Failed to create user"}, err
 		}
 	}
 
@@ -196,12 +197,12 @@ func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) er
 	return db.Insert(r.db, history)
 }
 
-func (r *signupRepo) GetUserByID(userID string) (acl.User, error) {
-	return db.GetByID[acl.User](r.db, userID)
+func (r *signupRepo) GetUserPendingByID(userID string) (acl.UserPending, error) {
+	return db.GetByID[acl.UserPending](r.db, userID)
 }
 
-func (r *signupRepo) UpdateUser(user acl.User) error {
-	return db.Update(r.db, user)
+func (r *signupRepo) CreateUser(user acl.User) error {
+	return db.Insert(r.db, user)
 }
 
 func (r *signupRepo) DeleteUserByID(userID string) error {

@@ -38,6 +38,8 @@ type iSignupRepo interface {
 	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
 	CreateApplicationHistory(history acl.ApplicationHistory) error
 	GetUserByID(userID string) (acl.User, error)
+	CreateUserPending(user acl.UserPending) error
+	CreateUserGroup(userGroup acl.UserGroup) error
 }
 
 type signupRepo struct {
@@ -70,6 +72,14 @@ func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) er
 
 func (r *signupRepo) GetUserByID(userID string) (acl.User, error) {
 	return db.GetByID[acl.User](r.db, userID)
+}
+
+func (r *signupRepo) CreateUserPending(user acl.UserPending) error {
+	return db.Insert(r.db, &user)
+}
+
+func (r *signupRepo) CreateUserGroup(userGroup acl.UserGroup) error {
+	return db.Insert(r.db, &userGroup)
 }
 
 type SignupUsecase struct {
@@ -175,23 +185,25 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	// Hash the password (SHA256)
 	hash := sha256.Sum256([]byte(req.Password))
 	hashedPassword := hex.EncodeToString(hash[:])
-	user := acl.User{
-		ID:       userID,
-		Username: req.Username,
-		Name:     req.Name,
-		Password: hashedPassword,
-		Status:   acl.StatusUserInApproval,
-		Groups: []acl.GroupRole{
-			{
-				GroupID:   req.GroupID,
-				GroupName: req.GroupName,
-				Role:      req.GroupRole,
+	user := acl.UserPending{
+		User: acl.User{
+			ID:       userID,
+			Username: req.Username,
+			Name:     req.Name,
+			Password: hashedPassword,
+			Status:   acl.StatusUserInApproval,
+			Groups: []acl.GroupRole{
+				{
+					GroupID:   req.GroupID,
+					GroupName: req.GroupName,
+					Role:      req.GroupRole,
+				},
 			},
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
-	if err := userrepo.CreateUser(uc.repo.(*signupRepo).db, user); err != nil {
+	if err := uc.repo.CreateUserPending(user); err != nil {
 		return SignupResponse{}, err
 	}
 	// Assign user to the requested group
@@ -203,7 +215,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := userrepo.CreateUserGroup(uc.repo.(*signupRepo).db, userGroup); err != nil {
+	if err := uc.repo.CreateUserGroup(userGroup); err != nil {
 		return SignupResponse{}, err
 	}
 	// 3. Create ApplicationHistory as "waiting for approval"

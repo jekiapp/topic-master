@@ -36,6 +36,7 @@ type User struct {
 
 const (
 	TableUser        = "user"
+	TableUserPending = "user_pending"
 	IdxUser_Status   = TableUser + ":status"
 	IdxUser_Username = TableUser + ":username"
 )
@@ -71,4 +72,33 @@ type Authorization struct {
 
 func (u *User) SetID(id string) {
 	u.ID = id
+}
+
+// this is a temporary user on signup, it will be deleted after the user is approved
+type UserPending struct {
+	User
+}
+
+func (u *UserPending) SetID(id string) {
+	u.ID = id
+}
+
+func (u *UserPending) GetPrimaryKey() string {
+	return fmt.Sprintf("%s:%s", TableUserPending, u.ID)
+}
+
+func (u *UserPending) GetIndexes() []db.Index {
+	return []db.Index{
+		{
+			Name:    IdxUser_Username,
+			Pattern: fmt.Sprintf("%s:*:%s", TableUserPending, "username"),
+			Type:    buntdb.IndexString,
+		},
+	}
+}
+
+func (u *UserPending) GetIndexValues() map[string]string {
+	return map[string]string{
+		"username": u.Username,
+	}
 }

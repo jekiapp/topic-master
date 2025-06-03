@@ -39,6 +39,7 @@ type assignee struct {
 type iViewSignupApplicationRepo interface {
 	GetApplicationByID(id string) (acl.Application, error)
 	GetUserByID(id string) (acl.User, error)
+	GetUserPendingByID(id string) (acl.UserPending, error)
 	GetGroupByID(id string) (acl.Group, error)
 	GetUserGroup(userID, groupID string) (acl.UserGroup, error)
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
@@ -54,7 +55,11 @@ func (r *viewSignupApplicationRepo) GetApplicationByID(id string) (acl.Applicati
 }
 
 func (r *viewSignupApplicationRepo) GetUserByID(id string) (acl.User, error) {
-	return userrepo.GetUserByID(r.db, id)
+	return dbpkg.GetByID[acl.User](r.db, id)
+}
+
+func (r *viewSignupApplicationRepo) GetUserPendingByID(id string) (acl.UserPending, error) {
+	return dbpkg.GetByID[acl.UserPending](r.db, id)
 }
 
 func (r *viewSignupApplicationRepo) GetGroupByID(id string) (acl.Group, error) {
@@ -89,7 +94,7 @@ func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req map[strin
 	if err != nil {
 		return ViewSignupApplicationResponse{}, errors.New("application not found")
 	}
-	user, err := uc.repo.GetUserByID(app.UserID)
+	user, err := uc.repo.GetUserPendingByID(app.UserID)
 	if err != nil {
 		return ViewSignupApplicationResponse{}, errors.New("user not found")
 	}
@@ -118,7 +123,7 @@ func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req map[strin
 	}
 	return ViewSignupApplicationResponse{
 		Application: app,
-		User:        user,
+		User:        user.User,
 		Assignee:    assignees,
 		Histories:   histories,
 	}, nil
