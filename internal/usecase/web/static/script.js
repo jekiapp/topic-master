@@ -7,34 +7,14 @@ $(function() {
     return $(this).text().trim() === 'Access Control';
   });
 
+  const mainIframe = $('#main-iframe');
+
   function showMyTopics() {
-    let iframe = iframeContainer.find('iframe');
-    if (iframe.length === 0) {
-      iframe = $('<iframe>', {
-        src: 'my_topics/index.html',
-        style: 'width:100%;height:100%;border:none;min-height:600px;',
-        frameborder: 0,
-        allowfullscreen: true
-      });
-      iframeContainer.empty().append(iframe);
-    } else if (iframe.attr('src') !== 'my_topics/index.html') {
-      iframe.attr('src', 'my_topics/index.html');
-    }
+    mainIframe.attr('src', 'my_topics/index.html');
   }
 
   function showAccessControl() {
-    let iframe = iframeContainer.find('iframe');
-    if (iframe.length === 0) {
-      iframe = $('<iframe>', {
-        src: 'acl/index.html',
-        style: 'width:100%;height:100%;border:none;min-height:600px;',
-        frameborder: 0,
-        allowfullscreen: true
-      });
-      iframeContainer.empty().append(iframe);
-    } else if (iframe.attr('src') !== 'acl/index.html') {
-      iframe.attr('src', 'acl/index.html');
-    }
+    mainIframe.attr('src', 'acl/index.html');
   }
 
   function setActiveMenuByHash(hash) {
@@ -53,33 +33,11 @@ $(function() {
   });
 
   function showTickets() {
-    let iframe = iframeContainer.find('iframe');
-    if (iframe.length === 0) {
-      iframe = $('<iframe>', {
-        src: 'tickets/index.html',
-        style: 'width:100%;height:100%;border:none;min-height:600px;',
-        frameborder: 0,
-        allowfullscreen: true
-      });
-      iframeContainer.empty().append(iframe);
-    } else if (iframe.attr('src') !== 'tickets/index.html') {
-      iframe.attr('src', 'tickets/index.html');
-    }
+    mainIframe.attr('src', 'tickets/index.html');
   }
 
   function showTicketDetail() {
-    let iframe = iframeContainer.find('iframe');
-    if (iframe.length === 0) {
-      iframe = $('<iframe>', {
-        src: 'tickets/detail/index.html',
-        style: 'width:100%;height:100%;border:none;min-height:600px;',
-        frameborder: 0,
-        allowfullscreen: true
-      });
-      iframeContainer.empty().append(iframe);
-    } else if (iframe.attr('src') !== 'tickets/detail/index.html') {
-      iframe.attr('src', 'tickets/detail/index.html');
-    }
+    mainIframe.attr('src', 'tickets/detail/index.html');
   }
 
   // Add event listener for Tickets menu
