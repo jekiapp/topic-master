@@ -1,41 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Assignments</title>
-    <link rel="stylesheet" href="/colors.css">
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>My Assignments</title>
+  <link rel="stylesheet" href="/colors.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/global-ajax-handler.js"></script>
 </head>
 <body>
-    <div class="assignments-container">
-        <div class="table-wrapper">
-            <div class="table-header">
-                <h2>My Assignments</h2>
-            </div>
-            <table id="assignments-table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Reason</th>
-                        <th>Created At</th>
-                    </tr>
-                </thead>
-                <tbody id="assignments-tbody">
-                    <!-- Example row for structure -->
-                    <tr style="display:none;">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="/js/global-ajax-handler.js"></script>
-    <script src="script.js"></script>
+  <div class="main-container">
+    <h2>My Assignments</h2>
+    <table id="assignments-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Reason</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="assignments-tbody">
+        <!-- Example row for structure -->
+        <tr style="display:none;">
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>

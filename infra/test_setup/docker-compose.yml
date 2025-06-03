@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   nsqlookupd:
     image: nsqio/nsq:latest
