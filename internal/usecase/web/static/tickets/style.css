@@ -46,6 +46,7 @@ tr:last-child {
 
 tr:hover {
     background: var(--input-bg);
+    cursor: pointer;
 }
 
 .bookmark-icon {

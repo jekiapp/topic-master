@@ -70,6 +70,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 
 	// Only create if not already assigned
 	userGroup := aclmodel.UserGroup{
+		ID:        uuid.NewString(),
 		UserID:    rootUser.ID,
 		GroupID:   rootGroup.ID,
 		Role:      aclmodel.RoleGroupAdmin,

@@ -5,7 +5,6 @@ package tickets
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -72,11 +71,11 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	ticketID := req["id"]
 	app, err := uc.repo.GetApplicationByID(ticketID)
 	if err != nil {
-		return TicketDetailResponse{}, errors.New("ticket not found")
+		return TicketDetailResponse{}, fmt.Errorf("ticket %s not found", ticketID)
 	}
 	user, err := uc.repo.GetUserByID(app.UserID)
 	if err != nil {
-		return TicketDetailResponse{}, errors.New("user not found")
+		return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
 	}
 
 	assignments, err := uc.repo.ListAssignmentsByApplicationID(ticketID)

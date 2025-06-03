@@ -126,18 +126,31 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	if err := uc.repo.CreateApplication(app); err != nil {
 		return SignupResponse{}, err
 	}
+
 	// 1. Select all members of root group
 	rootGroup, err := uc.repo.GetGroupByName(acl.GroupRoot)
 	if err != nil {
 		return SignupResponse{}, errors.New("root group not found")
 	}
+
 	rootMembers, err := uc.repo.ListUserGroupsByGroupID(rootGroup.ID, 0)
 	if err != nil {
 		return SignupResponse{}, errors.New("failed to list root group members")
 	}
+
+	adminUserIDs, err := uc.repo.GetAdminUserIDsByGroupID(req.GroupID)
+	if err != nil {
+		return SignupResponse{}, errors.New("failed to get admin user ids")
+	}
+
+	// merge together adminUserIDs and rootMembers
 	for _, member := range rootMembers {
+		adminUserIDs = append(adminUserIDs, member.UserID)
+	}
+
+	for _, userID := range adminUserIDs {
 		// check if the user status is "active"
-		user, err := uc.repo.GetUserByID(member.UserID)
+		user, err := uc.repo.GetUserByID(userID)
 		if err != nil {
 			return SignupResponse{}, err
 		}
@@ -148,7 +161,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		assignment := acl.ApplicationAssignment{
 			ID:            uuid.NewString(),
 			ApplicationID: app.ID,
-			ReviewerID:    member.UserID,
+			ReviewerID:    userID,
 			ReviewStatus:  acl.ActionWaitingForApproval,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
