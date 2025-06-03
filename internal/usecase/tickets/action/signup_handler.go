@@ -21,7 +21,7 @@ type iSignupRepo interface {
 	CreateApplicationHistory(history acl.ApplicationHistory) error
 	GetUserPendingByID(userID string) (acl.UserPending, error)
 	CreateUser(user acl.User) error
-	DeleteUserByID(userID string) error
+	UpdateUserPending(user acl.UserPending) error
 }
 
 type SignupHandler struct {
@@ -166,8 +166,14 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 	}
 
 	// 6. Delete user by id
-	if err := h.repo.DeleteUserByID(app.UserID); err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to delete user"}, err
+	// update user pending status to inactive
+	applicant, err := h.repo.GetUserPendingByID(app.UserID)
+	if err == nil {
+		applicant.Status = acl.UserStatusInactive
+		applicant.UpdatedAt = time.Now()
+		if err = h.repo.UpdateUserPending(applicant); err != nil {
+			return ActionResponse{Status: "error", Message: "Failed to update user"}, err
+		}
 	}
 
 	return ActionResponse{Status: "success", Message: "Signup rejected and user deleted"}, nil
@@ -205,6 +211,6 @@ func (r *signupRepo) CreateUser(user acl.User) error {
 	return db.Insert(r.db, user)
 }
 
-func (r *signupRepo) DeleteUserByID(userID string) error {
-	return db.DeleteByID[acl.User](r.db, userID)
+func (r *signupRepo) UpdateUserPending(user acl.UserPending) error {
+	return db.Update(r.db, &user)
 }
