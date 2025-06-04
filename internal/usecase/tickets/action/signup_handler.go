@@ -44,7 +44,28 @@ func (h *SignupHandler) HandleSignup(ctx context.Context, req ActionRequest) (Ac
 }
 
 func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (ActionResponse, error) {
-	// 1. Get application
+	// validate eligibility
+	user := util.GetUserInfo(ctx)
+	if user == nil {
+		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
+	}
+	assignments, err := h.repo.ListAssignmentsByApplicationID(req.ApplicationID)
+	if err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to get assignments"}, err
+	}
+
+	eligible := false
+	for _, assignment := range assignments {
+		if assignment.ReviewerID == user.ID {
+			eligible = true
+			break
+		}
+	}
+	if !eligible {
+		return ActionResponse{Status: "error", Message: "You are not eligible to approve this application"}, nil
+	}
+
+	// 2. Get application
 	app, err := h.repo.GetApplicationByID(req.ApplicationID)
 	if err != nil {
 		return ActionResponse{Status: "error", Message: "Application not found"}, err
@@ -58,16 +79,6 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 	}
 
 	// 3. Get all assignments for this application
-	assignments, err := h.repo.ListAssignmentsByApplicationID(app.ID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to get assignments"}, err
-	}
-
-	// 4. Get current user from context
-	user := util.GetUserInfo(ctx)
-	if user == nil {
-		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
-	}
 
 	for i, assignment := range assignments {
 		if assignment.ReviewerID == user.ID {
@@ -112,6 +123,28 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 }
 
 func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (ActionResponse, error) {
+
+	// validate eligibility
+	user := util.GetUserInfo(ctx)
+	if user == nil {
+		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
+	}
+	assignments, err := h.repo.ListAssignmentsByApplicationID(req.ApplicationID)
+	if err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to get assignments"}, err
+	}
+
+	eligible := false
+	for _, assignment := range assignments {
+		if assignment.ReviewerID == user.ID {
+			eligible = true
+			break
+		}
+	}
+	if !eligible {
+		return ActionResponse{Status: "error", Message: "You are not eligible to reject this application"}, nil
+	}
+
 	// 1. Get application by id
 	app, err := h.repo.GetApplicationByID(req.ApplicationID)
 	if err != nil {
@@ -125,18 +158,7 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
 	}
 
-	// 3. Get all assignments for this application
-	assignments, err := h.repo.ListAssignmentsByApplicationID(app.ID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to get assignments"}, err
-	}
-
-	// 4. Get current user from context
-	user := util.GetUserInfo(ctx)
-	if user == nil {
-		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
-	}
-
+	// 3. Update all assignments
 	for i, assignment := range assignments {
 		if assignment.ReviewerID == user.ID {
 			assignments[i].ReviewStatus = acl.ReviewStatusRejected
@@ -165,8 +187,7 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 		log.Println("Failed to create application history", err)
 	}
 
-	// 6. Delete user by id
-	// update user pending status to inactive
+	// 6. Delete user pending by id
 	applicant, err := h.repo.GetUserPendingByID(app.UserID)
 	if err == nil {
 		applicant.Status = acl.UserStatusInactive
