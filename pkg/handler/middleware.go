@@ -11,11 +11,37 @@ import (
 
 	"github.com/jekiapp/topic-master/internal/model"
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/pkg/util"
 )
 
 func InitJWTMiddleware(secret string) func(next http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return JWTMiddleware(next, secret)
+	}
+}
+
+func InitJWTMiddlewareWithRoot(secret string) func(next http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		rootNext := func(w http.ResponseWriter, r *http.Request) {
+
+			claims := util.GetUserInfo(r.Context())
+			// check if the user is root
+			isRoot := false
+			for _, group := range claims.Groups {
+				if group.GroupName == acl.GroupRoot {
+					isRoot = true
+					break
+				}
+			}
+
+			if !isRoot {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			next(w, r)
+		}
+		return JWTMiddleware(rootNext, secret)
 	}
 }
 
@@ -83,6 +109,7 @@ func JWTMiddleware(next http.HandlerFunc, secret string) http.HandlerFunc {
 			}
 			return
 		}
+
 		ctx := context.WithValue(r.Context(), model.UserInfoKey, claims)
 		next(w, r.WithContext(ctx))
 	}

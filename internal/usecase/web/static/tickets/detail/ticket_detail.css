@@ -9,8 +9,8 @@ body {
     background: var(--primary-white);
     color: var(--primary-purple);
     max-width: 700px;
-    margin: 48px auto;
-    padding: 40px 32px;
+    margin: 0px auto;
+    padding: 35px 32px;
     border-radius: 18px;
     box-shadow: 0 4px 24px var(--shadow-purple);
     position: relative;
@@ -128,7 +128,7 @@ tbody tr:not(:last-child) td {
 /* Back link arrow style */
 .back-link {
     display: inline-block;
-    margin: 32px 0 18px 8px;
+    margin: 10px 8px;
     color: var(--accent-purple);
     text-decoration: none;
     font-size: 1.08em;

@@ -12,6 +12,12 @@ $(function() {
       } else {
         $('.user-name').text('Unknown User ▼');
       }
+      // Hide Access Control if not root
+      if (!userData || userData.root === false) {
+        $(".menu li a").filter(function() {
+          return $(this).text().trim() === 'Access Control';
+        }).closest('li').hide();
+      }
     }).fail(function(jqxhr) {
       if (jqxhr.status === 401) {
         alert('Session expired or unauthorized. Please log in again.');

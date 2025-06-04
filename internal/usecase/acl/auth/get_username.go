@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	acl "github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/pkg/util"
 )
 
@@ -11,6 +12,7 @@ import (
 type GetUsernameResponse struct {
 	Name     string `json:"name"`
 	Username string `json:"username"`
+	Root     bool   `json:"root"`
 }
 
 // GetUsernameUsecase provides the username from context
@@ -28,5 +30,12 @@ func (uc GetUsernameUsecase) Handle(ctx context.Context, params map[string]strin
 	if user == nil || user.Username == "" {
 		return GetUsernameResponse{}, errors.New("user is not authenticated")
 	}
-	return GetUsernameResponse{Name: user.Name, Username: user.Username}, nil
+	isRoot := false
+	for _, group := range user.Groups {
+		if group.GroupName == acl.GroupRoot {
+			isRoot = true
+			break
+		}
+	}
+	return GetUsernameResponse{Name: user.Name, Username: user.Username, Root: isRoot}, nil
 }

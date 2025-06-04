@@ -79,25 +79,26 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 
 func (h Handler) routes(mux *http.ServeMux) {
 	authMiddleware := handlerPkg.InitJWTMiddleware(string(h.config.SecretKey))
+	rootMiddleware := handlerPkg.InitJWTMiddlewareWithRoot(string(h.config.SecretKey))
 
 	mux.HandleFunc("/api/login", h.loginUC.Handle)
 	mux.HandleFunc("/api/logout", h.logoutUC.Handle)
 
-	mux.HandleFunc("/api/user/list", handlerPkg.HandleGenericPost(h.getUserListUC.Handle))
-	mux.HandleFunc("/api/user/create", authMiddleware(handlerPkg.HandleGenericPost(h.createUserUC.Handle)))
-	mux.HandleFunc("/api/user/update", authMiddleware(handlerPkg.HandleGenericPost(h.updateUserUC.Handle)))
-	mux.HandleFunc("/api/user/assign-to-group", authMiddleware(handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle)))
-	mux.HandleFunc("/api/user/delete", authMiddleware(handlerPkg.HandleGenericPost(h.deleteUserUC.Handle)))
+	mux.HandleFunc("/api/user/list", rootMiddleware(handlerPkg.HandleGenericPost(h.getUserListUC.Handle)))
+	mux.HandleFunc("/api/user/create", rootMiddleware(handlerPkg.HandleGenericPost(h.createUserUC.Handle)))
+	mux.HandleFunc("/api/user/update", rootMiddleware(handlerPkg.HandleGenericPost(h.updateUserUC.Handle)))
+	mux.HandleFunc("/api/user/assign-to-group", rootMiddleware(handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle)))
+	mux.HandleFunc("/api/user/delete", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteUserUC.Handle)))
 
 	mux.HandleFunc("/api/create-permission", handlerPkg.HandleGenericPost(h.createPermissionUC.Handle))
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
 	mux.HandleFunc("/api/sync-topics", handlerPkg.QueryHandler(h.syncTopicsUC.HandleQuery))
 
-	mux.HandleFunc("/api/group/create", authMiddleware(handlerPkg.HandleGenericPost(h.createGroupUC.Handle)))
-	mux.HandleFunc("/api/group/list", authMiddleware(handlerPkg.HandleGenericPost(h.getGroupListUC.Handle)))
+	mux.HandleFunc("/api/group/create", rootMiddleware(handlerPkg.HandleGenericPost(h.createGroupUC.Handle)))
+	mux.HandleFunc("/api/group/list", rootMiddleware(handlerPkg.HandleGenericPost(h.getGroupListUC.Handle)))
 	mux.HandleFunc("/api/group/list-simple", handlerPkg.HandleGenericPost(h.getGroupListSimpleUC.Handle))
-	mux.HandleFunc("/api/group/update-group-by-id", authMiddleware(handlerPkg.HandleGenericPost(h.updateGroupByIDUC.Handle)))
-	mux.HandleFunc("/api/group/delete-group", authMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
+	mux.HandleFunc("/api/group/update-group-by-id", rootMiddleware(handlerPkg.HandleGenericPost(h.updateGroupByIDUC.Handle)))
+	mux.HandleFunc("/api/group/delete-group", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
 	mux.HandleFunc("/api/topic/list-topics", authMiddleware(handlerPkg.QueryHandler(h.listTopicsUC.HandleQuery)))
 
