@@ -33,7 +33,7 @@ type Handler struct {
 	getGroupListUC          aclGroup.GetGroupListUsecase
 	getGroupListSimpleUC    aclGroup.GetGroupListSimpleUsecase
 	getUserListUC           aclUser.GetUserListUsecase
-	listTopicsUC            topicUC.ListTopicsUsecase
+	listAllTopicsUC         topicUC.ListAllTopicsUsecase
 	updateGroupByIDUC       aclGroup.UpdateGroupByIDUsecase
 	deleteGroupUC           aclGroup.DeleteGroupUsecase
 	resetPasswordUC         aclAuth.ResetPasswordUsecase
@@ -64,7 +64,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		getGroupListUC:          aclGroup.NewGetGroupListUsecase(db),
 		getGroupListSimpleUC:    aclGroup.NewGetGroupListSimpleUsecase(db),
 		getUserListUC:           aclUser.NewGetUserListUsecase(db),
-		listTopicsUC:            topicUC.NewListTopicsUsecase(db),
+		listAllTopicsUC:         topicUC.NewListAllTopicsUsecase(db),
 		updateGroupByIDUC:       aclGroup.NewUpdateGroupByIDUsecase(db),
 		deleteGroupUC:           aclGroup.NewDeleteGroupUsecase(db),
 		resetPasswordUC:         aclAuth.NewResetPasswordUsecase(db),
@@ -100,7 +100,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/group/update-group-by-id", rootMiddleware(handlerPkg.HandleGenericPost(h.updateGroupByIDUC.Handle)))
 	mux.HandleFunc("/api/group/delete-group", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
-	mux.HandleFunc("/api/topic/list-topics", handlerPkg.HandleGenericGet(h.listTopicsUC.HandleQuery))
+	mux.HandleFunc("/api/topic/list-all-topics", handlerPkg.HandleGenericGet(h.listAllTopicsUC.HandleQuery))
 
 	mux.HandleFunc("/api/reset-password", handlerPkg.HandleGetPost(
 		h.resetPasswordUC.HandleGet,
