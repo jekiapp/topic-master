@@ -92,7 +92,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/create-permission", handlerPkg.HandleGenericPost(h.createPermissionUC.Handle))
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
-	mux.HandleFunc("/api/sync-topics", handlerPkg.QueryHandler(h.syncTopicsUC.HandleQuery))
+	mux.HandleFunc("/api/sync-topics", handlerPkg.HandleGenericGet(h.syncTopicsUC.HandleQuery))
 
 	mux.HandleFunc("/api/group/create", rootMiddleware(handlerPkg.HandleGenericPost(h.createGroupUC.Handle)))
 	mux.HandleFunc("/api/group/list", rootMiddleware(handlerPkg.HandleGenericPost(h.getGroupListUC.Handle)))
@@ -100,28 +100,21 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/group/update-group-by-id", rootMiddleware(handlerPkg.HandleGenericPost(h.updateGroupByIDUC.Handle)))
 	mux.HandleFunc("/api/group/delete-group", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
-	mux.HandleFunc("/api/topic/list-topics", authMiddleware(handlerPkg.QueryHandler(h.listTopicsUC.HandleQuery)))
+	mux.HandleFunc("/api/topic/list-topics", handlerPkg.HandleGenericGet(h.listTopicsUC.HandleQuery))
 
-	mux.HandleFunc("/api/reset-password", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			handlerPkg.QueryHandler(h.resetPasswordUC.HandleGet)(w, r)
-			return
-		}
-		if r.Method == http.MethodPost {
-			handlerPkg.HandleGenericPost(h.resetPasswordUC.HandlePost)(w, r)
-			return
-		}
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	})
+	mux.HandleFunc("/api/reset-password", handlerPkg.HandleGetPost(
+		h.resetPasswordUC.HandleGet,
+		h.resetPasswordUC.HandlePost,
+	))
 
 	mux.HandleFunc("/api/signup", handlerPkg.HandleGenericPost(h.signupUC.Handle))
-	mux.HandleFunc("/api/signup/app", handlerPkg.QueryHandler(h.viewSignupApplicationUC.Handle))
+	mux.HandleFunc("/api/signup/app", handlerPkg.HandleGenericGet(h.viewSignupApplicationUC.Handle))
 
-	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.QueryHandler(h.listMyAssignmentUC.Handle)))
-	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.QueryHandler(h.ticketDetailUC.Handle)))
+	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.HandleGenericGet(h.listMyAssignmentUC.Handle)))
+	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.HandleGenericGet(h.ticketDetailUC.Handle)))
 	mux.HandleFunc("/api/tickets/action", authMiddleware(handlerPkg.HandleGenericPost(h.actionCoordinatorUC.Handle)))
 
-	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.QueryHandler(h.getUsernameUC.Handle)))
+	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.HandleGenericGet(h.getUsernameUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

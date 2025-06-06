@@ -8,8 +8,8 @@ import (
 
 type GenericQueryHandler[R any] func(ctx context.Context, input map[string]string) (R, error)
 
-// QueryHandler handles GET requests by parsing query parameters into a map
-func QueryHandler[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
+// HandleGenericGet handles GET requests by parsing query parameters into a map
+func HandleGenericGet[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check method get
 		if r.Method != http.MethodGet {

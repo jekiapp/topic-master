@@ -98,3 +98,17 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 		})
 	}
 }
+
+// HandleGetPost returns a handler that dispatches to getHandler for GET and postHandler for POST, 405 otherwise.
+func HandleGetPost[G any, I any, O any](getHandler GenericQueryHandler[G], postHandler GenericPostHandler[I, O]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			HandleGenericGet(getHandler)(w, r)
+		case http.MethodPost:
+			HandleGenericPost(postHandler)(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}
+}
