@@ -13,8 +13,8 @@ import (
 // learn from internal/model and internal/repository
 // give me example to truncate application table
 
-// TruncateApplicationTable deletes all records in the application table.
-func TruncateApplicationTable(db *buntdb.DB, prefix string) error {
+// TruncateTable deletes all records in the application table.
+func TruncateTable(db *buntdb.DB, prefix string) error {
 	return db.Update(func(tx *buntdb.Tx) error {
 		var keysToDelete []string
 		tx.AscendKeys(prefix+"*", func(key, value string) bool {
@@ -22,6 +22,7 @@ func TruncateApplicationTable(db *buntdb.DB, prefix string) error {
 			return true
 		})
 		for _, key := range keysToDelete {
+			fmt.Println("deleting key: ", key)
 			if _, err := tx.Delete(key); err != nil {
 				return fmt.Errorf("failed to delete key %s: %w", key, err)
 			}
@@ -30,6 +31,7 @@ func TruncateApplicationTable(db *buntdb.DB, prefix string) error {
 	})
 }
 
+// example: go run main.go ../../data/topic-master.db truncate entity
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatalf("usage: %s <db_path>", os.Args[0])
@@ -45,8 +47,8 @@ func main() {
 
 	if action == "truncate" {
 		prefix := os.Args[3]
-		if err := TruncateApplicationTable(db, prefix); err != nil {
-			log.Fatalf("failed to truncate application table: %v", err)
+		if err := TruncateTable(db, prefix); err != nil {
+			log.Fatalf("failed to truncate table: %v", err)
 		}
 		fmt.Println("Table truncated successfully.")
 	}
