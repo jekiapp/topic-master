@@ -56,7 +56,7 @@ $(function() {
   });
 
   function showAllTopics() {
-    mainIframe.attr('src', 'all_topics/index.html');
+    mainIframe.attr('src', 'all-topics/index.html');
   }
 
   function setActiveMenuByHash(hash) {
@@ -65,7 +65,7 @@ $(function() {
       accessControlMenu.addClass('active');
     } else if (hash === '#tickets' || hash.startsWith('#ticket-detail')) {
       ticketsMenu.addClass('active');
-    } else if (hash === '#all_topics') {
+    } else if (hash === '#all-topics') {
       allTopicsMenu.addClass('active');
     } else {
       myTopicsMenu.addClass('active');
@@ -105,7 +105,7 @@ $(function() {
       showTickets();
     } else if (hash.startsWith('#ticket-detail')) {
       showTicketDetail();
-    } else if (hash === '#all_topics') {
+    } else if (hash === '#all-topics') {
       showAllTopics();
     } else {
       showMyTopics();
@@ -136,7 +136,7 @@ $(function() {
 
   allTopicsMenu.on('click', function(e) {
     e.preventDefault();
-    window.location.hash = '#all_topics';
+    window.location.hash = '#all-topics';
     $('.menu li a').removeClass('active');
     $(this).addClass('active');
     showAllTopics();
