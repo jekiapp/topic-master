@@ -56,4 +56,7 @@ tr:hover {
   background: var(--shadow-focus);
   color: var(--primary-purple);
   display: inline-block;
+}
+.topic-row {
+  cursor: pointer;
 } 

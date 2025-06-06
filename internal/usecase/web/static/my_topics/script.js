@@ -19,17 +19,20 @@ $(function() {
       }
       const topics = resp.data && resp.data.topics ? resp.data.topics : [];
       const rows = topics.map(function(t) {
-        return `<tr>
+        return `<tr class="topic-row" data-id="${t.id}">
           <td>${t.name || ''}</td>
           <td>${t.group || ''}</td>
-          <td>${t.description || ''}</td>
-          <td>${formatDate(t.created_at)}</td>
-          <td>${t.rps_1h != null ? t.rps_1h : '-'}</td>
-          <td><span class="status">${t.status || ''}</span></td>
-          <td>${renderBookmark(t.bookmarked)}</td>
+          <td>${t.type || ''}</td>
         </tr>`;
       }).join('');
       $('#topics-table tbody').html(rows || '<tr><td colspan="7">No topics found.</td></tr>');
+      // Add click handler for rows
+      $('#topics-table').off('click', '.topic-row').on('click', '.topic-row', function() {
+        const id = $(this).data('id');
+        if (id) {
+            window.parent.location.hash = `topic-detail?id=${id}`;
+        }
+      });
     },
     error: function(xhr) {
       if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error) {
