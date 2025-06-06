@@ -19,6 +19,7 @@ type Group struct {
 
 const (
 	GroupRoot  = "root"
+	GroupNone  = "None"
 	TableGroup = "group"
 
 	IdxGroup_Name = TableGroup + ":name"

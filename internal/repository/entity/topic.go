@@ -16,7 +16,7 @@ func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) 
 		Name:       topic,
 		Resource:   "NSQ",
 		Status:     "active",
-		GroupOwner: acl.GroupRoot,
+		GroupOwner: acl.GroupNone,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
