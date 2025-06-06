@@ -8,9 +8,12 @@ $(function() {
     }).done(function(resp) {
       var userData = resp && resp.data;
       if (userData && userData.name) {
-        $('.user-name').text(userData.name + ' ▼');
+        $('#user-dropdown').show();
+        $('#login-signup-link').hide();
+        $('#user-dropdown .user-name').text(userData.name + ' ▼');
       } else {
-        $('.user-name').text('Unknown User ▼');
+        $('#user-dropdown').hide();
+        $('#login-signup-link').show();
       }
       // Hide Access Control if not root
       if (!userData || userData.root === false) {
@@ -20,8 +23,9 @@ $(function() {
       }
     }).fail(function(jqxhr) {
       if (jqxhr.status === 401) {
-        alert('Session expired or unauthorized. Please log in again.');
-        window.top.location.href = '/login';
+        $('#user-dropdown').hide();
+        $('#login-signup-link').show();
+        // No redirect
       }
     });
   }
@@ -47,12 +51,22 @@ $(function() {
     mainIframe.attr('src', 'acl/index.html');
   }
 
+  const allTopicsMenu = $('.menu li a').filter(function() {
+    return $(this).text().trim() === 'All Topics';
+  });
+
+  function showAllTopics() {
+    mainIframe.attr('src', 'all_topics/index.html');
+  }
+
   function setActiveMenuByHash(hash) {
     $('.menu li a').removeClass('active');
     if (hash === '#access') {
       accessControlMenu.addClass('active');
     } else if (hash === '#tickets' || hash.startsWith('#ticket-detail')) {
       ticketsMenu.addClass('active');
+    } else if (hash === '#all_topics') {
+      allTopicsMenu.addClass('active');
     } else {
       myTopicsMenu.addClass('active');
     }
@@ -91,6 +105,8 @@ $(function() {
       showTickets();
     } else if (hash.startsWith('#ticket-detail')) {
       showTicketDetail();
+    } else if (hash === '#all_topics') {
+      showAllTopics();
     } else {
       showMyTopics();
     }
@@ -116,6 +132,14 @@ $(function() {
     $('.menu li a').removeClass('active');
     $(this).addClass('active');
     showAccessControl();
+  });
+
+  allTopicsMenu.on('click', function(e) {
+    e.preventDefault();
+    window.location.hash = '#all_topics';
+    $('.menu li a').removeClass('active');
+    $(this).addClass('active');
+    showAllTopics();
   });
 
   // Add logout handler
