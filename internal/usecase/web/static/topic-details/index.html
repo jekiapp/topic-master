@@ -31,7 +31,7 @@
                     <div class="event-trigger-section ">
                         <label for="event-trigger-input"><strong>Event Trigger:</strong></label>
                         <div class="event-trigger-editable">
-                            <textarea id="event-trigger-input" class="event-trigger-input" rows="3" readonly></textarea>
+                            <textarea id="event-trigger-input" class="event-trigger-input" rows="3" readonly placeholder="Describe what event triggers this topic"></textarea>
                             <span class="event-trigger-check" title="Saved" style="display:none;">&#10003;</span>
                         </div>
                     </div>
@@ -41,7 +41,8 @@
                     <div class="topic-stats-section">
                         <div class="stats-row-flex" style="display:flex; align-items:center; justify-content:space-between;">
                             <label><strong>Stats:</strong></label>
-                            <a href="javascript:void(0)" id="autorefresh-link" style="cursor:pointer; text-decoration:none; color:#1e90ff;"><img src="/icons/playbutton.png" id="autorefresh-icon" alt="Autorefresh" style="width:20px;vertical-align:middle;"></a>
+                            <a href="javascript:void(0)" id="autorefresh-link" style="cursor:pointer; text-decoration:none; color:#1e90ff;">
+                                <img src="/icons/playbutton.png" title="Autorefresh" id="autorefresh-icon" alt="Autorefresh" style="width:20px;vertical-align:middle;"></a>
                         </div>
                         <div class="detail-mini-section">
                             <div>Depth: <span class="topic-stats-depth"></span></div>

@@ -159,6 +159,7 @@ body {
 .topic-detail-row {
     display: flex;
     flex-direction: row;
+    margin-top: 30px;
     gap: 32px;
     align-items: flex-start;
 }
