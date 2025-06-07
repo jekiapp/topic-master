@@ -5,13 +5,13 @@ import (
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/internal/repository/application"
 	"github.com/jekiapp/topic-master/internal/repository/entity"
-	"github.com/jekiapp/topic-master/internal/repository/lookupd"
+	"github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
 )
 
 func Init(cfg *config.Config, db *buntdb.DB) error {
-	lookupd.Init(cfg)
+	nsq.Init(cfg)
 	err := entity.InitIndexEntity(db)
 	if err != nil {
 		return err

@@ -77,7 +77,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
 		actionCoordinatorUC:     action.NewActionCoordinator(db),
 		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
-		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(db),
+		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
 	}
 }
@@ -121,8 +121,8 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.HandleGenericGet(h.getUsernameUC.Handle)))
 
-	mux.HandleFunc("/api/topic/detail", handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandleQuery))
-	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericPost(h.getTopicStatsUC.HandleQuery))
+	mux.HandleFunc("/api/topic/detail", handlerPkg.HandleGenericGet(h.getTopicDetailUC.HandleQuery))
+	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

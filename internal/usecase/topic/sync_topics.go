@@ -14,7 +14,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/logic/topic"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	entity "github.com/jekiapp/topic-master/internal/repository/entity"
-	lookupd "github.com/jekiapp/topic-master/internal/repository/lookupd"
+	nsq "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/tidwall/buntdb"
 )
 
@@ -32,7 +32,7 @@ type syncTopicsRepo struct {
 }
 
 func (r *syncTopicsRepo) GetAllTopics() ([]string, error) {
-	return lookupd.GetAllTopics()
+	return nsq.GetAllTopics()
 }
 
 func (r *syncTopicsRepo) GetNsqTopicEntity(topic string) (*acl.Entity, error) {

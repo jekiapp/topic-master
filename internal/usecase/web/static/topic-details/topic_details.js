@@ -21,53 +21,87 @@ const mockTopicDetail = {
 };
 
 $(function() {
-    // Fill data
-    $('.topic-name').text(mockTopicDetail.name);
-    $('.group-owner').text(mockTopicDetail.group_owner);
-    var $eventTrigger = $('.event-trigger-input');
-    $eventTrigger.val(mockTopicDetail.event_trigger);
-    $eventTrigger.prop('readonly', !mockTopicDetail.permission.can_update_event_trigger);
-    $eventTrigger.data('original', mockTopicDetail.event_trigger);
-
-    // Bookmark icon
-    var bookmarkImg = $('.bookmark-img');
-    if (mockTopicDetail.bookmarked) {
-        bookmarkImg.attr('src', '/icons/bookmark-true.png');
-    } else {
-        bookmarkImg.attr('src', '/icons/bookmark-false.png');
+    // Example: get topic name from URL or a global JS variable
+    // For now, use a hardcoded topic name for demo
+    var topicID = getTopicNameFromURL();
+    if (!topicID) {
+        alert('Topic name is required');
+        return;
     }
 
-    // Render nsqd hosts
-    var hostsList = $('.nsqd-hosts-list');
-    hostsList.empty();
-    $.each(mockTopicDetail.nsqd_hosts, function(_, host) {
-        hostsList.append($('<li>').text(host));
-    });
-
-    // Enable/disable buttons based on permission
-    $('.btn-pause').prop('disabled', !mockTopicDetail.permission.can_pause);
-    $('.btn-publish').prop('disabled', !mockTopicDetail.permission.can_publish);
-    $('.btn-tail').prop('disabled', !mockTopicDetail.permission.can_tail);
-    $('.btn-delete').prop('disabled', !mockTopicDetail.permission.can_delete);
-    $('.btn-drain').prop('disabled', !mockTopicDetail.permission.can_empty_queue);
-
-    // Event trigger checkmark logic
-    var $check = $('.event-trigger-check');
-    $eventTrigger.on('input', function() {
-        var orig = $eventTrigger.data('original');
-        if ($eventTrigger.val() !== orig) {
-            $check.show();
-        } else {
-            $check.hide();
+    // Fetch topic detail
+    $.get('/api/topic/detail', { topic: topicID }, function(response) {
+        if (!response || !response.data) {
+            alert('Failed to load topic detail');
+            return;
         }
+        var detail = response.data;
+        $('.topic-name').text(detail.name);
+        $('.group-owner').text(detail.group_owner);
+        var $eventTrigger = $('.event-trigger-input');
+        $eventTrigger.val(detail.event_trigger);
+        $eventTrigger.prop('readonly', !detail.permission.can_update_event_trigger);
+        $eventTrigger.data('original', detail.event_trigger);
+
+        // Bookmark icon
+        var bookmarkImg = $('.bookmark-img');
+        if (detail.bookmarked) {
+            bookmarkImg.attr('src', '/icons/bookmark-true.png');
+        } else {
+            bookmarkImg.attr('src', '/icons/bookmark-false.png');
+        }
+
+        // Render nsqd hosts
+        var hostsList = $('.nsqd-hosts-list');
+        hostsList.empty();
+        $.each(detail.nsqd_hosts, function(_, host) {
+            hostsList.append($('<li>').text(host));
+        });
+
+        // Enable/disable buttons based on permission
+        $('.btn-pause').prop('disabled', !detail.permission.can_pause);
+        $('.btn-publish').prop('disabled', !detail.permission.can_publish);
+        $('.btn-tail').prop('disabled', !detail.permission.can_tail);
+        $('.btn-delete').prop('disabled', !detail.permission.can_delete);
+        $('.btn-drain').prop('disabled', !detail.permission.can_empty_queue);
+
+        // Event trigger checkmark logic
+        var $check = $('.event-trigger-check');
+        $eventTrigger.on('input', function() {
+            var orig = $eventTrigger.data('original');
+            if ($eventTrigger.val() !== orig) {
+                $check.show();
+            } else {
+                $check.hide();
+            }
+        });
+
+        // Fetch topic stats using hosts and topic name
+        var hostsStr = (detail.nsqd_hosts || []).join(',');
+        $.get('/api/topic/stats', { hosts: hostsStr, topic: detail.name }, function(statsResp) {
+            if (!statsResp || !statsResp.data) {
+                $('.topic-stats-depth').text('-');
+                $('.topic-stats-messages').text('-');
+                return;
+            }
+            $('.topic-stats-depth').text(statsResp.data.depth);
+            $('.topic-stats-messages').text(statsResp.data.messages);
+        }).fail(function() {
+            $('.topic-stats-depth').text('-');
+            $('.topic-stats-messages').text('-');
+        });
+    }).fail(function() {
+        alert('Failed to load topic detail');
     });
 
     // Back button (optional: history.back or custom logic)
     $('#back-link').on('click', function() {
         window.history.back();
     });
+});
 
-    // Render topic stats
-    $('.topic-stats-depth').text(mockTopicDetail.topic_stats.depth);
-    $('.topic-stats-messages').text(mockTopicDetail.topic_stats.messages);
-}); 
+// Helper: get topic name from URL (e.g., ?topic=MyTopic)
+function getTopicNameFromURL() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('id');
+} 

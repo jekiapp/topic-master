@@ -19,11 +19,11 @@ type NsqTopicDetailResponse struct {
 	EventTrigger string     `json:"event_trigger"`
 	GroupOwner   string     `json:"group_owner"`
 	Bookmarked   bool       `json:"bookmarked"`
-	Permission   permission `json:"permission"`
+	Permission   Permission `json:"permission"`
 	NsqdHosts    []string   `json:"nsqd_hosts"`
 }
 
-type permission struct {
+type Permission struct {
 	CanPause              bool `json:"can_pause"`
 	CanPublish            bool `json:"can_publish"`
 	CanTail               bool `json:"can_tail"`
@@ -37,8 +37,9 @@ type NsqTopicDetailUsecase struct {
 	repo iNsqTopicDetailRepo
 }
 
-func NewNsqTopicDetailUsecase(db *buntdb.DB) NsqTopicDetailUsecase {
+func NewNsqTopicDetailUsecase(cfg *config.Config, db *buntdb.DB) NsqTopicDetailUsecase {
 	return NsqTopicDetailUsecase{
+		cfg:  cfg,
 		repo: &nsqTopicDetailRepo{db: db},
 	}
 }
@@ -50,28 +51,41 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		return NsqTopicDetailResponse{}, nil // or return error
 	}
 
-	entity, err := uc.repo.GetNsqTopicEntity(topic)
+	entity, err := uc.repo.GetEntityByID(topic)
 	if err != nil {
-		return NsqTopicDetailResponse{}, err
+		return NsqTopicDetailResponse{}, fmt.Errorf("error getting topic entity: %v", err)
 	}
 	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, topic)
 	if err != nil {
 		nsqdHosts = nil // or log error, but don't fail the whole response
 	}
+
+	permission := Permission{}
+	if entity.GroupOwner == acl.GroupNone {
+		permission = Permission{
+			CanPause:              true,
+			CanPublish:            true,
+			CanTail:               true,
+			CanDelete:             true,
+			CanEmptyQueue:         true,
+			CanUpdateEventTrigger: true,
+		}
+	}
+
 	resp := NsqTopicDetailResponse{
 		ID:           entity.ID,
 		Name:         entity.Name,
-		EventTrigger: entity.Description, // TODO: map correctly if needed
+		EventTrigger: entity.Description,
 		GroupOwner:   entity.GroupOwner,
-		Bookmarked:   false,        // TODO: fill later
-		Permission:   permission{}, // TODO: fill later
+		Bookmarked:   false, // TODO: fill later
+		Permission:   permission,
 		NsqdHosts:    nsqdHosts,
 	}
 	return resp, nil
 }
 
 type iNsqTopicDetailRepo interface {
-	GetNsqTopicEntity(topic string) (*acl.Entity, error)
+	GetEntityByID(id string) (*acl.Entity, error)
 	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
 }
 
@@ -79,14 +93,19 @@ type nsqTopicDetailRepo struct {
 	db *buntdb.DB
 }
 
-func (r *nsqTopicDetailRepo) GetNsqTopicEntity(topic string) (*acl.Entity, error) {
-	return entityrepo.GetNsqTopicEntity(r.db, topic)
+func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (*acl.Entity, error) {
+	return entityrepo.GetEntityByID(r.db, topic)
 }
 
-func (r *nsqTopicDetailRepo) GetNsqdHosts(lookupdURL, topic string) ([]string, error) {
-	nsqds, err := nsqrepo.GetNsqdsForTopic(lookupdURL, topic)
+func (r *nsqTopicDetailRepo) GetNsqdHosts(lookupdURL, topicID string) ([]string, error) {
+	entity, err := r.GetEntityByID(topicID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting entity by id: %v", err)
+	}
+
+	nsqds, err := nsqrepo.GetNsqdsForTopic(lookupdURL, entity.Name)
+	if err != nil {
+		return nil, fmt.Errorf("error getting nsqds for topic: %v", err)
 	}
 	hosts := make([]string, 0, len(nsqds))
 	for _, n := range nsqds {
