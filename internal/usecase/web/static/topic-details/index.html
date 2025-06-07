@@ -27,22 +27,36 @@ This will be the FE for nsq_topic_detail.go
                     <img src="/icons/bookmark-false.png" alt="Bookmark" class="bookmark-img" />
                 </span>
             </div>
-            <div class="topic-meta">
-                <div><strong>Group Owner:</strong> <span class="group-owner"></span></div>
-            </div>
-            <div class="event-trigger-section ">
-                <label for="event-trigger-input"><strong>Event Trigger:</strong></label>
-                <div class="event-trigger-editable">
-                    <textarea id="event-trigger-input" class="event-trigger-input" rows="3" readonly></textarea>
-                    <span class="event-trigger-check" title="Saved" style="display:none;">&#10003;</span>
-                </div>
-            </div>
-      
 
-            <div class="nsqd-hosts-section">
-                <label><strong>Nsqd Hosts:</strong></label>
-                <div class="nsqd-hosts-list-scrollable">
-                    <ul class="nsqd-hosts-list"></ul>
+            <div class="topic-detail-row">
+                <div>
+                    <div class="topic-meta">
+                        <div><strong>Group Owner:</strong> <span class="group-owner"></span></div>
+                    </div>
+                    <div class="event-trigger-section ">
+                        <label for="event-trigger-input"><strong>Event Trigger:</strong></label>
+                        <div class="event-trigger-editable">
+                            <textarea id="event-trigger-input" class="event-trigger-input" rows="3" readonly></textarea>
+                            <span class="event-trigger-check" title="Saved" style="display:none;">&#10003;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="topic-stats-section">
+                        <label><strong>Stats:</strong></label>
+                        <div>
+                            <div>Depth: <span class="topic-stats-depth">100</span></div>
+                            <div>Messages: <span class="topic-stats-messages">5000</span></div>
+                        </div>
+                    </div>
+
+                    <div class="nsqd-hosts-section">
+                        <label><strong>Nsqd Hosts:</strong></label>
+                        <div class="nsqd-hosts-list-scrollable">
+                            <ul class="nsqd-hosts-list"></ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

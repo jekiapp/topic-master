@@ -66,4 +66,8 @@ $(function() {
     $('#back-link').on('click', function() {
         window.history.back();
     });
+
+    // Render topic stats
+    $('.topic-stats-depth').text(mockTopicDetail.topic_stats.depth);
+    $('.topic-stats-messages').text(mockTopicDetail.topic_stats.messages);
 }); 

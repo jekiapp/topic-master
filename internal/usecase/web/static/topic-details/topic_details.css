@@ -146,6 +146,16 @@ body {
     padding-left: 18px;
 }
 
+.topic-detail-row {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+    align-items: flex-start;
+}
+.topic-detail-row > div {
+    flex: 1 1 0;
+    min-width: 0;
+}
 @media (max-width: 800px) {
     .app-detail-container.topic-detail-container {
         padding: 18px 4vw;
@@ -161,5 +171,9 @@ body {
     .action-btn {
         min-width: 60px;
         padding: 7px 10px;
+    }
+    .topic-detail-row {
+        flex-direction: column;
+        gap: 18px;
     }
 } 
