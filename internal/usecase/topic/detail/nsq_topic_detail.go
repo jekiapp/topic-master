@@ -89,6 +89,26 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	return resp, nil
 }
 
+type PublishMessageResponse struct {
+	Message string `json:"message"`
+}
+
+type PublishMessageInput struct {
+	Topic     string   `json:"topic"`
+	Message   string   `json:"message"`
+	NsqdHosts []string `json:"nsqd_hosts"`
+}
+
+func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input PublishMessageInput) (PublishMessageResponse, error) {
+	err := nsqrepo.Publish(input.Topic, input.Message, input.NsqdHosts[0])
+	if err != nil {
+		return PublishMessageResponse{}, fmt.Errorf("error publishing message: %v", err)
+	}
+	return PublishMessageResponse{
+		Message: "Message published",
+	}, nil
+}
+
 type iNsqTopicDetailRepo interface {
 	GetEntityByID(id string) (*acl.Entity, error)
 	GetNsqdHosts(lookupdURL, topic string) ([]string, error)

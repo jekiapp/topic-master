@@ -123,6 +123,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/topic/detail", handlerPkg.HandleGenericGet(h.getTopicDetailUC.HandleQuery))
 	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery))
+	mux.HandleFunc("/api/topic/publish", handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
