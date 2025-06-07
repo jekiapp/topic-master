@@ -16,6 +16,11 @@ body {
     position: relative;
 }
 
+#publish-panel {
+    float: left;
+    margin-left: 10px;
+}
+
 .detail-section {
     background: var(--primary-white);
     border: 1.5px solid var(--border-purple);
@@ -194,4 +199,30 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 4px;
+}
+
+.publish-panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-publish-panel {
+    align-self: flex-end;
+    background: #c7efc0;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#publish-textarea {
+    overflow-y: auto;
+    overflow-x: auto;
+    resize: both;
+    width: 100%;
+    white-space: pre;
 } 

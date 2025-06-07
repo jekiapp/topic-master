@@ -147,6 +147,7 @@ $(function() {
     });
 
     // --- Publish panel logic ---
+    var currentTopicDetail = null;
     $('.btn-publish').on('click', function() {
         $('#publish-panel').show();
         $('.btn-publish').prop('disabled', true);
@@ -155,6 +156,69 @@ $(function() {
         $('#publish-panel').hide();
         $('#publish-textarea').val('');
         $('.btn-publish').prop('disabled', false);
+    });
+    // Store topic detail for publish use
+    function setCurrentTopicDetail(detail) {
+        currentTopicDetail = detail;
+    }
+    // Patch: after fetching topic detail, store it
+    var origGetTopicDetailSuccess = null;
+    if (typeof window.getTopicDetailSuccess === 'function') {
+        origGetTopicDetailSuccess = window.getTopicDetailSuccess;
+    }
+    window.getTopicDetailSuccess = function(detail) {
+        setCurrentTopicDetail(detail);
+        if (origGetTopicDetailSuccess) origGetTopicDetailSuccess(detail);
+    };
+    // Patch topic detail fetch to call our setter
+    var origAjax = $.get;
+    $.get = function(url, data, success, dataType) {
+        if (url === '/api/topic/detail') {
+            var wrappedSuccess = function(response) {
+                if (response && response.data) {
+                    window.getTopicDetailSuccess(response.data);
+                }
+                if (success) success(response);
+            };
+            return origAjax.call($, url, data, wrappedSuccess, dataType);
+        }
+        return origAjax.apply($, arguments);
+    };
+    // Publish button handler
+    $('#publish-panel-btn').on('click', function() {
+        var message = $('#publish-textarea').val();
+        if (!message) {
+            alert('Message cannot be empty');
+            return;
+        }
+        if (!currentTopicDetail) {
+            alert('Topic detail not loaded');
+            return;
+        }
+        var payload = {
+            topic: currentTopicDetail.name,
+            message: message,
+            nsqd_hosts: currentTopicDetail.nsqd_hosts
+        };
+        $.ajax({
+            url: '/api/topic/publish',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(resp) {
+                alert('Message published');
+                $('#publish-panel').hide();
+                $('#publish-textarea').val('');
+                $('.btn-publish').prop('disabled', false);
+            },
+            error: function(xhr) {
+                var msg = 'Failed to publish';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg += ': ' + xhr.responseJSON.error;
+                }
+                alert(msg);
+            }
+        });
     });
 });
 
