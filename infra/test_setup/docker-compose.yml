@@ -48,7 +48,9 @@ services:
       - TOPICS=${TOPICS}
       - NSQLOOKUPD_TCP_ADDRESS=nsqlookupd:4160
     depends_on:
+      - nsqd
       - nsqlookupd
+      - publisher
 
 volumes:
   nsq_data:
