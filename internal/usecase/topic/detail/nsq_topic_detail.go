@@ -72,6 +72,9 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		}
 	}
 
+	nsqdHostsdummy := []string{"127.0.0.1:4151"}
+	_ = nsqdHosts
+
 	resp := NsqTopicDetailResponse{
 		ID:           entity.ID,
 		Name:         entity.Name,
@@ -79,7 +82,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		GroupOwner:   entity.GroupOwner,
 		Bookmarked:   false, // TODO: fill later
 		Permission:   permission,
-		NsqdHosts:    nsqdHosts,
+		NsqdHosts:    nsqdHostsdummy,
 	}
 	return resp, nil
 }
