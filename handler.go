@@ -12,6 +12,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/usecase/tickets"
 	"github.com/jekiapp/topic-master/internal/usecase/tickets/action"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
+	topicDetailUC "github.com/jekiapp/topic-master/internal/usecase/topic/detail"
 	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
 	handlerPkg "github.com/jekiapp/topic-master/pkg/handler"
 	"github.com/tidwall/buntdb"
@@ -43,6 +44,8 @@ type Handler struct {
 	ticketDetailUC          tickets.TicketDetailUsecase
 	actionCoordinatorUC     *action.ActionCoordinator
 	getUsernameUC           aclAuth.GetUsernameUsecase
+	getTopicDetailUC        topicDetailUC.NsqTopicDetailUsecase
+	getTopicStatsUC         topicDetailUC.NsqTopicStatsUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -74,6 +77,8 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
 		actionCoordinatorUC:     action.NewActionCoordinator(db),
 		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
+		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(db),
+		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
 	}
 }
 
@@ -115,6 +120,9 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/tickets/action", authMiddleware(handlerPkg.HandleGenericPost(h.actionCoordinatorUC.Handle)))
 
 	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.HandleGenericGet(h.getUsernameUC.Handle)))
+
+	mux.HandleFunc("/api/topic/detail", handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandleQuery))
+	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericPost(h.getTopicStatsUC.HandleQuery))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
