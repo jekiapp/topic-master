@@ -145,6 +145,17 @@ $(function() {
             }
         }, 1000);
     });
+
+    // --- Publish panel logic ---
+    $('.btn-publish').on('click', function() {
+        $('#publish-panel').show();
+        $('.btn-publish').prop('disabled', true);
+    });
+    $('#close-publish-panel').on('click', function() {
+        $('#publish-panel').hide();
+        $('#publish-textarea').val('');
+        $('.btn-publish').prop('disabled', false);
+    });
 });
 
 // Helper: get topic name from URL (e.g., ?topic=MyTopic)
