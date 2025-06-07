@@ -1,4 +1,4 @@
-package lookupd
+package nsq
 
 import (
 	"encoding/json"
