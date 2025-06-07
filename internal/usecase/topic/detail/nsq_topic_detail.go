@@ -10,6 +10,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -60,6 +61,10 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		nsqdHosts = nil // or log error, but don't fail the whole response
 	}
 
+	// detect if the hosts is docker network
+	// this is only happens in local development
+	nsqdHosts = util.ReplaceDockerHostWithLocalhost(nsqdHosts)
+
 	permission := Permission{}
 	if entity.GroupOwner == acl.GroupNone {
 		permission = Permission{
@@ -72,9 +77,6 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		}
 	}
 
-	nsqdHostsdummy := []string{"127.0.0.1:4151"}
-	_ = nsqdHosts
-
 	resp := NsqTopicDetailResponse{
 		ID:           entity.ID,
 		Name:         entity.Name,
@@ -82,7 +84,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		GroupOwner:   entity.GroupOwner,
 		Bookmarked:   false, // TODO: fill later
 		Permission:   permission,
-		NsqdHosts:    nsqdHostsdummy,
+		NsqdHosts:    nsqdHosts,
 	}
 	return resp, nil
 }

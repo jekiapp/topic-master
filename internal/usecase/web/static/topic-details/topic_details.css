@@ -26,6 +26,16 @@ body {
     position: relative;
 }
 
+.detail-mini-section {
+    background: var(--primary-white);
+    border: 1px solid var(--border-purple);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px var(--shadow-purple);
+    position: relative;
+}
+
 .back-link {
     display: inline-block;
     margin: 10px 8px;
@@ -176,4 +186,11 @@ body {
         flex-direction: column;
         gap: 18px;
     }
+}
+
+.stats-row-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
 } 

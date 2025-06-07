@@ -39,16 +39,19 @@
 
                 <div>
                     <div class="topic-stats-section">
-                        <label><strong>Stats:</strong></label>
-                        <div>
-                            <div>Depth: <span class="topic-stats-depth">100</span></div>
-                            <div>Messages: <span class="topic-stats-messages">5000</span></div>
+                        <div class="stats-row-flex" style="display:flex; align-items:center; justify-content:space-between;">
+                            <label><strong>Stats:</strong></label>
+                            <a href="javascript:void(0)" id="autorefresh-link" style="cursor:pointer; text-decoration:none; color:#1e90ff;"><img src="/icons/playbutton.png" id="autorefresh-icon" alt="Autorefresh" style="width:20px;vertical-align:middle;"></a>
+                        </div>
+                        <div class="detail-mini-section">
+                            <div>Depth: <span class="topic-stats-depth"></span></div>
+                            <div>Messages: <span class="topic-stats-messages"></span></div>
                         </div>
                     </div>
 
                     <div class="nsqd-hosts-section">
                         <label><strong>Nsqd Hosts:</strong></label>
-                        <div class="nsqd-hosts-list-scrollable">
+                        <div class="detail-mini-section">
                             <ul class="nsqd-hosts-list"></ul>
                         </div>
                     </div>

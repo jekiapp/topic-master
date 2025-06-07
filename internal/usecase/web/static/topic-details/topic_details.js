@@ -77,6 +77,26 @@ $(function() {
         });
 
         // Fetch topic stats using hosts and topic name
+        fetchAndUpdateStats(detail);
+    }).fail(function() {
+        alert('Failed to load topic detail');
+    });
+
+    // Back button (optional: history.back or custom logic)
+    $('#back-link').on('click', function() {
+        window.history.back();
+    });
+
+    // --- Autorefresh logic ---
+    var autorefreshTimer = null;
+    var autorefreshCountdown = 0;
+    var autorefreshActive = false;
+    var autorefreshInterval = null;
+    var $autorefresh = $('#autorefresh-link');
+    var $autorefreshIcon = $('#autorefresh-icon');
+    var originalIconHtml = $autorefresh.html();
+
+    function fetchAndUpdateStats(detail) {
         var hostsStr = (detail.nsqd_hosts || []).join(',');
         $.get('/api/topic/stats', { hosts: hostsStr, topic: detail.name }, function(statsResp) {
             if (!statsResp || !statsResp.data) {
@@ -90,13 +110,40 @@ $(function() {
             $('.topic-stats-depth').text('-');
             $('.topic-stats-messages').text('-');
         });
-    }).fail(function() {
-        alert('Failed to load topic detail');
-    });
+    }
 
-    // Back button (optional: history.back or custom logic)
-    $('#back-link').on('click', function() {
-        window.history.back();
+    function refreshStats() {
+        // Use the same logic as in the main stats fetch
+        var topicID = getTopicNameFromURL();
+        if (!topicID) return;
+        $.get('/api/topic/detail', { topic: topicID }, function(response) {
+            if (!response || !response.data) return;
+            var detail = response.data;
+            fetchAndUpdateStats(detail);
+        });
+    }
+
+    $autorefresh.on('click', function() {
+        if (autorefreshActive) return;
+        autorefreshActive = true;
+        autorefreshCountdown = 30;
+        $autorefresh.html('Refreshing...' + autorefreshCountdown);
+        $autorefresh.css('pointer-events', 'none');
+        refreshStats();
+        autorefreshInterval = setInterval(function() {
+            autorefreshCountdown--;
+            if (autorefreshCountdown > 0) {
+                $autorefresh.html('Refreshing...' + autorefreshCountdown);
+                if (autorefreshCountdown % 2 === 0) {
+                    refreshStats();
+                }
+            } else {
+                clearInterval(autorefreshInterval);
+                $autorefresh.html(originalIconHtml);
+                $autorefresh.css('pointer-events', 'auto');
+                autorefreshActive = false;
+            }
+        }, 1000);
     });
 });
 
