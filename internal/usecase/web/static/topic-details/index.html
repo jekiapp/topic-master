@@ -1,0 +1,53 @@
+<!-- learn the style from signup/app/index.html 
+This will be the FE for nsq_topic_detail.go
+
+
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Topic Detail</title>
+    <link rel="stylesheet" href="/colors.css">
+    <link rel="stylesheet" href="/topic-details/topic_details.css">
+</head>
+<body>
+    <a href="javascript:void(0)" class="back-link" id="back-link">&#8592; Back</a>
+    <div class="app-detail-container topic-detail-container">
+        <div id="action-buttons" class="topic-actions">
+            <button class="action-btn btn-pause">Pause</button>
+            <button class="action-btn btn-drain">Drain</button>
+            <button class="action-btn btn-publish">Publish</button>
+            <button class="action-btn btn-delete">Delete</button>
+            <button class="action-btn btn-tail">Tail</button>
+        </div>
+        <div class="detail-section">
+            <div class="topic-header">
+                <span class="topic-name"></span>
+                <span class="bookmark-icon" title="Bookmarked">
+                    <img src="/icons/bookmark-false.png" alt="Bookmark" class="bookmark-img" />
+                </span>
+            </div>
+            <div class="topic-meta">
+                <div><strong>Group Owner:</strong> <span class="group-owner"></span></div>
+            </div>
+            <div class="event-trigger-section ">
+                <label for="event-trigger-input"><strong>Event Trigger:</strong></label>
+                <div class="event-trigger-editable">
+                    <textarea id="event-trigger-input" class="event-trigger-input" rows="3" readonly></textarea>
+                    <span class="event-trigger-check" title="Saved" style="display:none;">&#10003;</span>
+                </div>
+            </div>
+      
+
+            <div class="nsqd-hosts-section">
+                <label><strong>Nsqd Hosts:</strong></label>
+                <div class="nsqd-hosts-list-scrollable">
+                    <ul class="nsqd-hosts-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/topic-details/topic_details.js"></script>
+</body>
+</html>

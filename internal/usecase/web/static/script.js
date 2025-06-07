@@ -59,6 +59,10 @@ $(function() {
     mainIframe.attr('src', 'all-topics/index.html');
   }
 
+  function showTopicDetail(id) {
+    mainIframe.attr('src', `topic-details/index.html?id=${id}`);
+  }
+
   function setActiveMenuByHash(hash) {
     $('.menu li a').removeClass('active');
     if (hash === '#access') {
@@ -107,6 +111,8 @@ $(function() {
       showTicketDetail();
     } else if (hash === '#all-topics') {
       showAllTopics();
+    } else if (hash.startsWith('#topic-detail')) {
+      showTopicDetail(hash.split('=')[1]);
     } else {
       showMyTopics();
     }
