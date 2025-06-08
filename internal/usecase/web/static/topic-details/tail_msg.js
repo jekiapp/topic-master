@@ -27,7 +27,6 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         $tailBtn.prop('disabled', true);
         $tailPanelBtn.prop('disabled', false);
         $tailStopBtn.prop('disabled', true).hide();
-        $tailContent.empty();
         $tailStatus.text('');
         if (adjustPanelWidths) adjustPanelWidths();
     });
@@ -49,7 +48,7 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
             $tailStatus.text('Topic detail not loaded').css('color', 'red');
             return;
         }
-        var limitMsg = parseInt($tailLimitMsg.val(), 3);
+        var limitMsg = parseInt($tailLimitMsg.val(), 10);
         if (!limitMsg || limitMsg <= 0) {
             $tailStatus.text('Limit must be > 0').css('color', 'red');
             return;
@@ -81,10 +80,49 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
                 if (part.trim()) {
                     try {
                         var obj = JSON.parse(part);
-                        var msgHtml = '<div class="tail-msg"><span class="tail-topic">[' + obj.topic + ']</span> <span class="tail-payload">' + escapeHtml(obj.payload) + '</span></div>';
-                        $tailContent.append(msgHtml);
-                        $tailContent.scrollTop($tailContent[0].scrollHeight);
+                        var timestamp = '<span class="tail-timestamp">[' + obj.timestamp + ']</span>';
+                        var body = '<span class="tail-body">' + escapeHtml(obj.payload) + '</span>';
+                        var prettyBtn = '<span class="tail-pretty-btn" title="Pretty print JSON" style="cursor:pointer;user-select:none;margin-left:8px;font-size:1.1em;">✨</span>';
+                        var copyBtn = '<span class="tail-copy-btn" title="Copy to clipboard" style="cursor:pointer;user-select:none;margin-left:8px;font-size:1.1em;">📄</span>';
+                        var msgHtml = '<div class="tail-msg">' + timestamp + body + copyBtn + prettyBtn + '</div>';
+
+                        $tailContent.prepend(msgHtml);
+
+                        var $msg = $tailContent.find('.tail-msg').first();
+                        $msg.find('.tail-copy-btn').off('click').on('click', function() {
+                            navigator.clipboard.writeText(obj.payload);
+                            var $btn = $(this);
+                            if ($btn.next('.tail-copied-label').length === 0) {
+                                var $label = $('<span class="tail-copied-label" style="margin-left:4px;color:#2ecc40;font-size:0.98em;">Copied!</span>');
+                                $btn.after($label);
+                                setTimeout(function() { $label.fadeOut(200, function() { $label.remove(); }); }, 1200);
+                            }
+                        });
+                        $msg.find('.tail-pretty-btn').off('click').on('click', function() {
+                            var $body = $msg.find('.tail-body');
+                            var raw = $body.data('raw');
+                            if (raw === undefined) {
+                                raw = $body.text();
+                                $body.data('raw', raw);
+                            }
+                            if ($body.data('pretty')) {
+                                $body.text(raw);
+                                $body.data('pretty', false);
+                            } else {
+                                try {
+                                    var parsed = JSON.parse(raw);
+                                    var pretty = JSON.stringify(parsed, null, 2);
+                                    $body.html('<pre style="margin:0;font-family:monospace;font-size:0.98em;">' + escapeHtml(pretty) + '</pre>');
+                                    $body.data('pretty', true);
+                                } catch (e) {
+                                    $body.text(raw);
+                                    $body.data('pretty', false);
+                                }
+                            }
+                        });
+
                     } catch (e) {
+                        console.error(e);
                         $tailContent.append('<div class="tail-msg tail-msg-error">' + escapeHtml(part) + '</div>');
                     }
                 }
