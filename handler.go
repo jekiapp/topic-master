@@ -9,6 +9,7 @@ import (
 	aclGroup "github.com/jekiapp/topic-master/internal/usecase/acl/group"
 	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
 	aclUserGroup "github.com/jekiapp/topic-master/internal/usecase/acl/usergroup"
+	entityUC "github.com/jekiapp/topic-master/internal/usecase/entity"
 	"github.com/jekiapp/topic-master/internal/usecase/tickets"
 	"github.com/jekiapp/topic-master/internal/usecase/tickets/action"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
@@ -47,6 +48,8 @@ type Handler struct {
 	getTopicDetailUC        topicDetailUC.NsqTopicDetailUsecase
 	getTopicStatsUC         topicDetailUC.NsqTopicStatsUsecase
 	tailMessageUC           *topicDetailUC.TailMessageUsecase
+	updateDescriptionUC     entityUC.SaveDescriptionUsecase
+	toggleBookmarkUC        entityUC.ToggleBookmarkUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -81,6 +84,8 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
 		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(),
+		updateDescriptionUC:     entityUC.NewSaveDescriptionUsecase(db),
+		toggleBookmarkUC:        entityUC.NewToggleBookmarkUsecase(db),
 	}
 }
 
@@ -127,6 +132,9 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery))
 	mux.HandleFunc("/api/topic/publish", handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish))
 	mux.HandleFunc("/api/topic/tail", h.tailMessageUC.HandleTailMessage)
+
+	mux.HandleFunc("/api/entity/update-description", handlerPkg.HandleGenericPost(h.updateDescriptionUC.Save))
+	mux.HandleFunc("/api/entity/toggle-bookmark", authMiddleware(handlerPkg.HandleGenericPost(h.toggleBookmarkUC.Toggle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

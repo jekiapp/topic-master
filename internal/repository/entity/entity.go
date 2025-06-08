@@ -4,12 +4,16 @@ import (
 	"fmt"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/entity"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
 func InitIndexEntity(db *buntdb.DB) error {
 	indexes := acl.Entity{}.GetIndexes()
+	bookmarkIndexes := entity.Bookmark{}.GetIndexes()
+
+	indexes = append(indexes, bookmarkIndexes...)
 	for _, index := range indexes {
 		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
 		if err != nil {

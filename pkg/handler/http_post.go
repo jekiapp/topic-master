@@ -84,6 +84,7 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 			json.NewEncoder(w).Encode(Response[O]{
 				Status:  StatusError,
 				Message: "Handler execution failed",
+				Data:    result,
 				Error:   err.Error(),
 			})
 			return
