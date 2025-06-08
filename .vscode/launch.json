@@ -7,23 +7,13 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": [
-                "-data_path=${workspaceFolder}/infra/data/topic-master.db",
-                "-port=4181",
-                "-nsqlookupd_http_address=http://localhost:4161"
-            ]
-        },
-        {
-            "name": "Debug topic-master",
-            "type": "go",
-            "request": "launch",
-            "mode": "debug",
-            "program": "${workspaceFolder}",
+            "console":"integratedTerminal",
             "args": [
                 "-data_path=${workspaceFolder}/infra/data/topic-master.db",
                 "-port=4181",
                 "-nsqlookupd_http_address=http://localhost:4161"
             ]
         }
+
     ]
 }

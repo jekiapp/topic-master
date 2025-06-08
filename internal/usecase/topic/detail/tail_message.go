@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -49,11 +50,12 @@ func NewTailMessageUsecase() *TailMessageUsecase {
 	u := &TailMessageUsecase{
 		activeChannels: make(map[string]activeChannel),
 	}
-	// Listen for OS signals (SIGINT, SIGKILL) to trigger cleanup
+	// Listen for OS signals (SIGINT, SIGTERM) to trigger cleanup
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, os.Kill)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigCh
+		log.Println("[TAIL] received termination signal")
 		// Set stopping flag to prevent new channel registrations
 		u.stopping.Store(true)
 		// Copy activeChannels for cleanup outside the lock
