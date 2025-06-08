@@ -8,10 +8,12 @@ $(function() {
     }).done(function(resp) {
       var userData = resp && resp.data;
       if (userData && userData.name) {
+        localStorage.setItem('user', JSON.stringify(userData));
         $('#user-dropdown').show();
         $('#login-signup-link').hide();
         $('#user-dropdown .user-name').text(userData.name + ' ▼');
       } else {
+        localStorage.removeItem('user');
         $('#user-dropdown').hide();
         $('#login-signup-link').show();
       }
@@ -22,6 +24,7 @@ $(function() {
         }).closest('li').hide();
       }
     }).fail(function(jqxhr) {
+      localStorage.removeItem('user');
       if (jqxhr.status === 401) {
         $('#user-dropdown').hide();
         $('#login-signup-link').show();
@@ -151,10 +154,20 @@ $(function() {
   // Add logout handler
   $('#logout-link').on('click', function(e) {
     e.preventDefault();
+    localStorage.removeItem('user');
     $.get('/api/logout', function(resp) {
       if (resp && resp.redirect) {
         window.location.href = resp.redirect;
       }
     });
   });
+
+  // --- Login state helpers ---
+  window.isLogin = function() {
+    return !!localStorage.getItem('user');
+  };
+  window.getUserInfo = function() {
+    var user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  };
 });

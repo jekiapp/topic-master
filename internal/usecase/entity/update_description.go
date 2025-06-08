@@ -12,14 +12,13 @@ import (
 
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
-	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
 // SaveDescriptionInput holds the parameters for saving the description for an entity.
 type SaveDescriptionInput struct {
-	EntityID    string
-	Description string
+	EntityID    string `json:"entity_id"`
+	Description string `json:"description"`
 }
 
 type SaveDescriptionResponse struct {
@@ -68,13 +67,6 @@ func (uc SaveDescriptionUsecase) Save(ctx context.Context, input SaveDescription
 	entity.Description = input.Description
 	entity.UpdatedAt = time.Now()
 
-	updatedBy := "Anonymous"
-	userInfo := util.GetUserInfo(ctx)
-	if userInfo != nil {
-		updatedBy = userInfo.ID
-	}
-
-	entity.Metadata["updated_by"] = updatedBy
 	err = uc.repo.UpdateEntity(entity)
 	if err != nil {
 		return SaveDescriptionResponse{Message: "Failed to update description"}, err

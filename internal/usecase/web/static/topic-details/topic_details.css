@@ -85,10 +85,23 @@ body {
     display: block;
 }
 .event-trigger-editable {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 8px;
     margin-top: 4px;
+}
+.event-trigger-textarea-wrapper {
+    position: relative;
+    display: inline-block;
+    align-items: flex-start;
+}
+.event-trigger-actions {
+    position: absolute;
+    right: 1px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
 }
 .event-trigger-input {
     padding: 7px 10px;
@@ -101,10 +114,23 @@ body {
     background: var(--input-bg);
     color: var(--primary-purple);
 }
+.event-trigger-check,
+.event-trigger-reset {
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    user-select: none;
+    line-height: 1;
+}
 .event-trigger-check {
     color: #2ecc40;
-    font-size: 1.3em;
-    margin-top: 6px;
+}
+.event-trigger-reset {
+    color: #ff3b3b;
+}
+.event-trigger-check[style*="display: block"],
+.event-trigger-reset[style*="display: block"] {
+    display: inline;
 }
 
 #action-buttons.topic-actions {

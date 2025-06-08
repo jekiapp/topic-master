@@ -32,9 +32,12 @@
                         </div>
                         <div class="event-trigger-section ">
                             <label for="event-trigger-input"><strong>Event Trigger:</strong></label>
-                            <div class="event-trigger-editable">
+                            <div class="event-trigger-textarea-wrapper">
                                 <textarea id="event-trigger-input" class="event-trigger-input" rows="3" readonly placeholder="Describe what event triggers this topic"></textarea>
-                                <span class="event-trigger-check" title="Saved" style="display:none;">&#10003;</span>
+                                <div class="event-trigger-actions">
+                                    <span class="event-trigger-check" title="Save">✅</span>
+                                    <span class="event-trigger-reset" title="Reset">❌</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -65,7 +68,7 @@
         <div id="publish-panel" class="app-detail-container topic-detail-container" style="display:none;">
             <button id="close-publish-panel" style="position:absolute; top:8px; right:8px; background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
             <div class="publish-panel-content">
-                <textarea id="publish-textarea" class="event-trigger-input" rows="15" placeholder="Enter your message here"></textarea>
+                <textarea id="publish-textarea" rows="15" placeholder="Enter your message here"></textarea>
                 <div id="publish-status" style="margin-top:6px;min-height:20px;font-size:0.98em;"></div>
                 <button id="publish-panel-btn" class="action-btn btn-publish-panel">Publish</button>
             </div>

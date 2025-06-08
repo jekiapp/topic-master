@@ -22,13 +22,96 @@ $(function() {
         $eventTrigger.val(detail.event_trigger);
         $eventTrigger.prop('readonly', !detail.permission.can_update_event_trigger);
         $eventTrigger.data('original', detail.event_trigger);
+        var $check = $('.event-trigger-check');
+        var $reset = $('.event-trigger-reset');
+
+        function updateEventTriggerButtons() {
+            var orig = $eventTrigger.data('original');
+            if ($eventTrigger.val() !== orig) {
+                $check.show();
+                $reset.show();
+            } else {
+                $check.hide();
+                $reset.hide();
+            }
+        }
+        $eventTrigger.on('input', function() {
+            updateEventTriggerButtons();
+        });
+        $check.on('click', function() {
+            var newValue = $eventTrigger.val();
+            $.ajax({
+                url: '/api/entity/update-description',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ entity_id: detail.id, description: newValue }),
+                success: function() {
+                    $eventTrigger.data('original', newValue);
+                    updateEventTriggerButtons();
+                    // $check.fadeOut(120).fadeIn(120);
+                },
+                error: function() {
+                    alert('Failed to update event trigger');
+                }
+            });
+        });
+        $reset.on('click', function() {
+            $eventTrigger.val($eventTrigger.data('original'));
+            updateEventTriggerButtons();
+        });
+        updateEventTriggerButtons();
 
         // Bookmark icon
         var bookmarkImg = $('.bookmark-img');
-        if (detail.bookmarked) {
-            bookmarkImg.attr('src', '/icons/bookmark-true.png');
+        function setBookmarkIcon(state) {
+            if (state) {
+                bookmarkImg.attr('src', '/icons/bookmark-true.png');
+            } else {
+                bookmarkImg.attr('src', '/icons/bookmark-false.png');
+            }
+        }
+        setBookmarkIcon(detail.bookmarked);
+
+        // --- Bookmark toggle logic ---
+        function enableBookmarkToggle() {
+            bookmarkImg.css('cursor', 'pointer');
+            bookmarkImg.attr('title', detail.bookmarked ? 'Remove Bookmark' : 'Add Bookmark');
+            bookmarkImg.off('click').on('click', function(e) {
+                e.preventDefault();
+                if (!window.isLogin || !window.isLogin()) {
+                    alert('Please log in to bookmark topics.');
+                    return;
+                }
+                $.ajax({
+                    url: '/api/bookmark/toggle',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ entity_id: detail.name }),
+                    success: function(resp) {
+                        // Toggle state locally for instant feedback
+                        detail.bookmarked = !detail.bookmarked;
+                        setBookmarkIcon(detail.bookmarked);
+                        bookmarkImg.attr('title', detail.bookmarked ? 'Remove Bookmark' : 'Add Bookmark');
+                    },
+                    error: function(xhr) {
+                        var msg = 'Failed to toggle bookmark';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            msg += ': ' + xhr.responseJSON.error;
+                        }
+                        alert(msg);
+                    }
+                });
+            });
+        }
+        function disableBookmarkToggle() {
+            bookmarkImg.css('cursor', 'not-allowed');
+            bookmarkImg.attr('title', 'Log in to bookmark');
+            bookmarkImg.off('click');
+        }
+        if (window.isLogin && window.isLogin()) {
+            enableBookmarkToggle();
         } else {
-            bookmarkImg.attr('src', '/icons/bookmark-false.png');
+            disableBookmarkToggle();
         }
 
         // Render nsqd hosts
@@ -44,17 +127,6 @@ $(function() {
         $('.btn-tail').prop('disabled', !detail.permission.can_tail);
         $('.btn-delete').prop('disabled', !detail.permission.can_delete);
         $('.btn-drain').prop('disabled', !detail.permission.can_empty_queue);
-
-        // Event trigger checkmark logic
-        var $check = $('.event-trigger-check');
-        $eventTrigger.on('input', function() {
-            var orig = $eventTrigger.data('original');
-            if ($eventTrigger.val() !== orig) {
-                $check.show();
-            } else {
-                $check.hide();
-            }
-        });
 
         // Fetch topic stats using hosts and topic name
         fetchAndUpdateStats(detail);
