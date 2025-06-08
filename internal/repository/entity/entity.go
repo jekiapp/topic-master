@@ -3,14 +3,13 @@ package entity
 import (
 	"fmt"
 
-	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
 func InitIndexEntity(db *buntdb.DB) error {
-	indexes := acl.Entity{}.GetIndexes()
+	indexes := entity.Entity{}.GetIndexes()
 	bookmarkIndexes := entity.Bookmark{}.GetIndexes()
 
 	indexes = append(indexes, bookmarkIndexes...)
@@ -24,13 +23,13 @@ func InitIndexEntity(db *buntdb.DB) error {
 }
 
 // format id = nsqtopic:topic_name
-func GetEntityByID(dbConn *buntdb.DB, id string) (*acl.Entity, error) {
-	entity, err := db.GetByID[acl.Entity](dbConn, id)
+func GetEntityByID(dbConn *buntdb.DB, id string) (*entity.Entity, error) {
+	entityObj, err := db.GetByID[entity.Entity](dbConn, id)
 	if err != nil {
 		return nil, err
 	}
-	if entity.ID != id {
+	if entityObj.ID != id {
 		return nil, fmt.Errorf("entity not found")
 	}
-	return &entity, nil
+	return &entityObj, nil
 }

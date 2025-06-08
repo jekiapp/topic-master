@@ -1,4 +1,4 @@
-package acl
+package entity
 
 import (
 	"time"
@@ -47,6 +47,8 @@ const (
 	IdxEntity_Status    = TableEntity + ":status"
 	IdxEntity_GroupType = TableEntity + ":group_type"
 	IdxEntity_TypeName  = TableEntity + ":type_name"
+	EntityType_NSQTopic = "nsq_topic"
+	GroupNone           = "None"
 )
 
 func (e Entity) GetPrimaryKey() string {
@@ -98,10 +100,6 @@ func (e Entity) GetIndexValues() map[string]string {
 		"type_name":  e.TypeID + ":" + e.Name,
 	}
 }
-
-const (
-	EntityType_NSQTopic = "nsq_topic"
-)
 
 func (e *Entity) SetID(id string) {
 	e.ID = id

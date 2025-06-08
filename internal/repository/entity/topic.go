@@ -4,39 +4,40 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/entity"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
-func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
-	entity := &acl.Entity{
+func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) {
+	entityObj := &entity.Entity{
 		ID:         uuid.NewString(),
-		TypeID:     acl.EntityType_NSQTopic,
+		TypeID:     entity.EntityType_NSQTopic,
 		Name:       topic,
 		Resource:   "NSQ",
 		Status:     "active",
-		GroupOwner: acl.GroupNone,
+		GroupOwner: entity.GroupNone,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
-	err := db.Insert(dbConn, *entity)
+	err := db.Insert(dbConn, *entityObj)
 	if err != nil {
 		return nil, err
 	}
-	return entity, nil
+	return entityObj, nil
 }
 
-func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*acl.Entity, error) {
-	pivot := acl.EntityType_NSQTopic + ":" + topic
-	entity, err := db.SelectOne[acl.Entity](dbConn, pivot, acl.IdxEntity_TypeName)
+func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) {
+	pivot := entity.EntityType_NSQTopic + ":" + topic
+	entityObj, err := db.SelectOne[entity.Entity](dbConn, pivot, entity.IdxEntity_TypeName)
 	if err != nil {
 		return nil, err
 	}
-	return &entity, nil
+	return &entityObj, nil
 }
-func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]acl.Entity, error) {
-	entities, err := db.SelectAll[acl.Entity](dbConn, "="+acl.EntityType_NSQTopic, acl.IdxEntity_TypeID)
+
+func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]entity.Entity, error) {
+	entities, err := db.SelectAll[entity.Entity](dbConn, "="+entity.EntityType_NSQTopic, entity.IdxEntity_TypeID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,14 +45,14 @@ func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]acl.Entity, error) {
 }
 
 func DeleteNsqTopicEntity(dbConn *buntdb.DB, topic string) error {
-	tmp := acl.Entity{TypeID: acl.EntityType_NSQTopic, Name: topic}
-	return db.DeleteByIndex(dbConn, tmp, acl.IdxEntity_TypeName)
+	tmp := entity.Entity{TypeID: entity.EntityType_NSQTopic, Name: topic}
+	return db.DeleteByIndex(dbConn, tmp, entity.IdxEntity_TypeName)
 }
 
-// ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is acl.GroupRoot, returns all topics.
-func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]acl.Entity, error) {
-	pivot := group + ":" + acl.EntityType_NSQTopic
-	entities, err := db.SelectAll[acl.Entity](dbConn, "="+pivot, acl.IdxEntity_GroupType)
+// ListNsqTopicEntitiesByGroup returns all nsq topic entities owned by the given group. If group is entity.GroupRoot, returns all topics.
+func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]entity.Entity, error) {
+	pivot := group + ":" + entity.EntityType_NSQTopic
+	entities, err := db.SelectAll[entity.Entity](dbConn, "="+pivot, entity.IdxEntity_GroupType)
 	if err != nil {
 		return nil, err
 	}

@@ -4,15 +4,15 @@ import (
 	"errors"
 	"log"
 
-	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/entity"
 	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
 type ISyncTopics interface {
 	GetAllTopics() ([]string, error)
-	GetAllNsqTopicEntities() ([]acl.Entity, error)
-	CreateNsqTopicEntity(topic string) (*acl.Entity, error)
+	GetAllNsqTopicEntities() ([]entity.Entity, error)
+	CreateNsqTopicEntity(topic string) (*entity.Entity, error)
 	DeleteNsqTopicEntity(topic string) error
 }
 

@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/entity"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
@@ -28,8 +28,8 @@ type SaveDescriptionResponse struct {
 
 // iSaveDescriptionRepo abstracts the repository for entity persistence.
 type iSaveDescriptionRepo interface {
-	GetEntityByID(id string) (acl.Entity, error)
-	UpdateEntity(entity acl.Entity) error
+	GetEntityByID(id string) (entity.Entity, error)
+	UpdateEntity(entity entity.Entity) error
 }
 
 // saveDescriptionRepo implements iSaveDescriptionRepo using buntdb.
@@ -37,11 +37,11 @@ type saveDescriptionRepo struct {
 	db *buntdb.DB
 }
 
-func (r *saveDescriptionRepo) GetEntityByID(id string) (acl.Entity, error) {
+func (r *saveDescriptionRepo) GetEntityByID(id string) (entity.Entity, error) {
 	return getEntityByID(r.db, id)
 }
 
-func (r *saveDescriptionRepo) UpdateEntity(entity acl.Entity) error {
+func (r *saveDescriptionRepo) UpdateEntity(entity entity.Entity) error {
 	return updateEntity(r.db, entity)
 }
 
@@ -85,15 +85,15 @@ func (uc SaveDescriptionUsecase) Save(ctx context.Context, input SaveDescription
 // --- helpers ---
 
 // getEntityByID fetches an entity by ID using the repository pattern.
-func getEntityByID(db *buntdb.DB, id string) (acl.Entity, error) {
-	entity, err := dbpkg.GetByID[acl.Entity](db, id)
+func getEntityByID(db *buntdb.DB, id string) (entity.Entity, error) {
+	entityObj, err := dbpkg.GetByID[entity.Entity](db, id)
 	if err != nil {
-		return acl.Entity{}, err
+		return entity.Entity{}, err
 	}
-	return entity, nil
+	return entityObj, nil
 }
 
 // updateEntity persists the entity using db.Update.
-func updateEntity(db *buntdb.DB, entity acl.Entity) error {
+func updateEntity(db *buntdb.DB, entity entity.Entity) error {
 	return dbpkg.Update(db, entity)
 }

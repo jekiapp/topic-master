@@ -12,8 +12,8 @@ import (
 	"context"
 
 	"github.com/jekiapp/topic-master/internal/logic/topic"
-	"github.com/jekiapp/topic-master/internal/model/acl"
-	entity "github.com/jekiapp/topic-master/internal/repository/entity"
+	"github.com/jekiapp/topic-master/internal/model/entity"
+	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsq "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/tidwall/buntdb"
 )
@@ -35,20 +35,20 @@ func (r *syncTopicsRepo) GetAllTopics() ([]string, error) {
 	return nsq.GetAllTopics()
 }
 
-func (r *syncTopicsRepo) GetNsqTopicEntity(topic string) (*acl.Entity, error) {
-	return entity.GetNsqTopicEntity(r.db, topic)
+func (r *syncTopicsRepo) GetNsqTopicEntity(topic string) (*entity.Entity, error) {
+	return entityrepo.GetNsqTopicEntity(r.db, topic)
 }
 
-func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*acl.Entity, error) {
-	return entity.CreateNsqTopicEntity(r.db, topic)
+func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*entity.Entity, error) {
+	return entityrepo.CreateNsqTopicEntity(r.db, topic)
 }
 
-func (r *syncTopicsRepo) GetAllNsqTopicEntities() ([]acl.Entity, error) {
-	return entity.GetAllNsqTopicEntities(r.db)
+func (r *syncTopicsRepo) GetAllNsqTopicEntities() ([]entity.Entity, error) {
+	return entityrepo.GetAllNsqTopicEntities(r.db)
 }
 
 func (r *syncTopicsRepo) DeleteNsqTopicEntity(topic string) error {
-	return entity.DeleteNsqTopicEntity(r.db, topic)
+	return entityrepo.DeleteNsqTopicEntity(r.db, topic)
 }
 
 type SyncTopicsUsecase struct {

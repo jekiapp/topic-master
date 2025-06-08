@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jekiapp/topic-master/internal/config"
-	"github.com/jekiapp/topic-master/internal/model/acl"
+	"github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/jekiapp/topic-master/pkg/util"
@@ -52,7 +52,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		return NsqTopicDetailResponse{}, nil // or return error
 	}
 
-	entity, err := uc.repo.GetEntityByID(topic)
+	ent, err := uc.repo.GetEntityByID(topic)
 	if err != nil {
 		return NsqTopicDetailResponse{}, fmt.Errorf("error getting topic entity: %v", err)
 	}
@@ -66,7 +66,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	nsqdHosts = util.ReplaceDockerHostWithLocalhost(nsqdHosts)
 
 	permission := Permission{}
-	if entity.GroupOwner == acl.GroupNone {
+	if ent.GroupOwner == entity.GroupNone {
 		permission = Permission{
 			CanPause:              true,
 			CanPublish:            true,
@@ -78,10 +78,10 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	}
 
 	resp := NsqTopicDetailResponse{
-		ID:           entity.ID,
-		Name:         entity.Name,
-		EventTrigger: entity.Description,
-		GroupOwner:   entity.GroupOwner,
+		ID:           ent.ID,
+		Name:         ent.Name,
+		EventTrigger: ent.Description,
+		GroupOwner:   ent.GroupOwner,
 		Bookmarked:   false, // TODO: fill later
 		Permission:   permission,
 		NsqdHosts:    nsqdHosts,
@@ -112,7 +112,7 @@ func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input Publish
 }
 
 type iNsqTopicDetailRepo interface {
-	GetEntityByID(id string) (*acl.Entity, error)
+	GetEntityByID(id string) (*entity.Entity, error)
 	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
 }
 
@@ -120,7 +120,7 @@ type nsqTopicDetailRepo struct {
 	db *buntdb.DB
 }
 
-func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (*acl.Entity, error) {
+func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (*entity.Entity, error) {
 	return entityrepo.GetEntityByID(r.db, topic)
 }
 
