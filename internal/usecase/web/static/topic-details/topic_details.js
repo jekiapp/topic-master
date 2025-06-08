@@ -121,15 +121,32 @@ $(function() {
     });
 
     // --- Publish panel logic ---
+    function adjustPanelWidths() {
+        var publishVisible = $('#publish-panel').is(':visible');
+        var tailVisible = $('#tail-panel').is(':visible');
+        if (publishVisible && !tailVisible) {
+            $('#publish-panel').addClass('wide-panel');
+        } else {
+            $('#publish-panel').removeClass('wide-panel');
+        }
+        if (tailVisible && !publishVisible) {
+            $('#tail-panel').addClass('wide-panel');
+        } else {
+            $('#tail-panel').removeClass('wide-panel');
+        }
+    }
+
     $('.btn-publish').on('click', function() {
         $('#publish-panel').show();
         $('.btn-publish').prop('disabled', true);
+        adjustPanelWidths();
     });
     $('#close-publish-panel').on('click', function() {
         $('#publish-panel').hide();
         $('#publish-textarea').val('');
         $('#publish-status').text('').css('color', '');
         $('.btn-publish').prop('disabled', false);
+        adjustPanelWidths();
     });
     // Publish button handler
     $('#publish-panel-btn').on('click', function() {
@@ -184,6 +201,7 @@ $(function() {
         $tailPanelBtn.prop('disabled', false);
         $tailContent.empty();
         $tailStatus.text('');
+        adjustPanelWidths();
     });
     $tailCloseBtn.on('click', function() {
         $tailPanel.hide();
@@ -195,6 +213,7 @@ $(function() {
         $tailPanelBtn.prop('disabled', false);
         $tailStatus.text('');
         $tailContent.empty();
+        adjustPanelWidths();
     });
     $tailPanelBtn.on('click', function() {
         if (!currentTopicDetail) {

@@ -234,23 +234,24 @@ body {
     min-height: 1px;
 }
 
-#publish-panel {
+#publish-panel, #tail-panel {
     flex: 0 0 20%;
     max-width: 20%;
     min-width: 0;
     box-sizing: border-box;
+}
+/*
+  To make publish-panel or tail-panel occupy 40% width when only one is visible,
+  add the 'wide-panel' class to the panel.
+*/
+.wide-panel {
+    flex: 0 0 40% !important;
+    max-width: 40% !important;
 }
 
 #main-panel {
     flex: 0 0 55%;
     max-width: 55%;
-    min-width: 0;
-    box-sizing: border-box;
-}
-
-#tail-panel {
-    flex: 0 0 20%;
-    max-width: 20%;
     min-width: 0;
     box-sizing: border-box;
 }
@@ -263,4 +264,12 @@ body {
         max-width: 100%;
         flex: 1 1 100%;
     }
+}
+
+.tail-limit-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
 }
