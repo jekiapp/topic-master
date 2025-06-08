@@ -80,7 +80,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
 		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
-		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(cfg.NSQLookupdHTTPAddr),
+		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(),
 	}
 }
 

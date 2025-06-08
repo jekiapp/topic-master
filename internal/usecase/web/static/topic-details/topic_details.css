@@ -232,6 +232,7 @@ body {
     flex-direction: row;
     width: 100%;
     min-height: 1px;
+    align-items: flex-start;
 }
 
 #publish-panel, #tail-panel {
@@ -285,8 +286,14 @@ body {
 }
 
 #tail-content {
-    background: #f7f6fa !important;
-    color: #2d2231 !important;
+    margin-top: 8px;
+    font-family: monospace;
+    font-size: 0.97em;
+    background: #222;
+    color: #b5f;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 120px;
 }
 
 .tail-timestamp {
