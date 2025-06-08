@@ -1,25 +1,3 @@
-// Mock data based on NsqTopicDetailResponse
-const mockTopicDetail = {
-    id: "1",
-    name: "ExampleTopic",
-    event_trigger: "user.signup\nwith extra info",
-    group_owner: "alice",
-    bookmarked: true,
-    permission: {
-        can_pause: true,
-        can_publish: true,
-        can_tail: true,
-        can_delete: true,
-        can_empty_queue: false,
-        can_update_event_trigger: true
-    },
-    nsqd_hosts: ["1234.1234:4151", "123.13:4151"],
-    topic_stats: {
-        depth: 100,
-        messages: 5000
-    }
-};
-
 $(function() {
     var topicID = getTopicNameFromURL();
     if (!topicID) {

@@ -46,6 +46,7 @@ type Handler struct {
 	getUsernameUC           aclAuth.GetUsernameUsecase
 	getTopicDetailUC        topicDetailUC.NsqTopicDetailUsecase
 	getTopicStatsUC         topicDetailUC.NsqTopicStatsUsecase
+	tailMessageUC           topicDetailUC.TailMessageUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -79,6 +80,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
 		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
+		tailMessageUC:           topicDetailUC.TailMessageUsecase{},
 	}
 }
 
@@ -124,6 +126,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/topic/detail", handlerPkg.HandleGenericGet(h.getTopicDetailUC.HandleQuery))
 	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery))
 	mux.HandleFunc("/api/topic/publish", handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish))
+	mux.HandleFunc("/api/topic/tail", h.tailMessageUC.HandleTailMessage)
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
