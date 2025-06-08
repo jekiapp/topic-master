@@ -2,22 +2,22 @@ package nsq
 
 import (
 	"fmt"
-
-	nsq "github.com/nsqio/go-nsq"
+	"io"
+	"net/http"
+	"strings"
 )
 
 // Publish publishes a message to the given topic on all provided nsqd hosts using go-nsq.
 func Publish(topic string, message string, host string) error {
-	config := nsq.NewConfig()
-	producer, err := nsq.NewProducer(host, config)
-	if err != nil {
-		return fmt.Errorf("failed to create producer for %s: %w", host, err)
-	}
-	err = producer.Publish(topic, []byte(message))
-	producer.Stop()
+	url := fmt.Sprintf("http://%s/pub?topic=%s", host, topic)
+	resp, err := http.Post(url, "application/octet-stream", strings.NewReader(message))
 	if err != nil {
 		return fmt.Errorf("failed to publish to %s: %w", host, err)
 	}
-
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
 	return nil
 }

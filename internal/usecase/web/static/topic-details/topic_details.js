@@ -21,21 +21,23 @@ const mockTopicDetail = {
 };
 
 $(function() {
-    // Example: get topic name from URL or a global JS variable
-    // For now, use a hardcoded topic name for demo
     var topicID = getTopicNameFromURL();
     if (!topicID) {
         alert('Topic name is required');
         return;
     }
 
-    // Fetch topic detail
+    // --- Cache for topic detail ---
+    var currentTopicDetail = null;
+
+    // Fetch topic detail ONCE
     $.get('/api/topic/detail', { topic: topicID }, function(response) {
         if (!response || !response.data) {
             alert('Failed to load topic detail');
             return;
         }
         var detail = response.data;
+        currentTopicDetail = detail;
         $('.topic-name').text(detail.name);
         $('.group-owner').text(detail.group_owner);
         var $eventTrigger = $('.event-trigger-input');
@@ -88,7 +90,6 @@ $(function() {
     });
 
     // --- Autorefresh logic ---
-    var autorefreshTimer = null;
     var autorefreshCountdown = 0;
     var autorefreshActive = false;
     var autorefreshInterval = null;
@@ -112,15 +113,10 @@ $(function() {
         });
     }
 
+    // Only refresh stats, not topic detail
     function refreshStats() {
-        // Use the same logic as in the main stats fetch
-        var topicID = getTopicNameFromURL();
-        if (!topicID) return;
-        $.get('/api/topic/detail', { topic: topicID }, function(response) {
-            if (!response || !response.data) return;
-            var detail = response.data;
-            fetchAndUpdateStats(detail);
-        });
+        if (!currentTopicDetail) return;
+        fetchAndUpdateStats(currentTopicDetail);
     }
 
     $autorefresh.on('click', function() {
@@ -147,7 +143,6 @@ $(function() {
     });
 
     // --- Publish panel logic ---
-    var currentTopicDetail = null;
     $('.btn-publish').on('click', function() {
         $('#publish-panel').show();
         $('.btn-publish').prop('disabled', true);
@@ -155,44 +150,20 @@ $(function() {
     $('#close-publish-panel').on('click', function() {
         $('#publish-panel').hide();
         $('#publish-textarea').val('');
+        $('#publish-status').text('').css('color', '');
         $('.btn-publish').prop('disabled', false);
     });
-    // Store topic detail for publish use
-    function setCurrentTopicDetail(detail) {
-        currentTopicDetail = detail;
-    }
-    // Patch: after fetching topic detail, store it
-    var origGetTopicDetailSuccess = null;
-    if (typeof window.getTopicDetailSuccess === 'function') {
-        origGetTopicDetailSuccess = window.getTopicDetailSuccess;
-    }
-    window.getTopicDetailSuccess = function(detail) {
-        setCurrentTopicDetail(detail);
-        if (origGetTopicDetailSuccess) origGetTopicDetailSuccess(detail);
-    };
-    // Patch topic detail fetch to call our setter
-    var origAjax = $.get;
-    $.get = function(url, data, success, dataType) {
-        if (url === '/api/topic/detail') {
-            var wrappedSuccess = function(response) {
-                if (response && response.data) {
-                    window.getTopicDetailSuccess(response.data);
-                }
-                if (success) success(response);
-            };
-            return origAjax.call($, url, data, wrappedSuccess, dataType);
-        }
-        return origAjax.apply($, arguments);
-    };
     // Publish button handler
     $('#publish-panel-btn').on('click', function() {
         var message = $('#publish-textarea').val();
+        var $status = $('#publish-status');
+        $status.text('').css('color', '');
         if (!message) {
-            alert('Message cannot be empty');
+            $status.text('Message cannot be empty').css('color', 'red');
             return;
         }
         if (!currentTopicDetail) {
-            alert('Topic detail not loaded');
+            $status.text('Topic detail not loaded').css('color', 'red');
             return;
         }
         var payload = {
@@ -206,9 +177,7 @@ $(function() {
             contentType: 'application/json',
             data: JSON.stringify(payload),
             success: function(resp) {
-                alert('Message published');
-                $('#publish-panel').hide();
-                $('#publish-textarea').val('');
+                $status.text('Message published').css('color', 'green');
                 $('.btn-publish').prop('disabled', false);
             },
             error: function(xhr) {
@@ -216,7 +185,7 @@ $(function() {
                 if (xhr.responseJSON && xhr.responseJSON.error) {
                     msg += ': ' + xhr.responseJSON.error;
                 }
-                alert(msg);
+                $status.text(msg).css('color', 'red');
             }
         });
     });

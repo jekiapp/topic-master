@@ -100,7 +100,9 @@ type PublishMessageInput struct {
 }
 
 func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input PublishMessageInput) (PublishMessageResponse, error) {
-	err := nsqrepo.Publish(input.Topic, input.Message, input.NsqdHosts[0])
+	host := input.NsqdHosts[0]
+	// host = "http://" + host
+	err := nsqrepo.Publish(input.Topic, input.Message, host)
 	if err != nil {
 		return PublishMessageResponse{}, fmt.Errorf("error publishing message: %v", err)
 	}
