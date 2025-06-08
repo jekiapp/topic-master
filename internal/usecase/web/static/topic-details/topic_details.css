@@ -327,3 +327,20 @@ body {
     color: #888;
     margin-right: 8px;
 }
+
+.btn-tail-panel {
+    background: #b3d8fd;
+    color: #155a8a;
+}
+.btn-tail-panel:disabled {
+    background: #e3f1fd;
+    color: #a0b8c8;
+}
+.btn-stop-tail-panel {
+    background: #f7b6b6;
+    color: #a94442;
+}
+.btn-stop-tail-panel:disabled {
+    background: #fde3e3;
+    color: #c8a0a0;
+}

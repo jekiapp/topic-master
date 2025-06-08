@@ -13,26 +13,24 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
 
     function setTailingActive(active) {
         if (active) {
-            $tailPanelBtn.prop('disabled', true);
-            $tailStopBtn.prop('disabled', false).show();
+            $tailPanelBtn.hide();
+            $tailStopBtn.show();
         } else {
-            $tailPanelBtn.prop('disabled', false);
-            $tailStopBtn.prop('disabled', true).hide();
+            $tailPanelBtn.show();
+            $tailStopBtn.hide();
         }
     }
     setTailingActive(false);
 
     $tailBtn.on('click', function() {
         $tailPanel.show();
-        $tailBtn.prop('disabled', true);
-        $tailPanelBtn.prop('disabled', false);
-        $tailStopBtn.prop('disabled', true).hide();
+        $tailPanelBtn.show();
+        $tailStopBtn.hide();
         $tailStatus.text('');
         if (adjustPanelWidths) adjustPanelWidths();
     });
     $tailCloseBtn.on('click', function() {
         $tailPanel.hide();
-        $tailBtn.prop('disabled', false);
         if (tailSocket) {
             tailSocket.close();
             tailSocket = null;
@@ -135,7 +133,6 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         tailSocket.onclose = function() {
             $tailStatus.text('Connection closed').css('color', '#888');
             setTailingActive(false);
-            $tailBtn.prop('disabled', false);
         };
     });
     $tailStopBtn.on('click', function() {
@@ -145,7 +142,6 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
             $tailStatus.text('Stopped by user.').css('color', '#888');
         }
         setTailingActive(false);
-        $tailBtn.prop('disabled', false);
     });
 
     // Helper to escape HTML
