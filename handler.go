@@ -46,7 +46,7 @@ type Handler struct {
 	getUsernameUC           aclAuth.GetUsernameUsecase
 	getTopicDetailUC        topicDetailUC.NsqTopicDetailUsecase
 	getTopicStatsUC         topicDetailUC.NsqTopicStatsUsecase
-	tailMessageUC           topicDetailUC.TailMessageUsecase
+	tailMessageUC           *topicDetailUC.TailMessageUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -80,7 +80,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
 		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
-		tailMessageUC:           topicDetailUC.TailMessageUsecase{},
+		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(cfg.NSQLookupdHTTPAddr),
 	}
 }
 

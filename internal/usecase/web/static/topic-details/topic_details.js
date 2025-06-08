@@ -213,18 +213,17 @@ $(function() {
             tailSocket.close();
             tailSocket = null;
         }
-        // Open websocket
+        // Build query string for WebSocket URL
+        var topic = encodeURIComponent(currentTopicDetail.name);
+        var limitMsgStr = encodeURIComponent(limitMsg);
+        var hosts = (currentTopicDetail.nsqd_hosts || []).map(encodeURIComponent);
+        var params = `topic=${topic}&limit_msg=${limitMsgStr}`;
+        hosts.forEach(function(h) { params += `&nsqd_hosts=${h}`; });
         var wsProto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        var wsUrl = wsProto + window.location.host + '/api/topic/tail';
+        var wsUrl = wsProto + window.location.host + '/api/topic/tail?' + params;
         tailSocket = new WebSocket(wsUrl);
         tailSocket.onopen = function() {
             $tailStatus.text('Connected. Waiting for messages...').css('color', '#888');
-            // Send request body as JSON
-            tailSocket.send(JSON.stringify({
-                topic: currentTopicDetail.name,
-                limit_msg: limitMsg,
-                nsqd_hosts: currentTopicDetail.nsqd_hosts
-            }));
         };
         tailSocket.onmessage = function(event) {
             // Split by record separator (ASCII 30)

@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -19,21 +21,33 @@ type TailMessageInput struct {
 	NSQDHosts []string `json:"nsqd_hosts"`
 }
 
-type TailMessageUsecase struct{}
+type TailMessageUsecase struct {
+	NSQLookupdAddr string
+}
+
+func NewTailMessageUsecase(nsqLookupdAddr string) *TailMessageUsecase {
+	return &TailMessageUsecase{
+		NSQLookupdAddr: nsqLookupdAddr,
+	}
+}
 
 // TailAndStream streams up to input.LimitMsg messages to the websocket connection, delimited by ASCII RS (\x1E)
 func (u *TailMessageUsecase) HandleTailMessage(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
 	input := TailMessageInput{}
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "failed to decode request body", http.StatusBadRequest)
-		return
+	input.Topic = q.Get("topic")
+	limitMsgStr := q.Get("limit_msg")
+	if limitMsgStr != "" {
+		if n, err := strconv.Atoi(limitMsgStr); err == nil {
+			input.LimitMsg = n
+		}
 	}
+	input.NSQDHosts = q["nsqd_hosts"]
 
 	if input.LimitMsg <= 0 {
 		http.Error(w, "limit_msg must be > 0", http.StatusBadRequest)
 		return
 	}
-
 	if input.Topic == "" || len(input.NSQDHosts) == 0 {
 		http.Error(w, "topic and nsqd_hosts are required", http.StatusBadRequest)
 		return
@@ -51,6 +65,7 @@ func (u *TailMessageUsecase) HandleTailMessage(w http.ResponseWriter, r *http.Re
 
 	err = u.tailMessage(r.Context(), conn, input)
 	if err != nil {
+		log.Println("failed to tail message:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -71,12 +86,19 @@ func (u *TailMessageUsecase) tailMessage(ctx context.Context, conn *websocket.Co
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
 	}
-	err = consumer.ConnectToNSQDs(input.NSQDHosts)
+
+	consumer.AddHandler(handler)
+
+	// change hosts port to 4150
+	hosts := make([]string, len(input.NSQDHosts))
+	for i, host := range input.NSQDHosts {
+		hosts[i] = strings.Replace(host, ":4151", ":4150", 1)
+	}
+	err = consumer.ConnectToNSQDs(hosts)
 	if err != nil {
 		return fmt.Errorf("failed to connect to nsqd: %w", err)
 	}
 
-	consumer.AddHandler(handler)
 	defer consumer.Stop()
 
 loop:
@@ -95,6 +117,7 @@ loop:
 			if err != nil {
 				return err
 			}
+			log.Println("[TAIL] sending message:", string(jsonMsg))
 			if err := conn.WriteMessage(websocket.TextMessage, append(jsonMsg, RS...)); err != nil {
 				return err
 			}
