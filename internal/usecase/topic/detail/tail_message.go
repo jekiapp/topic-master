@@ -1,14 +1,3 @@
-// this usecase is used to tail message from a topic
-// it will receive post request with body:
-// {
-// 	"topic": "topic-name",
-// 	"limit_msg": 5,
-// 	"nsqd_hosts": ["nsqd-host-1", "nsqd-host-2"]
-// }
-// the handler is a websocket handler, use gorilla websocket
-// register nsq consumer to the topic
-// then stream the message to the conn
-
 package detail
 
 import (

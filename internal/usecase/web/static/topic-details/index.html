@@ -8,15 +8,8 @@
 <body>
     <a href="javascript:void(0)" class="back-link" id="back-link">&#8592; Back</a>
     <div class="topic-detail-row-flex">
-        <div id="publish-panel" class="app-detail-container topic-detail-container" style="display:none;">
-            <button id="close-publish-panel" style="position:absolute; top:8px; right:8px; background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
-            <div class="publish-panel-content">
-                <textarea id="publish-textarea" class="event-trigger-input" rows="15" placeholder="Enter your message here"></textarea>
-                <div id="publish-status" style="margin-top:6px;min-height:20px;font-size:0.98em;"></div>
-                <button id="publish-panel-btn" class="action-btn btn-publish-panel">Publish</button>
-            </div>
-        </div>
-        <div class="app-detail-container topic-detail-container">
+
+        <div id="main-panel" class="app-detail-container topic-detail-container">
             <div id="action-buttons" class="topic-actions">
                 <button class="action-btn btn-pause">Pause</button>
                 <button class="action-btn btn-drain">Drain</button>
@@ -51,7 +44,7 @@
                             <div class="stats-row-flex" style="display:flex; align-items:center; justify-content:space-between;">
                                 <label><strong>Stats:</strong></label>
                                 <a href="javascript:void(0)" id="autorefresh-link" style="cursor:pointer; text-decoration:none; color:#1e90ff;">
-                                    <img src="/icons/playbutton.png" title="Autorefresh" id="autorefresh-icon" alt="Autorefresh" style="width:20px;vertical-align:middle;"></a>
+                                    <img src="/icons/playbutton.png" title="Autorefresh for 30 seconds" id="autorefresh-icon" alt="Autorefresh" style="width:20px;vertical-align:middle;"></a>
                             </div>
                             <div class="detail-mini-section">
                                 <div>Depth: <span class="topic-stats-depth"></span></div>
@@ -67,6 +60,24 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div id="publish-panel" class="app-detail-container topic-detail-container" style="display:none;">
+            <button id="close-publish-panel" style="position:absolute; top:8px; right:8px; background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
+            <div class="publish-panel-content">
+                <textarea id="publish-textarea" class="event-trigger-input" rows="15" placeholder="Enter your message here"></textarea>
+                <div id="publish-status" style="margin-top:6px;min-height:20px;font-size:0.98em;"></div>
+                <button id="publish-panel-btn" class="action-btn btn-publish-panel">Publish</button>
+            </div>
+        </div>
+        <div id="tail-panel" class="app-detail-container topic-detail-container" style="display:none;">
+            <button id="close-tail-panel" style="position:absolute; top:8px; right:8px; background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>
+            <div class="tail-panel-content">
+                <label for="tail-limit-msg" style="font-size:0.98em;">Limit Messages:</label>
+                <input type="number" id="tail-limit-msg" min="1" value="10" style="width:60px; margin-left:6px; margin-bottom:8px;">
+                <button id="tail-panel-btn" class="action-btn btn-tail-panel">Tail</button>
+                <div id="tail-status" style="margin-top:6px;min-height:20px;font-size:0.98em;"></div>
+                <div id="tail-content" style="margin-top:8px; font-family:monospace; font-size:0.97em; background:#222; color:#b5f; padding:8px; border-radius:4px; min-height:120px; max-height:300px; overflow-y:auto;"></div>
             </div>
         </div>
     </div>
