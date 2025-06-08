@@ -74,6 +74,20 @@ func (u *TailMessageUsecase) tailMessage(ctx context.Context, conn *websocket.Co
 	const RS = "\x1E"
 	var count int32
 	msgCh := make(chan *nsq.Message, input.LimitMsg)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Goroutine to detect websocket disconnects
+	go func() {
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				cancel()
+				return
+			}
+		}
+	}()
+
 	handler := nsq.HandlerFunc(func(message *nsq.Message) error {
 		if atomic.LoadInt32(&count) < int32(input.LimitMsg) {
 			msgCh <- message
@@ -82,12 +96,38 @@ func (u *TailMessageUsecase) tailMessage(ctx context.Context, conn *websocket.Co
 	})
 
 	config := nsq.NewConfig()
-	consumer, err := nsq.NewConsumer(input.Topic, "topic-master-tail-channel-"+strconv.FormatInt(time.Now().UnixNano(), 10), config)
+	channelName := "topic-master-tail-channel-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	consumer, err := nsq.NewConsumer(input.Topic, channelName, config)
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
 	}
 
 	consumer.AddHandler(handler)
+
+	// cleanup function to stop consumer, close msgCh, and delete channel from nsqd
+	cleanup := func() {
+		consumer.Stop()
+		for _, host := range input.NSQDHosts {
+			// ensure host is host:4150, convert to host:4151 for HTTP
+			httpHost := strings.Replace(host, ":4150", ":4151", 1)
+			url := fmt.Sprintf("http://%s/channel/delete?topic=%s&channel=%s", httpHost, input.Topic, channelName)
+			req, err := http.NewRequest(http.MethodPost, url, nil)
+			if err != nil {
+				log.Printf("[TAIL] failed to create delete channel request: %v", err)
+				continue
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				log.Printf("[TAIL] failed to delete channel: %v", err)
+				continue
+			}
+			resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				log.Printf("[TAIL] failed to delete channel, status: %s", resp.Status)
+			}
+		}
+	}
+	defer cleanup()
 
 	// change hosts port to 4150
 	hosts := make([]string, len(input.NSQDHosts))
@@ -99,20 +139,21 @@ func (u *TailMessageUsecase) tailMessage(ctx context.Context, conn *websocket.Co
 		return fmt.Errorf("failed to connect to nsqd: %w", err)
 	}
 
-	defer consumer.Stop()
-
 loop:
 	for atomic.LoadInt32(&count) < int32(input.LimitMsg) {
 		select {
 		case <-ctx.Done():
 			break loop
 		case msg := <-msgCh:
+			timestamp := time.Unix(0, msg.Timestamp).Format(time.RFC3339)
 			jsonMsg, err := json.Marshal(struct {
-				Topic   string `json:"topic"`
-				Payload string `json:"payload"`
+				Topic     string `json:"topic"`
+				Payload   string `json:"payload"`
+				Timestamp string `json:"timestamp"`
 			}{
-				Topic:   input.Topic,
-				Payload: string(msg.Body),
+				Topic:     input.Topic,
+				Payload:   string(msg.Body),
+				Timestamp: timestamp,
 			})
 			if err != nil {
 				return err
