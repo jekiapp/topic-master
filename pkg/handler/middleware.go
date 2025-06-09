@@ -14,6 +14,41 @@ import (
 	"github.com/jekiapp/topic-master/pkg/util"
 )
 
+func InitSessionMiddleware(secret string) func(next http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			var tokenString string
+			if strings.HasPrefix(authHeader, "Bearer ") {
+				tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+			} else {
+				cookie, err := r.Cookie("access_token")
+				if err == nil && cookie.Value != "" {
+					tokenString = cookie.Value
+				}
+			}
+
+			if tokenString != "" {
+				decodedSecret, err := base64.StdEncoding.DecodeString(secret)
+				if err == nil {
+					token := &acl.JWTClaims{}
+					parsedToken, err := jwt.ParseWithClaims(tokenString, token, func(token *jwt.Token) (interface{}, error) {
+						return decodedSecret, nil
+					})
+					if err == nil && parsedToken.Valid {
+						claims, ok := parsedToken.Claims.(*acl.JWTClaims)
+						if ok {
+							ctx := context.WithValue(r.Context(), model.UserInfoKey, claims)
+							r = r.WithContext(ctx)
+						}
+					}
+				}
+			}
+			next(w, r)
+		}
+	}
+}
+
 func InitJWTMiddleware(secret string) func(next http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return JWTMiddleware(next, secret)
