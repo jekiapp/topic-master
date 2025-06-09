@@ -51,7 +51,10 @@ const (
 	GroupNone           = "None"
 )
 
-func (e Entity) GetPrimaryKey() string {
+func (e *Entity) GetPrimaryKey(id string) string {
+	if e.ID == "" && id != "" {
+		e.ID = id
+	}
 	return TableEntity + ":" + e.ID
 }
 

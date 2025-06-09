@@ -20,7 +20,8 @@ const (
 	IdxBookmark_EntUser  = TableBookmark + ":entuser"
 )
 
-func (b Bookmark) GetPrimaryKey() string {
+func (b *Bookmark) GetPrimaryKey(id string) string {
+	// ignore id
 	return TableBookmark + ":" + b.EntityID + ":" + b.UserID
 }
 

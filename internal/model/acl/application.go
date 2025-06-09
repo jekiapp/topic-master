@@ -54,7 +54,10 @@ type Application struct {
 	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
 }
 
-func (a Application) GetPrimaryKey() string {
+func (a *Application) GetPrimaryKey(id string) string {
+	if a.ID == "" && id != "" {
+		a.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableApplication, a.ID)
 }
 
@@ -107,7 +110,10 @@ type ApplicationAssignment struct {
 	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
 }
 
-func (aa ApplicationAssignment) GetPrimaryKey() string {
+func (aa *ApplicationAssignment) GetPrimaryKey(id string) string {
+	if aa.ID == "" && id != "" {
+		aa.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableApplicationAssignment, aa.ID)
 }
 
@@ -155,7 +161,10 @@ type ApplicationHistory struct {
 	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
 }
 
-func (ah ApplicationHistory) GetPrimaryKey() string {
+func (ah *ApplicationHistory) GetPrimaryKey(id string) string {
+	if ah.ID == "" && id != "" {
+		ah.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableApplicationHistory, ah.ID)
 }
 

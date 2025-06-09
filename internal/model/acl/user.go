@@ -41,7 +41,10 @@ const (
 	IdxUser_Username = TableUser + ":username"
 )
 
-func (u User) GetPrimaryKey() string {
+func (u *User) GetPrimaryKey(id string) string {
+	if u.ID == "" && id != "" {
+		u.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableUser, u.ID)
 }
 
@@ -83,7 +86,10 @@ func (u *UserPending) SetID(id string) {
 	u.ID = id
 }
 
-func (u *UserPending) GetPrimaryKey() string {
+func (u *UserPending) GetPrimaryKey(id string) string {
+	if u.ID == "" && id != "" {
+		u.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableUserPending, u.ID)
 }
 

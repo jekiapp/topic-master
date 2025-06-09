@@ -28,7 +28,10 @@ const (
 	IdxResetPassword_Username = TableResetPassword + ":username"
 )
 
-func (r ResetPassword) GetPrimaryKey() string {
+func (r *ResetPassword) GetPrimaryKey(id string) string {
+	if r.Token == "" && id != "" {
+		r.Token = id
+	}
 	return TableResetPassword + ":" + r.Token
 }
 

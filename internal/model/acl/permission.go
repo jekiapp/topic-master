@@ -40,7 +40,10 @@ func (p Permission) GetIndexes() []db.Index {
 	}
 }
 
-func (p Permission) GetPrimaryKey() string {
+func (p *Permission) GetPrimaryKey(id string) string {
+	if p.ID == "" && id != "" {
+		p.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TablePermission, p.ID)
 }
 

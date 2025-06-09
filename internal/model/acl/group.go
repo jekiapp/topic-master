@@ -28,7 +28,10 @@ const (
 	RoleGroupMember = "member"
 )
 
-func (g Group) GetPrimaryKey() string {
+func (g *Group) GetPrimaryKey(id string) string {
+	if g.ID == "" && id != "" {
+		g.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableGroup, g.ID)
 }
 
@@ -66,7 +69,10 @@ const (
 	IdxUserGroup_Role    = TableUserGroup + ":role"
 )
 
-func (ug UserGroup) GetPrimaryKey() string {
+func (ug *UserGroup) GetPrimaryKey(id string) string {
+	if ug.ID == "" && id != "" {
+		ug.ID = id
+	}
 	return fmt.Sprintf("%s:%s", TableUserGroup, ug.ID)
 }
 
