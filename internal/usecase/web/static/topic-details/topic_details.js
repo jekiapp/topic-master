@@ -1,3 +1,12 @@
+// --- Local login helpers for iframe context ---
+function isLogin() {
+    return !!localStorage.getItem('user');
+}
+function getUserInfo() {
+    var user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+}
+
 $(function() {
     var topicID = getTopicNameFromURL();
     if (!topicID) {
@@ -78,15 +87,15 @@ $(function() {
             bookmarkImg.attr('title', detail.bookmarked ? 'Remove Bookmark' : 'Add Bookmark');
             bookmarkImg.off('click').on('click', function(e) {
                 e.preventDefault();
-                if (!window.isLogin || !window.isLogin()) {
+                if (!window.parent.isLogin || !window.parent.isLogin()) {
                     alert('Please log in to bookmark topics.');
                     return;
                 }
                 $.ajax({
-                    url: '/api/bookmark/toggle',
+                    url: '/api/entity/toggle-bookmark',
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ entity_id: detail.name }),
+                    data: JSON.stringify({ entity_id: detail.id, bookmark: !detail.bookmarked }),
                     success: function(resp) {
                         // Toggle state locally for instant feedback
                         detail.bookmarked = !detail.bookmarked;
@@ -108,7 +117,7 @@ $(function() {
             bookmarkImg.attr('title', 'Log in to bookmark');
             bookmarkImg.off('click');
         }
-        if (window.isLogin && window.isLogin()) {
+        if (window.parent.isLogin && window.parent.isLogin()) {
             enableBookmarkToggle();
         } else {
             disableBookmarkToggle();
