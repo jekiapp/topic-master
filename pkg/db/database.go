@@ -34,17 +34,16 @@ type Table interface {
 }
 
 type GetRecordByIndexes interface {
-	GetPrimaryKey() string
+	GetPrimaryKey
 	GetIndexValues() map[string]string
 }
 
-type GetRecordByID interface {
-	SetID(id string)
-	GetPrimaryKey() string
+type GetPrimaryKey interface {
+	GetPrimaryKey(id string) string
 }
 
 type DeleteRecordByID interface {
-	GetRecordByID
+	GetPrimaryKey
 	Table
 }
 
@@ -55,7 +54,7 @@ type Pagination struct {
 
 func Insert(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := record.GetPrimaryKey()
+		key := record.GetPrimaryKey("")
 		id := strings.Split(key, ":")[1]
 		if id == "" {
 			return fmt.Errorf("id is empty")
@@ -102,7 +101,7 @@ func Insert(db *buntdb.DB, record GetRecordByIndexes) error {
 
 func Update(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := record.GetPrimaryKey()
+		key := record.GetPrimaryKey("")
 		msgpackValue, err := msgpack.Marshal(record)
 		if err != nil {
 			return err
@@ -141,7 +140,7 @@ func Update(db *buntdb.DB, record GetRecordByIndexes) error {
 
 func Upsert(db *buntdb.DB, record GetRecordByIndexes) error {
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := record.GetPrimaryKey()
+		key := record.GetPrimaryKey("")
 		msgpackValue, err := msgpack.Marshal(record)
 		if err != nil {
 			return err
@@ -336,13 +335,12 @@ func SelectOne[Y any](db *buntdb.DB, pivot string, indexName string) (Y, error) 
 // make sure the id in the primary key is not empty
 func GetByID[Y any](db *buntdb.DB, id string) (Y, error) {
 	result := new(Y)
-	rec, ok := any(result).(GetRecordByID)
+	rec, ok := any(result).(GetPrimaryKey)
 	if !ok {
-		return *result, fmt.Errorf("type %T is not implement Record interface", result)
+		return *result, fmt.Errorf("type %T is not implement GetPrimaryKey interface", result)
 	}
 
-	rec.SetID(id)
-	key := rec.GetPrimaryKey()
+	key := rec.GetPrimaryKey(id)
 	if id == "" {
 		return *result, fmt.Errorf("id is empty")
 	}
@@ -361,12 +359,11 @@ func DeleteByID[Y any](db *buntdb.DB, id string) error {
 	result := new(Y)
 	rec, ok := any(result).(DeleteRecordByID)
 	if !ok {
-		return fmt.Errorf("type %T is not implement Record interface", result)
+		return fmt.Errorf("type %T is not implement DeleteRecordByID interface", result)
 	}
 
-	rec.SetID(id)
 	return db.Update(func(tx *buntdb.Tx) error {
-		key := rec.GetPrimaryKey()
+		key := rec.GetPrimaryKey(id)
 		_, err := tx.Delete(key)
 		if err != nil {
 			return fmt.Errorf("error deleting primary key: %s, %w", key, err)

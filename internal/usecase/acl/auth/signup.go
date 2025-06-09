@@ -47,7 +47,7 @@ type signupRepo struct {
 }
 
 func (r *signupRepo) CreateApplication(app acl.Application) error {
-	return db.Insert(r.db, app)
+	return db.Insert(r.db, &app)
 }
 
 func (r *signupRepo) GetGroupByName(name string) (acl.Group, error) {
@@ -63,11 +63,11 @@ func (r *signupRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, error) 
 }
 
 func (r *signupRepo) CreateApplicationAssignment(assignment acl.ApplicationAssignment) error {
-	return db.Insert(r.db, assignment)
+	return db.Insert(r.db, &assignment)
 }
 
 func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) error {
-	return db.Insert(r.db, history)
+	return db.Insert(r.db, &history)
 }
 
 func (r *signupRepo) GetUserByID(userID string) (acl.User, error) {
@@ -123,7 +123,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, err
 	}
 	userID := uuid.NewString()
-	app := acl.Application{
+	app := &acl.Application{
 		ID:            uuid.NewString(),
 		Title:         fmt.Sprintf("Signup request by %s (%s)", req.Name, req.Username),
 		UserID:        userID,
@@ -133,7 +133,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	if err := uc.repo.CreateApplication(app); err != nil {
+	if err := uc.repo.CreateApplication(*app); err != nil {
 		return SignupResponse{}, err
 	}
 
@@ -168,7 +168,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			continue
 		}
 
-		assignment := acl.ApplicationAssignment{
+		assignment := &acl.ApplicationAssignment{
 			ID:            uuid.NewString(),
 			ApplicationID: app.ID,
 			ReviewerID:    userID,
@@ -177,7 +177,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			UpdatedAt:     time.Now(),
 		}
 
-		if err := uc.repo.CreateApplicationAssignment(assignment); err != nil {
+		if err := uc.repo.CreateApplicationAssignment(*assignment); err != nil {
 			return SignupResponse{}, err
 		}
 	}
@@ -219,7 +219,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, err
 	}
 	// 3. Create ApplicationHistory as "waiting for approval"
-	history := acl.ApplicationHistory{
+	history := &acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
 		Action:        "Create ticket",
@@ -228,6 +228,6 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	_ = uc.repo.CreateApplicationHistory(history)
+	_ = uc.repo.CreateApplicationHistory(*history)
 	return SignupResponse{ApplicationID: app.ID}, nil
 }

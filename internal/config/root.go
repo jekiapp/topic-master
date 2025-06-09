@@ -39,13 +39,13 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	now := time.Now()
 
 	rootGroup := aclmodel.Group{
+		ID:          uuid.NewString(),
 		Name:        aclmodel.GroupRoot,
 		Description: "Main administrator group",
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
 	// fill it now, so that we can use it in the next step
-	rootGroup.ID = rootGroup.GetPrimaryKey()
 	err = usergroup.CreateGroup(db, rootGroup)
 	if err != nil {
 		return errors.New("failed to create root group: " + err.Error())

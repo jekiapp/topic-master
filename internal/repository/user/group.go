@@ -22,5 +22,5 @@ func DeleteGroupByID(dbConn *buntdb.DB, id string) error {
 
 // UpdateGroup updates a group by its ID
 func UpdateGroup(dbConn *buntdb.DB, group acl.Group) error {
-	return db.Update(dbConn, group)
+	return db.Update(dbConn, &group)
 }

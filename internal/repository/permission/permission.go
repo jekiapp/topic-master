@@ -18,7 +18,7 @@ func InitIndexPermission(db *buntdb.DB) error {
 }
 
 func CreatePermission(dbConn *buntdb.DB, permission acl.Permission) error {
-	return db.Insert(dbConn, permission)
+	return db.Insert(dbConn, &permission)
 }
 
 func GetPermissionByNameEntity(dbConn *buntdb.DB, name string, entityID string) (*acl.Permission, error) {

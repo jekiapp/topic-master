@@ -158,7 +158,7 @@ func (r *updateUserRepo) ListUserGroupsByUserID(userID string) ([]acl.UserGroup,
 
 func (r *updateUserRepo) DeleteUserGroupsByUserID(userID string) error {
 	pivot := acl.UserGroup{UserID: userID}
-	return db.DeleteByIndex(r.db, pivot, acl.IdxUserGroup_UserID)
+	return db.DeleteByIndex(r.db, &pivot, acl.IdxUserGroup_UserID)
 }
 
 func (r *updateUserRepo) CreateUserGroup(userGroup acl.UserGroup) error {

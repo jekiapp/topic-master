@@ -18,7 +18,7 @@ func InitIndexUser(db *buntdb.DB) error {
 }
 
 func CreateUser(dbConn *buntdb.DB, user acl.User) error {
-	return db.Insert(dbConn, user)
+	return db.Insert(dbConn, &user)
 }
 
 func GetUserByID(dbConn *buntdb.DB, id string) (acl.User, error) {
@@ -26,11 +26,11 @@ func GetUserByID(dbConn *buntdb.DB, id string) (acl.User, error) {
 }
 
 func UpdateUser(dbConn *buntdb.DB, user acl.User) error {
-	return db.Update(dbConn, user)
+	return db.Update(dbConn, &user)
 }
 
 func UpsertUser(dbConn *buntdb.DB, user acl.User) error {
-	return db.Upsert(dbConn, user)
+	return db.Upsert(dbConn, &user)
 }
 
 func GetUserByUsername(dbConn *buntdb.DB, username string) (acl.User, error) {

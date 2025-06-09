@@ -41,7 +41,7 @@ func (r *saveDescriptionRepo) GetEntityByID(id string) (entity.Entity, error) {
 }
 
 func (r *saveDescriptionRepo) UpdateEntity(entity entity.Entity) error {
-	return updateEntity(r.db, entity)
+	return updateEntity(r.db, &entity)
 }
 
 // SaveDescriptionUsecase handles saving the description for an entity.
@@ -86,6 +86,6 @@ func getEntityByID(db *buntdb.DB, id string) (entity.Entity, error) {
 }
 
 // updateEntity persists the entity using db.Update.
-func updateEntity(db *buntdb.DB, entity entity.Entity) error {
+func updateEntity(db *buntdb.DB, entity *entity.Entity) error {
 	return dbpkg.Update(db, entity)
 }

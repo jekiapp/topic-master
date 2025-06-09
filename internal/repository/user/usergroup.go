@@ -29,7 +29,7 @@ func InitIndexUserGroup(db *buntdb.DB) error {
 }
 
 func CreateUserGroup(dbConn *buntdb.DB, userGroup acl.UserGroup) error {
-	return db.Insert(dbConn, userGroup)
+	return db.Insert(dbConn, &userGroup)
 }
 
 func GetUserGroup(dbConn *buntdb.DB, userID, groupID string) (acl.UserGroup, error) {
@@ -38,7 +38,7 @@ func GetUserGroup(dbConn *buntdb.DB, userID, groupID string) (acl.UserGroup, err
 }
 
 func CreateGroup(dbConn *buntdb.DB, group acl.Group) error {
-	return db.Insert(dbConn, group)
+	return db.Insert(dbConn, &group)
 }
 
 func GetGroupByID(dbConn *buntdb.DB, id string) (acl.Group, error) {

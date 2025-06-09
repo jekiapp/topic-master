@@ -20,8 +20,7 @@ func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, erro
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
-	err := db.Insert(dbConn, *entityObj)
-	if err != nil {
+	if err := db.Insert(dbConn, entityObj); err != nil {
 		return nil, err
 	}
 	return entityObj, nil
@@ -45,7 +44,7 @@ func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]entity.Entity, error) {
 }
 
 func DeleteNsqTopicEntity(dbConn *buntdb.DB, topic string) error {
-	tmp := entity.Entity{TypeID: entity.EntityType_NSQTopic, Name: topic}
+	tmp := &entity.Entity{TypeID: entity.EntityType_NSQTopic, Name: topic}
 	return db.DeleteByIndex(dbConn, tmp, entity.IdxEntity_TypeName)
 }
 

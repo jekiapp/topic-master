@@ -40,7 +40,7 @@ type applicationRepo struct {
 }
 
 func (r *applicationRepo) CreateApplication(app acl.Application) error {
-	return db.Insert(r.db, app)
+	return db.Insert(r.db, &app)
 }
 
 func (r *applicationRepo) GetApplicationByUserAndPermission(userID, permissionKey string) (acl.Application, error) {
@@ -106,7 +106,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 	}
 
 	// 3. Create the application
-	app := acl.Application{
+	app := &acl.Application{
 		ID:            uuid.NewString(),
 		UserID:        req.UserID,
 		PermissionIDs: []string{req.PermissionID},
@@ -115,7 +115,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	if err := uc.repo.CreateApplication(app); err != nil {
+	if err := uc.repo.CreateApplication(*app); err != nil {
 		return CreateApplicationResponse{}, err
 	}
 
@@ -149,7 +149,7 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 
 	// 7. Create assignment for each admin/root user
 	for _, adminID := range adminIDs {
-		assignment := acl.ApplicationAssignment{
+		assignment := &acl.ApplicationAssignment{
 			ID:            uuid.NewString(),
 			ApplicationID: app.ID,
 			ReviewerID:    adminID,
@@ -157,8 +157,8 @@ func (uc CreateApplicationUsecase) Handle(ctx context.Context, req CreateApplica
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
 		}
-		_ = uc.repo.CreateApplicationAssignment(assignment)
+		_ = uc.repo.CreateApplicationAssignment(*assignment)
 	}
 
-	return CreateApplicationResponse{Application: app}, nil
+	return CreateApplicationResponse{Application: *app}, nil
 }

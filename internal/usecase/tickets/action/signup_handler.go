@@ -209,7 +209,7 @@ func (r *signupRepo) GetApplicationByID(id string) (acl.Application, error) {
 }
 
 func (r *signupRepo) UpdateApplication(app acl.Application) error {
-	return db.Update(r.db, app)
+	return db.Update(r.db, &app)
 }
 
 func (r *signupRepo) ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error) {
@@ -217,11 +217,11 @@ func (r *signupRepo) ListAssignmentsByApplicationID(appID string) ([]acl.Applica
 }
 
 func (r *signupRepo) UpdateApplicationAssignment(assignment acl.ApplicationAssignment) error {
-	return db.Update(r.db, assignment)
+	return db.Update(r.db, &assignment)
 }
 
 func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) error {
-	return db.Insert(r.db, history)
+	return db.Insert(r.db, &history)
 }
 
 func (r *signupRepo) GetUserPendingByID(userID string) (acl.UserPending, error) {
@@ -229,7 +229,7 @@ func (r *signupRepo) GetUserPendingByID(userID string) (acl.UserPending, error) 
 }
 
 func (r *signupRepo) CreateUser(user acl.User) error {
-	return db.Insert(r.db, user)
+	return db.Insert(r.db, &user)
 }
 
 func (r *signupRepo) UpdateUserPending(user acl.UserPending) error {

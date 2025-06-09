@@ -12,7 +12,7 @@ const permissionApplicationPrefix = "permission_application:"
 const applicationAssignmentPrefix = "application_assignment:"
 
 func CreateApplication(db *buntdb.DB, app acl.Application) error {
-	return dbpkg.Insert(db, app)
+	return dbpkg.Insert(db, &app)
 }
 
 func GetApplicationByUserAndPermission(db *buntdb.DB, userID, permissionID string) (acl.Application, error) {
@@ -32,7 +32,7 @@ func GetApplicationByUserAndPermission(db *buntdb.DB, userID, permissionID strin
 }
 
 func CreateApplicationAssignment(db *buntdb.DB, assignment acl.ApplicationAssignment) error {
-	return dbpkg.Insert(db, assignment)
+	return dbpkg.Insert(db, &assignment)
 }
 
 // InitIndexApplication registers indexes for Application, ApplicationAssignment, and ApplicationHistory

@@ -49,7 +49,7 @@ func (r *loginRepo) ListGroupsForUser(userID string) ([]acl.GroupRole, error) {
 }
 
 func (r *loginRepo) InsertResetPassword(rp acl.ResetPassword) error {
-	return dbPkg.Insert(r.db, rp)
+	return dbPkg.Insert(r.db, &rp)
 }
 
 type LoginUsecase struct {
@@ -105,13 +105,13 @@ func (uc LoginUsecase) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		token := hex.EncodeToString(tokenBytes)
 		expiresAt := time.Now().Add(1 * time.Hour).Unix()
-		rp := acl.ResetPassword{
+		rp := &acl.ResetPassword{
 			Token:     token,
 			Username:  user.Username,
 			CreatedAt: time.Now().Unix(),
 			ExpiresAt: expiresAt,
 		}
-		if err := uc.repo.InsertResetPassword(rp); err != nil {
+		if err := uc.repo.InsertResetPassword(*rp); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "failed to save reset token"})
 			return
@@ -166,7 +166,7 @@ func (uc LoginUsecase) doLogin(ctx context.Context, req LoginRequest) (LoginResp
 		}
 		token := hex.EncodeToString(tokenBytes)
 		expiresAt := time.Now().Add(1 * time.Hour).Unix()
-		rp := acl.ResetPassword{
+		rp := &acl.ResetPassword{
 			Token:     token,
 			Username:  user.Username,
 			CreatedAt: time.Now().Unix(),
