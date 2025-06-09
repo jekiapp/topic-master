@@ -10,24 +10,27 @@ import (
 )
 
 func ToggleBookmark(dbConn *buntdb.DB, entityID, userID string, bookmark bool) error {
-	primaryKey := entity.TableBookmark + ":" + entityID + ":" + userID
+	b := &entity.Bookmark{
+		EntityID: entityID,
+		UserID:   userID,
+	}
 	if bookmark {
 		// Create mapping
-		b := entity.Bookmark{
-			EntityID:  entityID,
-			UserID:    userID,
-			CreatedAt: time.Now(),
-		}
+		b.CreatedAt = time.Now()
 		return db.Insert(dbConn, b)
 	} else {
 		// Delete mapping
-		return db.DeleteByID[entity.Bookmark](dbConn, primaryKey)
+		return db.DeleteByID[entity.Bookmark](dbConn, b.GetPrimaryKey(""))
 	}
 }
 
 func IsBookmarked(dbConn *buntdb.DB, entityID, userID string) (bool, error) {
-	primaryKey := entity.TableBookmark + ":" + entityID + ":" + userID
-	_, err := db.GetByID[entity.Bookmark](dbConn, primaryKey)
+	b := &entity.Bookmark{
+		EntityID: entityID,
+		UserID:   userID,
+	}
+	key := b.GetPrimaryKey("")
+	_, err := db.GetByID[entity.Bookmark](dbConn, key)
 	if err != nil {
 		if errors.Is(err, buntdb.ErrNotFound) {
 			return false, nil

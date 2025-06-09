@@ -12,6 +12,7 @@ package entity
 import (
 	"context"
 	"errors"
+	"strings"
 
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	"github.com/jekiapp/topic-master/pkg/util"
@@ -19,8 +20,8 @@ import (
 )
 
 type ToggleBookmarkInput struct {
-	EntityID string
-	Bookmark bool
+	EntityID string `json:"entity_id"`
+	Bookmark bool   `json:"bookmark"`
 }
 
 type ToggleBookmarkResponse struct {
@@ -50,6 +51,9 @@ func (uc ToggleBookmarkUsecase) Toggle(ctx context.Context, input ToggleBookmark
 	}
 	err := uc.repo.ToggleBookmark(input.EntityID, userInfo.ID, input.Bookmark)
 	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return ToggleBookmarkResponse{Message: "Bookmark already exists"}, nil
+		}
 		return ToggleBookmarkResponse{Message: "Failed to toggle bookmark"}, err
 	}
 	return ToggleBookmarkResponse{Message: "Bookmark toggled successfully"}, nil

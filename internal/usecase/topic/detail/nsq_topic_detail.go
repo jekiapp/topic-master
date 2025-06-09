@@ -77,12 +77,22 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		}
 	}
 
+	// --- Fill Bookmarked ---
+	bookmarked := false
+	user := util.GetUserInfo(ctx)
+	if user != nil && user.ID != "" {
+		isB, err := entityrepo.IsBookmarked(uc.repo.(*nsqTopicDetailRepo).db, ent.ID, user.ID)
+		if err == nil {
+			bookmarked = isB
+		}
+	}
+
 	resp := NsqTopicDetailResponse{
 		ID:           ent.ID,
 		Name:         ent.Name,
 		EventTrigger: ent.Description,
 		GroupOwner:   ent.GroupOwner,
-		Bookmarked:   false, // TODO: fill later
+		Bookmarked:   bookmarked,
 		Permission:   permission,
 		NsqdHosts:    nsqdHosts,
 	}
@@ -101,7 +111,6 @@ type PublishMessageInput struct {
 
 func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input PublishMessageInput) (PublishMessageResponse, error) {
 	host := input.NsqdHosts[0]
-	// host = "http://" + host
 	err := nsqrepo.Publish(input.Topic, input.Message, host)
 	if err != nil {
 		return PublishMessageResponse{}, fmt.Errorf("error publishing message: %v", err)
