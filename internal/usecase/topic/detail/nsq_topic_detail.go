@@ -121,7 +121,7 @@ func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input Publish
 }
 
 type iNsqTopicDetailRepo interface {
-	GetEntityByID(id string) (*entity.Entity, error)
+	GetEntityByID(id string) (entity.Entity, error)
 	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
 }
 
@@ -129,7 +129,7 @@ type nsqTopicDetailRepo struct {
 	db *buntdb.DB
 }
 
-func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (*entity.Entity, error) {
+func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (entity.Entity, error) {
 	return entityrepo.GetEntityByID(r.db, topic)
 }
 

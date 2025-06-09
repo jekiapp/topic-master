@@ -21,7 +21,9 @@ const (
 )
 
 func (b *Bookmark) GetPrimaryKey(id string) string {
-	// ignore id
+	if id != "" {
+		return id
+	}
 	return TableBookmark + ":" + b.EntityID + ":" + b.UserID
 }
 

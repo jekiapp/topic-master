@@ -23,13 +23,13 @@ func InitIndexEntity(db *buntdb.DB) error {
 }
 
 // format id = nsqtopic:topic_name
-func GetEntityByID(dbConn *buntdb.DB, id string) (*entity.Entity, error) {
-	entityObj, err := db.GetByID[*entity.Entity](dbConn, id)
+func GetEntityByID(dbConn *buntdb.DB, id string) (entity.Entity, error) {
+	entityObj, err := db.GetByID[entity.Entity](dbConn, id)
 	if err != nil {
-		return nil, err
+		return entity.Entity{}, err
 	}
 	if entityObj.ID != id {
-		return nil, fmt.Errorf("entity not found")
+		return entity.Entity{}, fmt.Errorf("entity not found")
 	}
 	return entityObj, nil
 }
