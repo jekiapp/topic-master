@@ -50,6 +50,8 @@ type Handler struct {
 	tailMessageUC           *topicDetailUC.TailMessageUsecase
 	updateDescriptionUC     entityUC.SaveDescriptionUsecase
 	toggleBookmarkUC        entityUC.ToggleBookmarkUsecase
+	deleteTopicUC           topicDetailUC.DeleteTopicUsecase
+	nsqOpsPauseEmptyUC      topicDetailUC.NsqOpsPauseEmptyUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -86,15 +88,19 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(),
 		updateDescriptionUC:     entityUC.NewSaveDescriptionUsecase(db),
 		toggleBookmarkUC:        entityUC.NewToggleBookmarkUsecase(db),
+		deleteTopicUC:           topicDetailUC.NewDeleteTopicUsecase(cfg, db),
+		nsqOpsPauseEmptyUC:      topicDetailUC.NewNsqOpsPauseEmptyUsecase(cfg, db),
 	}
 }
 
 func (h Handler) routes(mux *http.ServeMux) {
-	// this middleware is login only
+	// this middleware is login required
 	authMiddleware := handlerPkg.InitJWTMiddleware(string(h.config.SecretKey))
+
 	// this middleware is login optional
 	sessionMiddleware := handlerPkg.InitSessionMiddleware(string(h.config.SecretKey))
-	// this middleware is root only
+
+	// this middleware is root access only
 	rootMiddleware := handlerPkg.InitJWTMiddlewareWithRoot(string(h.config.SecretKey))
 
 	mux.HandleFunc("/api/login", h.loginUC.Handle)
@@ -133,12 +139,15 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.HandleGenericGet(h.getUsernameUC.Handle)))
 
 	mux.HandleFunc("/api/topic/detail", sessionMiddleware(handlerPkg.HandleGenericGet(h.getTopicDetailUC.HandleQuery)))
-	mux.HandleFunc("/api/topic/stats", handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery))
+	mux.HandleFunc("/api/topic/stats", sessionMiddleware(handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery)))
 	mux.HandleFunc("/api/topic/publish", sessionMiddleware(handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish)))
 	mux.HandleFunc("/api/topic/tail", sessionMiddleware(h.tailMessageUC.HandleTailMessage))
 
 	mux.HandleFunc("/api/entity/update-description", sessionMiddleware(handlerPkg.HandleGenericPost(h.updateDescriptionUC.Save)))
 	mux.HandleFunc("/api/entity/toggle-bookmark", authMiddleware(handlerPkg.HandleGenericPost(h.toggleBookmarkUC.Toggle)))
+
+	mux.HandleFunc("/api/topic/delete", sessionMiddleware(handlerPkg.HandleGenericPost(h.deleteTopicUC.Handle)))
+	mux.HandleFunc("/api/topic/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericPost(h.nsqOpsPauseEmptyUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
