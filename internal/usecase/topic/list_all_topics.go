@@ -6,6 +6,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	dbPkg "github.com/jekiapp/topic-master/pkg/db"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -28,6 +29,11 @@ func NewListAllTopicsUsecase(db *buntdb.DB) ListAllTopicsUsecase {
 	}
 }
 
+type ListAllTopicsUsecase struct {
+	db   *buntdb.DB
+	repo iListTopicsRepo
+}
+
 // HandleQuery handles HTTP query for listing topics by group.
 // params should contain "group" key.
 func (uc ListAllTopicsUsecase) HandleQuery(ctx context.Context, params map[string]string) (ListTopicsResponse, error) {
@@ -38,13 +44,25 @@ func (uc ListAllTopicsUsecase) HandleQuery(ctx context.Context, params map[strin
 		return ListTopicsResponse{}, err
 	}
 	topics := make([]TopicResponse, len(topicEntities))
+	user := util.GetUserInfo(ctx)
+	userID := ""
+	if user != nil {
+		userID = user.ID
+	}
 	for i, t := range topicEntities {
+		bookmarked := false
+		if userID != "" {
+			b, err := uc.repo.IsBookmarked(t.ID, userID)
+			if err == nil {
+				bookmarked = b
+			}
+		}
 		topics[i] = TopicResponse{
 			ID:           t.ID,
 			Name:         t.Name,
 			EventTrigger: t.Description,
 			GroupOwner:   t.GroupOwner,
-			Bookmarked:   i%2 == 0, // todo: get data from db later
+			Bookmarked:   bookmarked,
 		}
 	}
 	return ListTopicsResponse{Topics: topics}, nil
@@ -53,6 +71,7 @@ func (uc ListAllTopicsUsecase) HandleQuery(ctx context.Context, params map[strin
 type iListTopicsRepo interface {
 	ListNsqTopicEntitiesByGroup(group string) ([]entity.Entity, error)
 	GetAllNsqTopicEntities() ([]entity.Entity, error)
+	IsBookmarked(entityID, userID string) (bool, error)
 }
 
 type listTopicsRepo struct {
@@ -67,7 +86,6 @@ func (r *listTopicsRepo) GetAllNsqTopicEntities() ([]entity.Entity, error) {
 	return entityrepo.GetAllNsqTopicEntities(r.db)
 }
 
-type ListAllTopicsUsecase struct {
-	db   *buntdb.DB
-	repo iListTopicsRepo
+func (r *listTopicsRepo) IsBookmarked(entityID, userID string) (bool, error) {
+	return entityrepo.IsBookmarked(r.db, entityID, userID)
 }

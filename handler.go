@@ -122,7 +122,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/group/update-group-by-id", rootMiddleware(handlerPkg.HandleGenericPost(h.updateGroupByIDUC.Handle)))
 	mux.HandleFunc("/api/group/delete-group", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
-	mux.HandleFunc("/api/topic/list-all-topics", handlerPkg.HandleGenericGet(h.listAllTopicsUC.HandleQuery))
+	mux.HandleFunc("/api/topic/list-all-topics", sessionMiddleware(handlerPkg.HandleGenericGet(h.listAllTopicsUC.HandleQuery)))
 
 	mux.HandleFunc("/api/reset-password", handlerPkg.HandleGetPost(
 		h.resetPasswordUC.HandleGet,
