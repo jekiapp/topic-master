@@ -1,0 +1,31 @@
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+#modal-overlay .modal-content {
+    background: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+    font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+    #modal-overlay .modal-content {
+        padding: 1rem;
+        max-width: 98vw;
+        max-height: 90vh;
+    }
+} 

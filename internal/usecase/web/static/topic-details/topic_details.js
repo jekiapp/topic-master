@@ -280,6 +280,132 @@ $(function() {
             return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
         });
     }
+
+    // --- Action buttons: Pause, Delete, Empty Queue ---
+    $('.btn-pause').on('click', function() {
+        if (!currentTopicDetail) return;
+        var $btn = $(this);
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: '/api/topic/nsq/pause',
+            method: 'GET',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: currentTopicDetail.id }),
+            success: function(resp) {
+                showStatus('Topic paused successfully', 'green');
+            },
+            error: function(xhr) {
+                var msg = 'Failed to pause topic';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg += ': ' + xhr.responseJSON.error;
+                }
+                showStatus(msg, 'red');
+            },
+            complete: function() {
+                $btn.prop('disabled', false);
+            }
+        });
+    });
+
+    $('.btn-delete').on('click', function() {
+        if (!currentTopicDetail) return;
+        var modalHtml = [
+            '<div style="text-align:center;">',
+            '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to delete this topic? This cannot be undone.</div>',
+            '<button id="modal-delete-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Delete</button>',
+            '<button id="modal-delete-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+            '</div>'
+        ].join('');
+        window.parent.showModalOverlay(modalHtml);
+        setTimeout(function() {
+            $('#modal-delete-confirm', window.parent.document).off('click').on('click', function() {
+                var $btn = $('.btn-delete');
+                $btn.prop('disabled', true);
+                window.parent.hideModalOverlay();
+                $.ajax({
+                    url: '/api/topic/delete',
+                    method: 'GET',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: currentTopicDetail.id }),
+                    success: function(resp) {
+                        showStatus('Topic deleted successfully', 'green');
+                        setTimeout(function() { window.location.href = '/'; }, 1200);
+                    },
+                    error: function(xhr) {
+                        var msg = 'Failed to delete topic';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            msg += ': ' + xhr.responseJSON.error;
+                        }
+                        showStatus(msg, 'red');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            });
+            $('#modal-delete-cancel', window.parent.document).off('click').on('click', function() {
+                window.parent.hideModalOverlay();
+            });
+        }, 0);
+    });
+
+    $('.btn-empty').on('click', function() {
+        if (!currentTopicDetail) return;
+        // Use modal overlay for confirmation
+        
+            var modalHtml = [
+                '<div style="text-align:center;">',
+                '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to empty the queue for this topic? This cannot be undone.</div>',
+                '<button id="modal-empty-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Empty</button>',
+                '<button id="modal-empty-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+                '</div>'
+            ].join('');
+            window.parent.showModalOverlay(modalHtml);
+            // Attach handlers after modal is shown
+            setTimeout(function() {
+                $('#modal-empty-confirm', window.parent.document).off('click').on('click', function() {
+                    var $btn = $('.btn-empty');
+                    $btn.prop('disabled', true);
+                    window.parent.hideModalOverlay();
+                    $.ajax({
+                        url: '/api/topic/nsq/empty',
+                        method: 'GET',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: currentTopicDetail.id }),
+                        success: function(resp) {
+                            showStatus('Queue emptied successfully', 'green');
+                            refreshStats();
+                        },
+                        error: function(xhr) {
+                            var msg = 'Failed to empty queue';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                msg += ': ' + xhr.responseJSON.error;
+                            }
+                            showStatus(msg, 'red');
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+                $('#modal-empty-cancel', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                });
+        }, 0);
+    });
+
+    // Helper to show status messages
+    function showStatus(msg, color) {
+        var $status = $('#topic-action-status');
+        if (!$status.length) {
+            $('.topic-actions').append('<div id="topic-action-status" style="margin-top:6px;font-size:0.98em;"></div>');
+            $status = $('#topic-action-status');
+        }
+        $status.text(msg).css('color', color || 'black');
+        if (color === 'green') {
+            setTimeout(function() { $status.text(''); }, 2000);
+        }
+    }
 });
 
 // Helper: get topic name from URL (e.g., ?topic=MyTopic)

@@ -71,8 +71,12 @@ func NewDeleteTopicUsecase(cfg *config.Config, db *buntdb.DB) DeleteTopicUsecase
 	}
 }
 
-func (uc DeleteTopicUsecase) Handle(ctx context.Context, input DeleteTopicInput) (DeleteTopicResponse, error) {
-	ent, err := uc.repo.GetEntityByID(input.ID)
+func (uc DeleteTopicUsecase) Handle(ctx context.Context, params map[string]string) (DeleteTopicResponse, error) {
+	id, ok := params["id"]
+	if !ok {
+		return DeleteTopicResponse{}, fmt.Errorf("id is required")
+	}
+	ent, err := uc.repo.GetEntityByID(id)
 	if err != nil {
 		return DeleteTopicResponse{}, fmt.Errorf("entity not found: %w", err)
 	}

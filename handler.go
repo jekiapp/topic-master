@@ -146,9 +146,9 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/entity/update-description", sessionMiddleware(handlerPkg.HandleGenericPost(h.updateDescriptionUC.Save)))
 	mux.HandleFunc("/api/entity/toggle-bookmark", authMiddleware(handlerPkg.HandleGenericPost(h.toggleBookmarkUC.Toggle)))
 
-	mux.HandleFunc("/api/topic/delete", sessionMiddleware(handlerPkg.HandleGenericPost(h.deleteTopicUC.Handle)))
-	mux.HandleFunc("/api/topic/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericPost(h.nsqOpsPauseEmptyUC.HandlePause)))
-	mux.HandleFunc("/api/topic/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericPost(h.nsqOpsPauseEmptyUC.HandleEmpty)))
+	mux.HandleFunc("/api/topic/delete", sessionMiddleware(handlerPkg.HandleGenericGet(h.deleteTopicUC.Handle)))
+	mux.HandleFunc("/api/topic/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandlePause)))
+	mux.HandleFunc("/api/topic/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleEmpty)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
