@@ -67,16 +67,19 @@ $(function() {
   }
 
   function setActiveMenuByHash(hash) {
-    $('.menu li a').removeClass('active');
     if (hash === '#access') {
+      $('.menu li a').removeClass('active');
       accessControlMenu.addClass('active');
     } else if (hash === '#tickets' || hash.startsWith('#ticket-detail')) {
+    $('.menu li a').removeClass('active');
       ticketsMenu.addClass('active');
     } else if (hash === '#all-topics') {
+      $('.menu li a').removeClass('active');
       allTopicsMenu.addClass('active');
-    } else {
+    } else if (hash === '#my-topics' || hash === '') {
+      $('.menu li a').removeClass('active');
       myTopicsMenu.addClass('active');
-    }
+    } 
   }
 
   const ticketsMenu = $('.menu li a').filter(function() {

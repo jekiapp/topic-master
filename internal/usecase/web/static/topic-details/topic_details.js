@@ -156,6 +156,7 @@ $(function() {
 
     // Back button (optional: history.back or custom logic)
     $('#back-link').on('click', function() {
+        // Parse back parameter from hash
         window.history.back();
     });
 
