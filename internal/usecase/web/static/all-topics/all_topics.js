@@ -37,7 +37,7 @@ $(function() {
         if ($(e.target).hasClass('bookmark-icon')) return;
         const id = $(this).data('id');
         if (id) {
-            window.parent.location.hash = `topic-detail?id=${id}`;
+            window.parent.location.hash = `topic-detail?id=${id}&back=all-topics`;
         }
       });
       // Add click handler for bookmark icon

@@ -157,7 +157,14 @@ $(function() {
     // Back button (optional: history.back or custom logic)
     $('#back-link').on('click', function() {
         // Parse back parameter from hash
-        window.history.back();
+        var hash = window.parent.location.hash || '';
+        var backMatch = hash.match(/back=([^&]+)/);
+        var back = backMatch ? decodeURIComponent(backMatch[1]) : null;
+        if (back) {
+            window.parent.location.hash = `#${back}`;
+        } else {
+            window.history.back();
+        }
     });
 
     // --- Autorefresh logic ---

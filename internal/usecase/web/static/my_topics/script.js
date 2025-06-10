@@ -30,7 +30,7 @@ $(function() {
       $('#topics-table').off('click', '.topic-row').on('click', '.topic-row', function() {
         const id = $(this).data('id');
         if (id) {
-            window.parent.location.hash = `topic-detail?id=${id}`;
+            window.parent.location.hash = `topic-detail?id=${id}&back=my-topics`;
         }
       });
     },
