@@ -1,0 +1,114 @@
+// this usecase is for pausing and emptying topic
+// it will receive param id and action
+// logic:
+// 1. get entity by id
+// 2. if the entity resource is not NSQ then error
+// 3. if the action is pause then pause topic
+// 4. if the action is empty then empty_queue topic
+
+package detail
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/model/entity"
+	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
+	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
+	"github.com/tidwall/buntdb"
+)
+
+// Input struct for pausing or emptying a topic
+// json alias for API compatibility
+// Example: {"id": "entity_id", "action": "pause"}
+type NsqOpsPauseEmptyInput struct {
+	ID     string `json:"id"`
+	Action string `json:"action"`
+}
+
+type NsqOpsPauseEmptyResponse struct {
+	Message string `json:"message"`
+}
+
+type NsqOpsPauseEmptyUsecase struct {
+	cfg  *config.Config
+	repo iNsqOpsPauseEmptyRepo
+}
+
+type iNsqOpsPauseEmptyRepo interface {
+	GetEntityByID(id string) (entity.Entity, error)
+	GetNsqdHosts(lookupdURL, topicName string) ([]string, error)
+	PauseTopicOnNsqd(host, topic string) error
+	EmptyTopicOnNsqd(host, topic string) error
+}
+
+type nsqOpsPauseEmptyRepo struct {
+	db *buntdb.DB
+}
+
+func (r *nsqOpsPauseEmptyRepo) GetEntityByID(id string) (entity.Entity, error) {
+	return entityrepo.GetEntityByID(r.db, id)
+}
+
+func (r *nsqOpsPauseEmptyRepo) GetNsqdHosts(lookupdURL, topicName string) ([]string, error) {
+	nsqds, err := nsqrepo.GetNsqdsForTopic(lookupdURL, topicName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting nsqds for topic: %v", err)
+	}
+	hosts := make([]string, 0, len(nsqds))
+	for _, n := range nsqds {
+		hosts = append(hosts, fmt.Sprintf("%s:%d", n.BroadcastAddress, n.HTTPPort))
+	}
+	return hosts, nil
+}
+
+func (r *nsqOpsPauseEmptyRepo) PauseTopicOnNsqd(host, topic string) error {
+	return nsqrepo.PauseTopicOnNsqd(host, topic)
+}
+
+func (r *nsqOpsPauseEmptyRepo) EmptyTopicOnNsqd(host, topic string) error {
+	return nsqrepo.EmptyTopicOnNsqd(host, topic)
+}
+
+func NewNsqOpsPauseEmptyUsecase(cfg *config.Config, db *buntdb.DB) NsqOpsPauseEmptyUsecase {
+	return NsqOpsPauseEmptyUsecase{
+		cfg:  cfg,
+		repo: &nsqOpsPauseEmptyRepo{db: db},
+	}
+}
+
+func (uc NsqOpsPauseEmptyUsecase) Handle(ctx context.Context, input NsqOpsPauseEmptyInput) (NsqOpsPauseEmptyResponse, error) {
+	ent, err := uc.repo.GetEntityByID(input.ID)
+	if err != nil {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("entity not found: %w", err)
+	}
+
+	if ent.Resource != "NSQ" {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("entity resource is not NSQ")
+	}
+
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, ent.Name)
+	if err != nil {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
+	}
+
+	switch input.Action {
+	case "pause":
+		for _, host := range nsqdHosts {
+			if err := uc.repo.PauseTopicOnNsqd(host, ent.Name); err != nil {
+				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", host, err)
+			}
+		}
+		return NsqOpsPauseEmptyResponse{Message: "Topic paused successfully"}, nil
+	case "empty":
+		for _, host := range nsqdHosts {
+			if err := uc.repo.EmptyTopicOnNsqd(host, ent.Name); err != nil {
+				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to empty topic on nsqd host %s: %w", host, err)
+			}
+		}
+		return NsqOpsPauseEmptyResponse{Message: "Topic emptied successfully"}, nil
+	default:
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("invalid action: %s", input.Action)
+	}
+}

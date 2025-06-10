@@ -47,16 +47,16 @@ func NewNsqTopicDetailUsecase(cfg *config.Config, db *buntdb.DB) NsqTopicDetailU
 
 // params should contain "topic" and "lookupd_url" keys
 func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[string]string) (NsqTopicDetailResponse, error) {
-	topic, ok := params["topic"]
+	entityID, ok := params["topic"]
 	if !ok {
 		return NsqTopicDetailResponse{}, nil // or return error
 	}
 
-	ent, err := uc.repo.GetEntityByID(topic)
+	ent, err := uc.repo.GetEntityByID(entityID)
 	if err != nil {
 		return NsqTopicDetailResponse{}, fmt.Errorf("error getting topic entity: %v", err)
 	}
-	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, topic)
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, entityID)
 	if err != nil {
 		nsqdHosts = nil // or log error, but don't fail the whole response
 	}

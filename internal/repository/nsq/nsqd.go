@@ -65,3 +65,48 @@ func GetTopicStats(nsqdHost, topic string) (depth int, messages int, err error) 
 	}
 	return 0, 0, fmt.Errorf("topic %s not found in nsqd stats", topic)
 }
+
+// DeleteTopicFromNsqd deletes a topic from the given nsqd host
+func DeleteTopicFromNsqd(host, topic string) error {
+	url := fmt.Sprintf("http://%s/topic/delete?topic=%s", host, topic)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete topic from nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
+
+// PauseTopicOnNsqd pauses a topic on the given nsqd host
+func PauseTopicOnNsqd(host, topic string) error {
+	url := fmt.Sprintf("http://%s/topic/pause?topic=%s", host, topic)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to pause topic on nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
+
+// EmptyTopicOnNsqd empties a topic on the given nsqd host
+func EmptyTopicOnNsqd(host, topic string) error {
+	url := fmt.Sprintf("http://%s/topic/empty?topic=%s", host, topic)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to empty topic on nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
