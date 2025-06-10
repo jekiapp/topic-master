@@ -110,3 +110,35 @@ func EmptyTopicOnNsqd(host, topic string) error {
 	}
 	return nil
 }
+
+// IsTopicPausedOnNsqd checks if a topic is paused on the given nsqd host
+func IsTopicPausedOnNsqd(host, topic string) (bool, error) {
+	url := fmt.Sprintf("http://%s/stats?format=json", host)
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("nsqd returned status %d", resp.StatusCode)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+	var parsed struct {
+		Topics []struct {
+			TopicName string `json:"topic_name"`
+			Paused    bool   `json:"paused"`
+		} `json:"topics"`
+	}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return false, err
+	}
+	for _, t := range parsed.Topics {
+		if t.TopicName == topic {
+			return t.Paused, nil
+		}
+	}
+	return false, fmt.Errorf("topic %s not found in nsqd stats", topic)
+}

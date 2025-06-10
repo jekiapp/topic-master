@@ -15,13 +15,18 @@ import (
 )
 
 type NsqTopicDetailResponse struct {
-	ID           string     `json:"id"`
-	Name         string     `json:"name"`
-	EventTrigger string     `json:"event_trigger"`
-	GroupOwner   string     `json:"group_owner"`
-	Bookmarked   bool       `json:"bookmarked"`
-	Permission   Permission `json:"permission"`
-	NsqdHosts    []string   `json:"nsqd_hosts"`
+	ID             string         `json:"id"`
+	Name           string         `json:"name"`
+	EventTrigger   string         `json:"event_trigger"`
+	GroupOwner     string         `json:"group_owner"`
+	Bookmarked     bool           `json:"bookmarked"`
+	Permission     Permission     `json:"permission"`
+	NsqdHosts      []string       `json:"nsqd_hosts"`
+	PlatformStatus PlatformStatus `json:"platform_status"`
+}
+
+type PlatformStatus struct {
+	IsPaused bool `json:"is_paused"`
 }
 
 type Permission struct {

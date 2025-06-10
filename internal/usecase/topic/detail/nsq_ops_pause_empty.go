@@ -13,6 +13,7 @@ import (
 	"fmt"
 
 	"github.com/jekiapp/topic-master/internal/config"
+	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
@@ -41,6 +42,7 @@ type iNsqOpsPauseEmptyRepo interface {
 	GetNsqdHosts(lookupdURL, topicName string) ([]string, error)
 	PauseTopicOnNsqd(host, topic string) error
 	EmptyTopicOnNsqd(host, topic string) error
+	IsTopicPausedOnNsqd(host, topic string) (bool, error)
 }
 
 type nsqOpsPauseEmptyRepo struct {
@@ -52,15 +54,7 @@ func (r *nsqOpsPauseEmptyRepo) GetEntityByID(id string) (entity.Entity, error) {
 }
 
 func (r *nsqOpsPauseEmptyRepo) GetNsqdHosts(lookupdURL, topicName string) ([]string, error) {
-	nsqds, err := nsqrepo.GetNsqdsForTopic(lookupdURL, topicName)
-	if err != nil {
-		return nil, fmt.Errorf("error getting nsqds for topic: %v", err)
-	}
-	hosts := make([]string, 0, len(nsqds))
-	for _, n := range nsqds {
-		hosts = append(hosts, fmt.Sprintf("%s:%d", n.BroadcastAddress, n.HTTPPort))
-	}
-	return hosts, nil
+	return nsqlogic.GetNsqdHosts(lookupdURL, topicName)
 }
 
 func (r *nsqOpsPauseEmptyRepo) PauseTopicOnNsqd(host, topic string) error {
@@ -69,6 +63,10 @@ func (r *nsqOpsPauseEmptyRepo) PauseTopicOnNsqd(host, topic string) error {
 
 func (r *nsqOpsPauseEmptyRepo) EmptyTopicOnNsqd(host, topic string) error {
 	return nsqrepo.EmptyTopicOnNsqd(host, topic)
+}
+
+func (r *nsqOpsPauseEmptyRepo) IsTopicPausedOnNsqd(host, topic string) (bool, error) {
+	return nsqrepo.IsTopicPausedOnNsqd(host, topic)
 }
 
 func NewNsqOpsPauseEmptyUsecase(cfg *config.Config, db *buntdb.DB) NsqOpsPauseEmptyUsecase {
@@ -83,7 +81,38 @@ func (uc NsqOpsPauseEmptyUsecase) HandlePause(ctx context.Context, params map[st
 	if !ok {
 		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("id is required")
 	}
-	return uc.doNsqOps(ctx, id, "pause")
+	ent, err := uc.repo.GetEntityByID(id)
+	if err != nil {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("entity not found: %w", err)
+	}
+
+	if ent.Resource != "NSQ" {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("entity resource is not NSQ")
+	}
+
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, ent.Name)
+	if err != nil {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
+	}
+	pausedHosts := 0
+	for _, host := range nsqdHosts {
+		paused, err := uc.repo.IsTopicPausedOnNsqd(host, ent.Name)
+		if err != nil {
+			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to check paused status on nsqd host %s: %w", host, err)
+		}
+		if paused {
+			pausedHosts++
+		}
+	}
+	if pausedHosts == len(nsqdHosts) {
+		return NsqOpsPauseEmptyResponse{Message: "Topic is already paused on all hosts"}, nil
+	}
+	for _, host := range nsqdHosts {
+		if err := uc.repo.PauseTopicOnNsqd(host, ent.Name); err != nil {
+			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", host, err)
+		}
+	}
+	return NsqOpsPauseEmptyResponse{Message: "Topic paused successfully"}, nil
 }
 
 func (uc NsqOpsPauseEmptyUsecase) HandleEmpty(ctx context.Context, params map[string]string) (NsqOpsPauseEmptyResponse, error) {

@@ -137,6 +137,13 @@ $(function() {
         $('.btn-delete').prop('disabled', !detail.permission.can_delete);
         $('.btn-drain').prop('disabled', !detail.permission.can_empty_queue);
 
+        // Set Pause button label based on paused status
+        if (detail.platform_status && detail.platform_status.is_paused) {
+            $('.btn-pause').text('Resume');
+        } else {
+            $('.btn-pause').text('Pause');
+        }
+
         // Fetch topic stats using hosts and topic name
         fetchAndUpdateStats(detail);
     }).fail(function() {
@@ -284,27 +291,42 @@ $(function() {
     // --- Action buttons: Pause, Delete, Empty Queue ---
     $('.btn-pause').on('click', function() {
         if (!currentTopicDetail) return;
-        var $btn = $(this);
-        $btn.prop('disabled', true);
-        $.ajax({
-            url: '/api/topic/nsq/pause',
-            method: 'GET',
-            contentType: 'application/json',
-            data: JSON.stringify({ id: currentTopicDetail.id }),
-            success: function(resp) {
-                showStatus('Topic paused successfully', 'green');
-            },
-            error: function(xhr) {
-                var msg = 'Failed to pause topic';
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    msg += ': ' + xhr.responseJSON.error;
-                }
-                showStatus(msg, 'red');
-            },
-            complete: function() {
-                $btn.prop('disabled', false);
-            }
-        });
+        var modalHtml = [
+            '<div style="text-align:center;">',
+            '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to pause this topic?</div>',
+            '<button id="modal-pause-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Pause</button>',
+            '<button id="modal-pause-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+            '</div>'
+        ].join('');
+        window.parent.showModalOverlay(modalHtml);
+        setTimeout(function() {
+            $('#modal-pause-confirm', window.parent.document).off('click').on('click', function() {
+                window.parent.hideModalOverlay();
+                var $btn = $('.btn-pause');
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: '/api/topic/nsq/pause?id=' + currentTopicDetail.id,
+                    method: 'GET',
+                    success: function(resp) {
+                        showStatus('Topic paused successfully', 'green');
+                    },
+                    error: function(xhr) {
+                        var msg = 'Failed to pause topic';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            msg += ': ' + xhr.responseJSON.error;
+                        }
+                        showStatus(msg, 'red');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            });
+            $('#modal-pause-cancel', window.parent.document).off('click').on('click', function() {
+                window.parent.hideModalOverlay();
+            });
+        }, 100);
+
     });
 
     $('.btn-delete').on('click', function() {
@@ -323,10 +345,8 @@ $(function() {
                 $btn.prop('disabled', true);
                 window.parent.hideModalOverlay();
                 $.ajax({
-                    url: '/api/topic/delete',
+                    url: '/api/topic/delete?id=' + currentTopicDetail.id,
                     method: 'GET',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ id: currentTopicDetail.id }),
                     success: function(resp) {
                         showStatus('Topic deleted successfully', 'green');
                         setTimeout(function() { window.location.href = '/'; }, 1200);
@@ -368,10 +388,8 @@ $(function() {
                     $btn.prop('disabled', true);
                     window.parent.hideModalOverlay();
                     $.ajax({
-                        url: '/api/topic/nsq/empty',
+                        url: '/api/topic/nsq/empty?id=' + currentTopicDetail.id,
                         method: 'GET',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ id: currentTopicDetail.id }),
                         success: function(resp) {
                             showStatus('Queue emptied successfully', 'green');
                             refreshStats();

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jekiapp/topic-master/internal/config"
+	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
@@ -45,15 +46,7 @@ func (r *deleteTopicRepo) GetEntityByID(id string) (entity.Entity, error) {
 }
 
 func (r *deleteTopicRepo) GetNsqdHosts(lookupdURL, topicName string) ([]string, error) {
-	nsqds, err := nsqrepo.GetNsqdsForTopic(lookupdURL, topicName)
-	if err != nil {
-		return nil, fmt.Errorf("error getting nsqds for topic: %v", err)
-	}
-	hosts := make([]string, 0, len(nsqds))
-	for _, n := range nsqds {
-		hosts = append(hosts, fmt.Sprintf("%s:%d", n.BroadcastAddress, n.HTTPPort))
-	}
-	return hosts, nil
+	return nsqlogic.GetNsqdHosts(lookupdURL, topicName)
 }
 
 func (r *deleteTopicRepo) DeleteEntityByID(id string) error {
