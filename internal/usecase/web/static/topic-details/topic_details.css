@@ -165,6 +165,10 @@ body {
 .btn-publish { background: #e0e0f7; color: #333; }
 .btn-delete { background: #ff2d2d; color: #fff; }
 .btn-tail { background: #1e90ff; color: #fff; }
+.btn-resume {
+    background: #c7efc0 !important;
+    color: #333 !important;
+}
 .action-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;

@@ -137,11 +137,15 @@ $(function() {
         $('.btn-delete').prop('disabled', !detail.permission.can_delete);
         $('.btn-drain').prop('disabled', !detail.permission.can_empty_queue);
 
-        // Set Pause button label based on paused status
+        // Toggle Pause/Resume button visibility based on paused status
+        var $pauseBtn = $('.btn-pause');
+        var $resumeBtn = $('.btn-resume');
         if (detail.platform_status && detail.platform_status.is_paused) {
-            $('.btn-pause').text('Resume');
+            $pauseBtn.hide();
+            $resumeBtn.show();
         } else {
-            $('.btn-pause').text('Pause');
+            $pauseBtn.show();
+            $resumeBtn.hide();
         }
 
         // Fetch topic stats using hosts and topic name
@@ -309,6 +313,8 @@ $(function() {
                     method: 'GET',
                     success: function(resp) {
                         showStatus('Topic paused successfully', 'green');
+                        // Refresh topic detail to update UI
+                        location.reload();
                     },
                     error: function(xhr) {
                         var msg = 'Failed to pause topic';
@@ -326,7 +332,48 @@ $(function() {
                 window.parent.hideModalOverlay();
             });
         }, 100);
+    });
 
+    // --- Resume button logic ---
+    $('.btn-resume').on('click', function() {
+        if (!currentTopicDetail) return;
+        var modalHtml = [
+            '<div style="text-align:center;">',
+            '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to resume this topic?</div>',
+            '<button id="modal-resume-confirm" style="margin-right:18px;padding:8px 18px;background:#c7efc0;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Resume</button>',
+            '<button id="modal-resume-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+            '</div>'
+        ].join('');
+        window.parent.showModalOverlay(modalHtml);
+        setTimeout(function() {
+            $('#modal-resume-confirm', window.parent.document).off('click').on('click', function() {
+                window.parent.hideModalOverlay();
+                var $btn = $('.btn-resume');
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: '/api/topic/nsq/resume?id=' + currentTopicDetail.id,
+                    method: 'GET',
+                    success: function(resp) {
+                        showStatus('Topic resumed successfully', 'green');
+                        // Refresh topic detail to update UI
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        var msg = 'Failed to resume topic';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            msg += ': ' + xhr.responseJSON.error;
+                        }
+                        showStatus(msg, 'red');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            });
+            $('#modal-resume-cancel', window.parent.document).off('click').on('click', function() {
+                window.parent.hideModalOverlay();
+            });
+        }, 100);
     });
 
     $('.btn-delete').on('click', function() {

@@ -142,3 +142,18 @@ func IsTopicPausedOnNsqd(host, topic string) (bool, error) {
 	}
 	return false, fmt.Errorf("topic %s not found in nsqd stats", topic)
 }
+
+// ResumeTopicOnNsqd resumes a topic on the given nsqd host
+func ResumeTopicOnNsqd(host, topic string) error {
+	url := fmt.Sprintf("http://%s/topic/unpause?topic=%s", host, topic)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to resume topic on nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}

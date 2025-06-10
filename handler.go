@@ -149,6 +149,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/topic/delete", sessionMiddleware(handlerPkg.HandleGenericGet(h.deleteTopicUC.Handle)))
 	mux.HandleFunc("/api/topic/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandlePause)))
 	mux.HandleFunc("/api/topic/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleEmpty)))
+	mux.HandleFunc("/api/topic/nsq/resume", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleResume)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

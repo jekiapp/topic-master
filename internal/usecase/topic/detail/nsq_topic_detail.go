@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jekiapp/topic-master/internal/config"
+	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
@@ -61,7 +62,9 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	if err != nil {
 		return NsqTopicDetailResponse{}, fmt.Errorf("error getting topic entity: %v", err)
 	}
-	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, entityID)
+
+	topicName := ent.Name
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, topicName)
 	if err != nil {
 		nsqdHosts = nil // or log error, but don't fail the whole response
 	}
@@ -86,20 +89,37 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	bookmarked := false
 	user := util.GetUserInfo(ctx)
 	if user != nil && user.ID != "" {
-		isB, err := entityrepo.IsBookmarked(uc.repo.(*nsqTopicDetailRepo).db, ent.ID, user.ID)
+		isB, err := uc.repo.IsBookmarked(ent.ID, user.ID)
 		if err == nil {
 			bookmarked = isB
 		}
 	}
 
+	// --- Fill PlatformStatus ---
+	platformStatus := PlatformStatus{}
+	if len(nsqdHosts) > 0 {
+		// Check if topic is paused on all hosts
+		for _, host := range nsqdHosts {
+			paused, err := uc.repo.IsTopicPausedOnNsqd(host, topicName)
+			if err != nil {
+				return NsqTopicDetailResponse{}, fmt.Errorf("failed to check paused status on nsqd host %s: %w", host, err)
+			}
+			if paused {
+				platformStatus.IsPaused = true
+				break
+			}
+		}
+	}
+
 	resp := NsqTopicDetailResponse{
-		ID:           ent.ID,
-		Name:         ent.Name,
-		EventTrigger: ent.Description,
-		GroupOwner:   ent.GroupOwner,
-		Bookmarked:   bookmarked,
-		Permission:   permission,
-		NsqdHosts:    nsqdHosts,
+		ID:             ent.ID,
+		Name:           ent.Name,
+		EventTrigger:   ent.Description,
+		GroupOwner:     ent.GroupOwner,
+		Bookmarked:     bookmarked,
+		Permission:     permission,
+		NsqdHosts:      nsqdHosts,
+		PlatformStatus: platformStatus,
 	}
 	return resp, nil
 }
@@ -128,10 +148,16 @@ func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input Publish
 type iNsqTopicDetailRepo interface {
 	GetEntityByID(id string) (entity.Entity, error)
 	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
+	IsTopicPausedOnNsqd(host, topic string) (bool, error)
+	IsBookmarked(id, userID string) (bool, error)
 }
 
 type nsqTopicDetailRepo struct {
 	db *buntdb.DB
+}
+
+func (r *nsqTopicDetailRepo) IsBookmarked(id, userID string) (bool, error) {
+	return entityrepo.IsBookmarked(r.db, id, userID)
 }
 
 func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (entity.Entity, error) {
@@ -139,18 +165,9 @@ func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (entity.Entity, error) 
 }
 
 func (r *nsqTopicDetailRepo) GetNsqdHosts(lookupdURL, topicID string) ([]string, error) {
-	entity, err := r.GetEntityByID(topicID)
-	if err != nil {
-		return nil, fmt.Errorf("error getting entity by id: %v", err)
-	}
+	return nsqlogic.GetNsqdHosts(lookupdURL, topicID)
+}
 
-	nsqds, err := nsqrepo.GetNsqdsForTopic(lookupdURL, entity.Name)
-	if err != nil {
-		return nil, fmt.Errorf("error getting nsqds for topic: %v", err)
-	}
-	hosts := make([]string, 0, len(nsqds))
-	for _, n := range nsqds {
-		hosts = append(hosts, fmt.Sprintf("%s:%d", n.BroadcastAddress, n.HTTPPort))
-	}
-	return hosts, nil
+func (r *nsqTopicDetailRepo) IsTopicPausedOnNsqd(host, topic string) (bool, error) {
+	return nsqrepo.IsTopicPausedOnNsqd(host, topic)
 }
