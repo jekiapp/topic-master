@@ -78,8 +78,24 @@ func NewNsqOpsPauseEmptyUsecase(cfg *config.Config, db *buntdb.DB) NsqOpsPauseEm
 	}
 }
 
-func (uc NsqOpsPauseEmptyUsecase) Handle(ctx context.Context, input NsqOpsPauseEmptyInput) (NsqOpsPauseEmptyResponse, error) {
-	ent, err := uc.repo.GetEntityByID(input.ID)
+func (uc NsqOpsPauseEmptyUsecase) HandlePause(ctx context.Context, params map[string]string) (NsqOpsPauseEmptyResponse, error) {
+	id, ok := params["id"]
+	if !ok {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("id is required")
+	}
+	return uc.doNsqOps(ctx, id, "pause")
+}
+
+func (uc NsqOpsPauseEmptyUsecase) HandleEmpty(ctx context.Context, params map[string]string) (NsqOpsPauseEmptyResponse, error) {
+	id, ok := params["id"]
+	if !ok {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("id is required")
+	}
+	return uc.doNsqOps(ctx, id, "empty")
+}
+
+func (uc NsqOpsPauseEmptyUsecase) doNsqOps(ctx context.Context, id, action string) (NsqOpsPauseEmptyResponse, error) {
+	ent, err := uc.repo.GetEntityByID(id)
 	if err != nil {
 		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("entity not found: %w", err)
 	}
@@ -93,7 +109,7 @@ func (uc NsqOpsPauseEmptyUsecase) Handle(ctx context.Context, input NsqOpsPauseE
 		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 	}
 
-	switch input.Action {
+	switch action {
 	case "pause":
 		for _, host := range nsqdHosts {
 			if err := uc.repo.PauseTopicOnNsqd(host, ent.Name); err != nil {
@@ -109,6 +125,6 @@ func (uc NsqOpsPauseEmptyUsecase) Handle(ctx context.Context, input NsqOpsPauseE
 		}
 		return NsqOpsPauseEmptyResponse{Message: "Topic emptied successfully"}, nil
 	default:
-		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("invalid action: %s", input.Action)
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("invalid action: %s", action)
 	}
 }
