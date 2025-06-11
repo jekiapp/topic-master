@@ -20,76 +20,78 @@ import (
 )
 
 type Handler struct {
-	config                  *config.Config
-	createUserUC            aclUser.CreateUserUsecase
-	updateUserUC            aclUser.UpdateUserUsecase
-	loginUC                 aclAuth.LoginUsecase
-	logoutUC                aclAuth.LogoutUsecase
-	assignUserToGroupUC     aclUserGroup.AssignUserToGroupUsecase
-	deleteUserUC            aclUser.DeleteUserUsecase
-	createGroupUC           aclGroup.CreateGroupUsecase
-	createPermissionUC      acl.CreatePermissionUsecase
-	changePasswordUC        aclUser.ChangePasswordUsecase
-	syncTopicsUC            topicUC.SyncTopicsUsecase
-	webUC                   *webUC.WebUsecase
-	getGroupListUC          aclGroup.GetGroupListUsecase
-	getGroupListSimpleUC    aclGroup.GetGroupListSimpleUsecase
-	getUserListUC           aclUser.GetUserListUsecase
-	listAllTopicsUC         topicUC.ListAllTopicsUsecase
-	updateGroupByIDUC       aclGroup.UpdateGroupByIDUsecase
-	deleteGroupUC           aclGroup.DeleteGroupUsecase
-	resetPasswordUC         aclAuth.ResetPasswordUsecase
-	signupUC                aclAuth.SignupUsecase
-	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
-	listMyAssignmentUC      tickets.ListMyAssignmentUsecase
-	ticketDetailUC          tickets.TicketDetailUsecase
-	actionCoordinatorUC     *action.ActionCoordinator
-	getUsernameUC           aclAuth.GetUsernameUsecase
-	getTopicDetailUC        topicDetailUC.NsqTopicDetailUsecase
-	getTopicStatsUC         topicDetailUC.NsqTopicStatsUsecase
-	tailMessageUC           *topicDetailUC.TailMessageUsecase
-	updateDescriptionUC     entityUC.SaveDescriptionUsecase
-	toggleBookmarkUC        entityUC.ToggleBookmarkUsecase
-	deleteTopicUC           topicDetailUC.DeleteTopicUsecase
-	nsqOpsPauseEmptyUC      topicDetailUC.NsqOpsPauseEmptyUsecase
+	config                   *config.Config
+	createUserUC             aclUser.CreateUserUsecase
+	updateUserUC             aclUser.UpdateUserUsecase
+	loginUC                  aclAuth.LoginUsecase
+	logoutUC                 aclAuth.LogoutUsecase
+	assignUserToGroupUC      aclUserGroup.AssignUserToGroupUsecase
+	deleteUserUC             aclUser.DeleteUserUsecase
+	createGroupUC            aclGroup.CreateGroupUsecase
+	createPermissionUC       acl.CreatePermissionUsecase
+	changePasswordUC         aclUser.ChangePasswordUsecase
+	syncTopicsUC             topicUC.SyncTopicsUsecase
+	webUC                    *webUC.WebUsecase
+	getGroupListUC           aclGroup.GetGroupListUsecase
+	getGroupListSimpleUC     aclGroup.GetGroupListSimpleUsecase
+	getUserListUC            aclUser.GetUserListUsecase
+	listAllTopicsUC          topicUC.ListAllTopicsUsecase
+	listMyBookmarkedTopicsUC topicUC.ListMyBookmarkedTopicsUsecase
+	updateGroupByIDUC        aclGroup.UpdateGroupByIDUsecase
+	deleteGroupUC            aclGroup.DeleteGroupUsecase
+	resetPasswordUC          aclAuth.ResetPasswordUsecase
+	signupUC                 aclAuth.SignupUsecase
+	viewSignupApplicationUC  aclAuth.ViewSignupApplicationUsecase
+	listMyAssignmentUC       tickets.ListMyAssignmentUsecase
+	ticketDetailUC           tickets.TicketDetailUsecase
+	actionCoordinatorUC      *action.ActionCoordinator
+	getUsernameUC            aclAuth.GetUsernameUsecase
+	getTopicDetailUC         topicDetailUC.NsqTopicDetailUsecase
+	getTopicStatsUC          topicDetailUC.NsqTopicStatsUsecase
+	tailMessageUC            *topicDetailUC.TailMessageUsecase
+	updateDescriptionUC      entityUC.SaveDescriptionUsecase
+	toggleBookmarkUC         entityUC.ToggleBookmarkUsecase
+	deleteTopicUC            topicDetailUC.DeleteTopicUsecase
+	nsqOpsPauseEmptyUC       topicDetailUC.NsqOpsPauseEmptyUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 	webUsecase := webUC.NewWebUsecase()
 
 	return Handler{
-		config:                  cfg,
-		createUserUC:            aclUser.NewCreateUserUsecase(db),
-		updateUserUC:            aclUser.NewUpdateUserUsecase(db),
-		loginUC:                 aclAuth.NewLoginUsecase(db, cfg),
-		logoutUC:                aclAuth.NewLogoutUsecase(),
-		assignUserToGroupUC:     aclUserGroup.NewAssignUserToGroupUsecase(db),
-		deleteUserUC:            aclUser.NewDeleteUserUsecase(db),
-		createGroupUC:           aclGroup.NewCreateGroupUsecase(db),
-		createPermissionUC:      acl.NewCreatePermissionUsecase(db),
-		changePasswordUC:        aclUser.NewChangePasswordUsecase(db),
-		syncTopicsUC:            topicUC.NewSyncTopicsUsecase(db),
-		webUC:                   webUsecase,
-		getGroupListUC:          aclGroup.NewGetGroupListUsecase(db),
-		getGroupListSimpleUC:    aclGroup.NewGetGroupListSimpleUsecase(db),
-		getUserListUC:           aclUser.NewGetUserListUsecase(db),
-		listAllTopicsUC:         topicUC.NewListAllTopicsUsecase(db),
-		updateGroupByIDUC:       aclGroup.NewUpdateGroupByIDUsecase(db),
-		deleteGroupUC:           aclGroup.NewDeleteGroupUsecase(db),
-		resetPasswordUC:         aclAuth.NewResetPasswordUsecase(db),
-		signupUC:                aclAuth.NewSignupUsecase(db),
-		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
-		listMyAssignmentUC:      tickets.NewListMyAssignmentUsecase(db),
-		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
-		actionCoordinatorUC:     action.NewActionCoordinator(db),
-		getUsernameUC:           aclAuth.NewGetUsernameUsecase(),
-		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
-		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
-		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(),
-		updateDescriptionUC:     entityUC.NewSaveDescriptionUsecase(db),
-		toggleBookmarkUC:        entityUC.NewToggleBookmarkUsecase(db),
-		deleteTopicUC:           topicDetailUC.NewDeleteTopicUsecase(cfg, db),
-		nsqOpsPauseEmptyUC:      topicDetailUC.NewNsqOpsPauseEmptyUsecase(cfg, db),
+		config:                   cfg,
+		createUserUC:             aclUser.NewCreateUserUsecase(db),
+		updateUserUC:             aclUser.NewUpdateUserUsecase(db),
+		loginUC:                  aclAuth.NewLoginUsecase(db, cfg),
+		logoutUC:                 aclAuth.NewLogoutUsecase(),
+		assignUserToGroupUC:      aclUserGroup.NewAssignUserToGroupUsecase(db),
+		deleteUserUC:             aclUser.NewDeleteUserUsecase(db),
+		createGroupUC:            aclGroup.NewCreateGroupUsecase(db),
+		createPermissionUC:       acl.NewCreatePermissionUsecase(db),
+		changePasswordUC:         aclUser.NewChangePasswordUsecase(db),
+		syncTopicsUC:             topicUC.NewSyncTopicsUsecase(db),
+		webUC:                    webUsecase,
+		getGroupListUC:           aclGroup.NewGetGroupListUsecase(db),
+		getGroupListSimpleUC:     aclGroup.NewGetGroupListSimpleUsecase(db),
+		getUserListUC:            aclUser.NewGetUserListUsecase(db),
+		listAllTopicsUC:          topicUC.NewListAllTopicsUsecase(db),
+		listMyBookmarkedTopicsUC: topicUC.NewListMyBookmarkedTopicsUsecase(db),
+		updateGroupByIDUC:        aclGroup.NewUpdateGroupByIDUsecase(db),
+		deleteGroupUC:            aclGroup.NewDeleteGroupUsecase(db),
+		resetPasswordUC:          aclAuth.NewResetPasswordUsecase(db),
+		signupUC:                 aclAuth.NewSignupUsecase(db),
+		viewSignupApplicationUC:  aclAuth.NewViewSignupApplicationUsecase(db),
+		listMyAssignmentUC:       tickets.NewListMyAssignmentUsecase(db),
+		ticketDetailUC:           tickets.NewTicketDetailUsecase(db),
+		actionCoordinatorUC:      action.NewActionCoordinator(db),
+		getUsernameUC:            aclAuth.NewGetUsernameUsecase(),
+		getTopicDetailUC:         topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
+		getTopicStatsUC:          topicDetailUC.NewNsqTopicStatsUsecase(cfg),
+		tailMessageUC:            topicDetailUC.NewTailMessageUsecase(),
+		updateDescriptionUC:      entityUC.NewSaveDescriptionUsecase(db),
+		toggleBookmarkUC:         entityUC.NewToggleBookmarkUsecase(db),
+		deleteTopicUC:            topicDetailUC.NewDeleteTopicUsecase(cfg, db),
+		nsqOpsPauseEmptyUC:       topicDetailUC.NewNsqOpsPauseEmptyUsecase(cfg, db),
 	}
 }
 
@@ -123,6 +125,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/group/delete-group", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteGroupUC.Handle)))
 
 	mux.HandleFunc("/api/topic/list-all-topics", sessionMiddleware(handlerPkg.HandleGenericGet(h.listAllTopicsUC.HandleQuery)))
+	mux.HandleFunc("/api/topic/list-my-topics", sessionMiddleware(handlerPkg.HandleGenericGet(h.listMyBookmarkedTopicsUC.HandleQuery)))
 
 	mux.HandleFunc("/api/reset-password", handlerPkg.HandleGetPost(
 		h.resetPasswordUC.HandleGet,

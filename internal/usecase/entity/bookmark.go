@@ -14,6 +14,7 @@ import (
 	"errors"
 	"strings"
 
+	entitymodel "github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
@@ -26,10 +27,6 @@ type ToggleBookmarkInput struct {
 
 type ToggleBookmarkResponse struct {
 	Message string `json:"message"`
-}
-
-type iBookmarkRepo interface {
-	ToggleBookmark(entityID, userID string, bookmark bool) error
 }
 
 type ToggleBookmarkUsecase struct {
@@ -49,7 +46,11 @@ func (uc ToggleBookmarkUsecase) Toggle(ctx context.Context, input ToggleBookmark
 	if userInfo == nil {
 		return ToggleBookmarkResponse{Message: "User info not found in context"}, errors.New("user info not found in context")
 	}
-	err := uc.repo.ToggleBookmark(input.EntityID, userInfo.ID, input.Bookmark)
+	entity, err := uc.repo.GetEntityByID(uc.db, input.EntityID)
+	if err != nil {
+		return ToggleBookmarkResponse{Message: "Entity not found"}, err
+	}
+	err = uc.repo.ToggleBookmark(input.EntityID, entity.TypeID, userInfo.ID, input.Bookmark)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			return ToggleBookmarkResponse{Message: "Bookmark already exists"}, nil
@@ -59,10 +60,19 @@ func (uc ToggleBookmarkUsecase) Toggle(ctx context.Context, input ToggleBookmark
 	return ToggleBookmarkResponse{Message: "Bookmark toggled successfully"}, nil
 }
 
+type iBookmarkRepo interface {
+	ToggleBookmark(entityID, entityType, userID string, bookmark bool) error
+	GetEntityByID(db *buntdb.DB, entityID string) (entitymodel.Entity, error)
+}
+
 type bookmarkRepo struct {
 	db *buntdb.DB
 }
 
-func (r *bookmarkRepo) ToggleBookmark(entityID, userID string, bookmark bool) error {
-	return entityrepo.ToggleBookmark(r.db, entityID, userID, bookmark)
+func (r *bookmarkRepo) ToggleBookmark(entityID, entityType, userID string, bookmark bool) error {
+	return entityrepo.ToggleBookmark(r.db, entityID, entityType, userID, bookmark)
+}
+
+func (r *bookmarkRepo) GetEntityByID(db *buntdb.DB, entityID string) (entitymodel.Entity, error) {
+	return entityrepo.GetEntityByID(db, entityID)
 }

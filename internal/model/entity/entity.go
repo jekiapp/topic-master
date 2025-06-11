@@ -10,7 +10,7 @@ import (
 
 type Entity struct {
 	ID          string
-	TypeID      string
+	TypeID      string // e.g EntityType_NSQTopic
 	GroupOwner  string // Group.ID
 	Name        string
 	Resource    string
@@ -22,13 +22,9 @@ type Entity struct {
 	UpdatedAt   time.Time
 }
 
-// e.g nsq topic
-type EntityType struct {
-	ID        string
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
+const (
+	EntityType_NSQTopic = "nsq_topic"
+)
 
 // publish, tail, etc.
 type EntityDefaultPermission struct {
@@ -47,7 +43,6 @@ const (
 	IdxEntity_Status    = TableEntity + ":status"
 	IdxEntity_GroupType = TableEntity + ":group_type"
 	IdxEntity_TypeName  = TableEntity + ":type_name"
-	EntityType_NSQTopic = "nsq_topic"
 	GroupNone           = "None"
 )
 

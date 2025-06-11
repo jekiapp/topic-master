@@ -8,7 +8,7 @@ function renderBookmark(isBookmarked) {
 }
 $(function() {
   $.ajax({
-    url: '/api/topic/list-topics',
+    url: '/api/topic/list-my-topics',
     dataType: 'json',
     xhrFields: { withCredentials: true },
     success: function(resp) {

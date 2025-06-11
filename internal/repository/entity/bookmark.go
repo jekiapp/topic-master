@@ -9,10 +9,11 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-func ToggleBookmark(dbConn *buntdb.DB, entityID, userID string, bookmark bool) error {
+func ToggleBookmark(dbConn *buntdb.DB, entityID, entityType, userID string, bookmark bool) error {
 	b := &entity.Bookmark{
-		EntityID: entityID,
-		UserID:   userID,
+		EntityID:   entityID,
+		EntityType: entityType,
+		UserID:     userID,
 	}
 	if bookmark {
 		// Create mapping
@@ -38,4 +39,16 @@ func IsBookmarked(dbConn *buntdb.DB, entityID, userID string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func ListBookmarkedTopicIDsByUser(dbConn *buntdb.DB, userID, entityType string) ([]string, error) {
+	bookmarks, err := db.SelectAll[entity.Bookmark](dbConn, "="+userID+":"+entityType, entity.IdxBookmark_UserID_EntityType)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, 0, len(bookmarks))
+	for _, b := range bookmarks {
+		ids = append(ids, b.EntityID)
+	}
+	return ids, nil
 }
