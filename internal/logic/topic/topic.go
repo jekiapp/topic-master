@@ -16,11 +16,11 @@ type ISyncTopics interface {
 	DeleteNsqTopicEntity(topic string) error
 }
 
-func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
+func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) (topics []string, err error) {
 	// Get the list of topics from the source (e.g., nsqlookupd)
-	topics, err := iSyncTopics.GetAllTopics()
+	topics, err = iSyncTopics.GetAllTopics()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(topics) == 0 {
@@ -35,7 +35,7 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 	// Get all topic entities currently in the DB
 	dbEntities, err := iSyncTopics.GetAllNsqTopicEntities()
 	if err != nil && err != dbPkg.ErrNotFound {
-		return err
+		return nil, err
 	}
 
 	var errSet error
@@ -44,6 +44,7 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 	for _, entity := range dbEntities {
 		dbTopicSet[entity.Name] = struct{}{}
 		// If a topic exists in DB but not in the source, delete it from DB
+		// another option is to mark it as deleted
 		if _, ok := topicSet[entity.Name]; !ok {
 			if delErr := iSyncTopics.DeleteNsqTopicEntity(entity.Name); delErr != nil {
 				// Collect deletion errors
@@ -63,5 +64,5 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) error {
 	}
 
 	// Return any collected errors (nil if none)
-	return errSet
+	return topics, errSet
 }

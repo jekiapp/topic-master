@@ -11,7 +11,7 @@ package topic
 import (
 	"context"
 
-	"github.com/jekiapp/topic-master/internal/logic/topic"
+	topicLogic "github.com/jekiapp/topic-master/internal/logic/topic"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsq "github.com/jekiapp/topic-master/internal/repository/nsq"
@@ -24,7 +24,8 @@ type SyncTopicsResponse struct {
 }
 
 type iSyncTopicsRepo interface {
-	topic.ISyncTopics
+	topicLogic.ISyncTopics
+	topicLogic.ISyncChannels
 }
 
 type syncTopicsRepo struct {
@@ -51,6 +52,22 @@ func (r *syncTopicsRepo) DeleteNsqTopicEntity(topic string) error {
 	return entityrepo.DeleteNsqTopicEntity(r.db, topic)
 }
 
+func (r *syncTopicsRepo) GetAllChannels(topic string) ([]string, error) {
+	return nsq.GetAllChannels(topic)
+}
+
+func (r *syncTopicsRepo) GetAllNsqChannelEntities(topic string) ([]entity.Entity, error) {
+	return nsq.GetAllNsqTopicChannels(r.db, topic)
+}
+
+func (r *syncTopicsRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
+	return nsq.CreateNsqChannelEntity(r.db, topic, channel)
+}
+
+func (r *syncTopicsRepo) DeleteNsqChannelEntity(topic, channel string) error {
+	return nsq.DeleteNsqChannelEntity(r.db, topic, channel)
+}
+
 type SyncTopicsUsecase struct {
 	db   *buntdb.DB
 	repo iSyncTopicsRepo
@@ -64,9 +81,15 @@ func NewSyncTopicsUsecase(db *buntdb.DB) SyncTopicsUsecase {
 }
 
 func (uc SyncTopicsUsecase) HandleQuery(ctx context.Context, _ map[string]string) (SyncTopicsResponse, error) {
-	err := topic.SyncTopics(uc.db, uc.repo)
+	topics, err := topicLogic.SyncTopics(uc.db, uc.repo)
 	if err != nil {
 		return SyncTopicsResponse{Success: false, Error: err.Error()}, err
 	}
+
+	// sync channels
+	for _, topic := range topics {
+		topicLogic.SyncChannels(uc.db, topic, uc.repo)
+	}
+
 	return SyncTopicsResponse{Success: true}, nil
 }
