@@ -92,6 +92,11 @@ func (e Entity) GetIndexes() []db.Index {
 			Pattern: TableEntity + ":*:type_name",
 			Type:    buntdb.IndexString,
 		},
+		{
+			Name:    IdxEntity_TopicChannel,
+			Pattern: TableEntity + ":*:topic_channel",
+			Type:    buntdb.IndexString,
+		},
 	}
 }
 

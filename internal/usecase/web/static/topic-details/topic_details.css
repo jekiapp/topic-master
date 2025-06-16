@@ -348,3 +348,55 @@ body {
     background: #fde3e3;
     color: #c8a0a0;
 }
+
+.channels-table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.channels-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.channels-table th,
+.channels-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.channels-table th {
+    background-color: var(--header-bg-color);
+    font-weight: bold;
+}
+
+.channels-table tr:hover {
+    background-color: var(--hover-bg-color);
+}
+
+.channels-table .states-cell,
+.channels-table .messages-cell {
+    display: flex;
+    gap: 16px;
+}
+
+.channels-table .state-item,
+.channels-table .message-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.channels-table .state-label,
+.channels-table .message-label {
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+}
+
+.channels-table .state-value,
+.channels-table .message-value {
+    font-weight: 500;
+}

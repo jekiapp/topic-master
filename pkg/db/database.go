@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -10,7 +9,7 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-var ErrNotFound = errors.New("record not found")
+var ErrNotFound = buntdb.ErrNotFound
 
 type DbConfig struct {
 	Host string

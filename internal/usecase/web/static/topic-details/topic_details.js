@@ -8,7 +8,7 @@ function getUserInfo() {
 }
 
 $(function() {
-    var topicID = getTopicNameFromURL();
+    var topicID = getTopicIDFromURL();
     if (!topicID) {
         alert('Topic name is required');
         return;
@@ -57,7 +57,6 @@ $(function() {
                 success: function() {
                     $eventTrigger.data('original', newValue);
                     updateEventTriggerButtons();
-                    // $check.fadeOut(120).fadeIn(120);
                 },
                 error: function() {
                     alert('Failed to update event trigger');
@@ -150,13 +149,15 @@ $(function() {
 
         // Fetch topic stats using hosts and topic name
         fetchAndUpdateStats(detail);
+
+        // update channel here
+        refreshChannels(detail.name, detail.nsqd_hosts);
     }).fail(function() {
         alert('Failed to load topic detail');
     });
 
     // Back button (optional: history.back or custom logic)
     $('#back-link').on('click', function() {
-        // Parse back parameter from hash
         var hash = window.parent.location.hash || '';
         var backMatch = hash.match(/back=([^&]+)/);
         var back = backMatch ? decodeURIComponent(backMatch[1]) : null;
@@ -481,8 +482,7 @@ $(function() {
     }
 });
 
-// Helper: get topic name from URL (e.g., ?topic=MyTopic)
-function getTopicNameFromURL() {
+function getTopicIDFromURL() {
     var params = new URLSearchParams(window.location.search);
     return params.get('id');
 } 

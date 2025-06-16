@@ -89,7 +89,7 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 	}
 
 	channels, err := uc.repo.GetAllNsqTopicChannels(topic)
-	if err != nil {
+	if err != nil && err != buntdb.ErrNotFound {
 		return ListTopicChannelsResponse{}, err
 	}
 
