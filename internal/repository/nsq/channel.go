@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
 	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -114,9 +115,19 @@ func GetChannelStats(host, topic, channel string) (depth int, messages int, err 
 	return 0, 0, fmt.Errorf("channel %s not found in topic %s", channel, topic)
 }
 
+// channelStatsResponse represents the raw response from NSQ stats API
+type channelStatsResponse struct {
+	Name          string `json:"channel_name"`
+	Depth         int    `json:"depth"`
+	Messages      int    `json:"message_count"`
+	InFlightCount int    `json:"in_flight_count"`
+	RequeueCount  int    `json:"requeue_count"`
+	DeferredCount int    `json:"deferred_count"`
+}
+
 // GetAllChannelStats gets stats for all channels in a topic from multiple nsqd hosts
-func GetAllChannelStats(hosts []string, topic string) (map[string]struct{ Depth, Messages int }, error) {
-	stats := make(map[string]struct{ Depth, Messages int })
+func GetAllChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
+	stats := make(map[string]modelnsq.ChannelStats)
 	var errs []error
 
 	for _, host := range hosts {
@@ -129,12 +140,8 @@ func GetAllChannelStats(hosts []string, topic string) (map[string]struct{ Depth,
 
 		var nsqStats struct {
 			Topics []struct {
-				Name     string `json:"topic_name"`
-				Channels []struct {
-					Name     string `json:"channel_name"`
-					Depth    int    `json:"depth"`
-					Messages int    `json:"message_count"`
-				} `json:"channels"`
+				Name     string                 `json:"topic_name"`
+				Channels []channelStatsResponse `json:"channels"`
 			} `json:"topics"`
 		}
 
@@ -151,6 +158,9 @@ func GetAllChannelStats(hosts []string, topic string) (map[string]struct{ Depth,
 					existing := stats[c.Name]
 					existing.Depth += c.Depth
 					existing.Messages += c.Messages
+					existing.InFlight += c.InFlightCount
+					existing.Requeued += c.RequeueCount
+					existing.Deferred += c.DeferredCount
 					stats[c.Name] = existing
 				}
 			}

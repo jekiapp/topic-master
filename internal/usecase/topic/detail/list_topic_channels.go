@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/tidwall/buntdb"
 )
@@ -22,12 +23,15 @@ type ChannelResponse struct {
 	Topic       string `json:"topic"`
 	Depth       int    `json:"depth"`
 	Messages    int    `json:"messages"`
+	InFlight    int    `json:"in_flight"`
+	Requeued    int    `json:"requeued"`
+	Deferred    int    `json:"deferred"`
 }
 
 //go:generate mockgen -source=list_topic_channels.go -destination=mock_list_topic_channels_repo.go -package=detail iListTopicChannelsRepo
 type iListTopicChannelsRepo interface {
 	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
-	GetChannelStats(hosts []string, topic string) (map[string]struct{ Depth, Messages int }, error)
+	GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error)
 	DeleteChannel(topic, channel string) error
 	CreateChannel(topic, channel string) (*entity.Entity, error)
 }
@@ -40,7 +44,7 @@ func (r *listTopicChannelsRepo) GetAllNsqTopicChannels(topic string) ([]entity.E
 	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
 }
 
-func (r *listTopicChannelsRepo) GetChannelStats(hosts []string, topic string) (map[string]struct{ Depth, Messages int }, error) {
+func (r *listTopicChannelsRepo) GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
 	return nsqrepo.GetAllChannelStats(hosts, topic)
 }
 
@@ -134,6 +138,9 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 			Topic:       c.Metadata["topic"],
 			Depth:       stats.Depth,
 			Messages:    stats.Messages,
+			InFlight:    stats.InFlight,
+			Requeued:    stats.Requeued,
+			Deferred:    stats.Deferred,
 		}
 	}
 
