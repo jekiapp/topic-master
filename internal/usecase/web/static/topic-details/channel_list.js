@@ -4,9 +4,17 @@ let nsqdHosts = [];
 function updateChannelsTable(topic, hosts) {
     if (!topic || !hosts || hosts.length === 0) return;
 
+    // Extract address if hosts is array of objects
+    const hostAddresses = hosts.map(host => {
+        if (typeof host === 'object' && host.address) {
+            return host.address;
+        }
+        return host;
+    });
+
     const params = new URLSearchParams({
         topic: topic,
-        hosts: hosts.join(',')
+        hosts: hostAddresses.join(',')
     });
 
     fetch(`/api/topic/nsq/list-channels?${params}`)
@@ -45,7 +53,7 @@ function updateChannelsTable(topic, hosts) {
                     
                     const value = document.createElement('span');
                     value.className = 'state-value';
-                    value.textContent = state.value;
+                    value.textContent = Number(state.value).toLocaleString();
                     
                     stateItem.appendChild(label);
                     stateItem.appendChild(value);
@@ -72,7 +80,7 @@ function updateChannelsTable(topic, hosts) {
                     
                     const value = document.createElement('span');
                     value.className = 'message-value';
-                    value.textContent = message.value;
+                    value.textContent = Number(message.value).toLocaleString();
                     
                     messageItem.appendChild(label);
                     messageItem.appendChild(value);

@@ -126,7 +126,17 @@ $(function() {
         var hostsList = $('.nsqd-hosts-list');
         hostsList.empty();
         $.each(detail.nsqd_hosts, function(_, host) {
-            hostsList.append($('<li>').text(host));
+            if (typeof host === 'object' && host.host_name && host.address) {
+                hostsList.append(
+                    $('<li>').html(
+                        escapeHtml(host.host_name) +
+                        ' <span style="font-size:0.92em;color:#888;">(' + escapeHtml(host.address) + ')</span>'
+                    )
+                );
+            } else {
+                // fallback for old string format
+                hostsList.append($('<li>').text(host));
+            }
         });
 
         // Enable/disable buttons based on permission
@@ -177,15 +187,21 @@ $(function() {
     var originalIconHtml = $autorefresh.html();
 
     function fetchAndUpdateStats(detail) {
-        var hostsStr = (detail.nsqd_hosts || []).join(',');
+        var hostsArr = (detail.nsqd_hosts || []).map(function(host) {
+            if (typeof host === 'object' && host.address) {
+                return host.address;
+            }
+            return host;
+        });
+        var hostsStr = hostsArr.join(',');
         $.get('/api/topic/stats', { hosts: hostsStr, topic: detail.name }, function(statsResp) {
             if (!statsResp || !statsResp.data) {
                 $('.topic-stats-depth').text('-');
                 $('.topic-stats-messages').text('-');
                 return;
             }
-            $('.topic-stats-depth').text(statsResp.data.depth);
-            $('.topic-stats-messages').text(statsResp.data.messages);
+            $('.topic-stats-depth').text(Number(statsResp.data.depth).toLocaleString());
+            $('.topic-stats-messages').text(Number(statsResp.data.messages).toLocaleString());
 
             // --- Update channel stats if present ---
             if (statsResp.data.channel_stats) {
@@ -195,15 +211,15 @@ $(function() {
                         // Update states-cell
                         var $states = $row.find('.states-cell .state-value');
                         if ($states.length >= 3) {
-                            $states.eq(0).text(stats.in_flight);
-                            $states.eq(1).text(stats.requeued);
-                            $states.eq(2).text(stats.deferred);
+                            $states.eq(0).text(Number(stats.in_flight).toLocaleString());
+                            $states.eq(1).text(Number(stats.requeued).toLocaleString());
+                            $states.eq(2).text(Number(stats.deferred).toLocaleString());
                         }
                         // Update messages-cell
                         var $messages = $row.find('.messages-cell .message-value');
                         if ($messages.length >= 2) {
-                            $messages.eq(0).text(stats.depth);
-                            $messages.eq(1).text(stats.messages);
+                            $messages.eq(0).text(Number(stats.depth).toLocaleString());
+                            $messages.eq(1).text(Number(stats.messages).toLocaleString());
                         }
                     }
                 });
@@ -287,7 +303,12 @@ $(function() {
         var payload = {
             topic: currentTopicDetail.name,
             message: message,
-            nsqd_hosts: currentTopicDetail.nsqd_hosts
+            nsqd_hosts: (currentTopicDetail.nsqd_hosts || []).map(function(host) {
+                if (typeof host === 'object' && host.address) {
+                    return host.address;
+                }
+                return host;
+            })
         };
         $.ajax({
             url: '/api/topic/publish',

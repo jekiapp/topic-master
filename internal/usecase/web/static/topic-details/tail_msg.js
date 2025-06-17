@@ -61,7 +61,12 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         // Build query string for WebSocket URL
         var topic = encodeURIComponent(currentTopicDetail.name);
         var limitMsgStr = encodeURIComponent(limitMsg);
-        var hosts = (currentTopicDetail.nsqd_hosts || []).map(encodeURIComponent);
+        var hosts = (currentTopicDetail.nsqd_hosts || []).map(function(host) {
+            if (typeof host === 'object' && host.address) {
+                return encodeURIComponent(host.address);
+            }
+            return encodeURIComponent(host);
+        });
         var params = `topic=${topic}&limit_msg=${limitMsgStr}`;
         hosts.forEach(function(h) { params += `&nsqd_hosts=${h}`; });
         var wsProto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';

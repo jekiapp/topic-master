@@ -39,6 +39,9 @@ body {
     margin-bottom: 12px;
     box-shadow: 0 2px 8px var(--shadow-purple);
     position: relative;
+    max-width: 350px;
+    max-height: 120px;
+    overflow: auto;
 }
 
 .back-link {
@@ -176,6 +179,7 @@ body {
 
 .nsqd-hosts-section {
     margin-top: 16px;
+
 }
 .nsqd-hosts-list-scrollable {
     max-height: 80px;
