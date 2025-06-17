@@ -61,31 +61,47 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 		}
 	}
 
-	channels, err := uc.repo.GetAllNsqTopicChannels(topic)
+	channelsDB, err := uc.repo.GetAllNsqTopicChannels(topic)
 	if err != nil && err != buntdb.ErrNotFound {
 		return ListTopicChannelsResponse{}, err
 	}
 
-	channelStats, err := topicLogic.GetChannelStatsFromHosts(uc.repo, hosts, topic)
+	stats, err := uc.repo.GetStats(hosts, topic, "")
 	if err != nil {
-		fmt.Printf("error getting channel stats: %v\n", err)
+		return ListTopicChannelsResponse{}, err
 	}
 
-	// sync channel from db with channel from upstream
-	channelMap := make(map[string]entity.Entity)
-	for _, c := range channels {
-		channelMap[c.Name] = c
+	if len(stats) == 0 {
+		return ListTopicChannelsResponse{}, errors.New("no stats found")
+	}
+
+	channelStats := make(map[string]modelnsq.ChannelStats)
+	for _, stat := range stats {
+		for _, channel := range stat.Channels {
+			channelStats[channel.ChannelName] = modelnsq.ChannelStats{
+				Depth:    channel.Depth,
+				Messages: channel.MessageCount,
+				InFlight: channel.InFlightCount,
+				Requeued: channel.RequeueCount,
+				Deferred: channel.DeferredCount,
+			}
+		}
+	}
+
+	channelsMap := make(map[string]entity.Entity)
+	for _, c := range channelsDB {
+		channelsMap[c.Name] = c
 	}
 
 	hasChanges := false
 
-	// no need to remove channel that doesnt exists in upstream but exists in db
+	// no need to remove channel that doesn't exists in upstream but exists in db
 	// rely on the removal from the channel list manually
 
 	// Add channels that exist in upstream but not in DB
 	for channelName := range channelStats {
-		if _, exists := channelMap[channelName]; !exists {
-			if _, err := uc.repo.CreateChannel(topic, channelName); err != nil {
+		if _, exists := channelsMap[channelName]; !exists {
+			if _, err := topicLogic.CreateChannel(topic, channelName, uc.repo); err != nil {
 				fmt.Printf("error creating channel %s: %v\n", channelName, err)
 			} else {
 				hasChanges = true
@@ -95,14 +111,14 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 
 	// Refresh channels only if there were changes
 	if hasChanges {
-		channels, err = uc.repo.GetAllNsqTopicChannels(topic)
+		channelsDB, err = uc.repo.GetAllNsqTopicChannels(topic)
 		if err != nil {
 			return ListTopicChannelsResponse{}, err
 		}
 	}
 
-	channelResponses := make([]ChannelResponse, len(channels))
-	for i, c := range channels {
+	channelResponses := make([]ChannelResponse, len(channelsDB))
+	for i, c := range channelsDB {
 		stats := channelStats[c.Name]
 		channelResponses[i] = ChannelResponse{
 			ID:          c.ID,
@@ -123,10 +139,9 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 //go:generate mockgen -source=list_topic_channels.go -destination=mock_list_topic_channels_repo.go -package=detail iListTopicChannelsRepo
 type iListTopicChannelsRepo interface {
 	topicLogic.ICreateChannel
-	topicLogic.IChannelStatsFetcher
+	modelnsq.IStatsGetter
 	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
 	DeleteChannel(topic, channel string) error
-	CreateChannel(topic, channel string) (*entity.Entity, error)
 }
 
 type listTopicChannelsRepo struct {
@@ -137,16 +152,8 @@ func (r *listTopicChannelsRepo) GetAllNsqTopicChannels(topic string) ([]entity.E
 	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
 }
 
-func (r *listTopicChannelsRepo) GetChannelStats(host string, topic string) (map[string]modelnsq.ChannelStats, error) {
-	return nsqrepo.GetChannelStats(host, topic)
-}
-
 func (r *listTopicChannelsRepo) DeleteChannel(topic, channel string) error {
 	return nsqrepo.DeleteNsqChannelEntity(r.db, topic, channel)
-}
-
-func (r *listTopicChannelsRepo) CreateChannel(topic, channel string) (*entity.Entity, error) {
-	return topicLogic.CreateChannel(r.db, topic, channel, r)
 }
 
 func (r *listTopicChannelsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
@@ -155,4 +162,8 @@ func (r *listTopicChannelsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.
 
 func (r *listTopicChannelsRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
 	return nsqrepo.CreateNsqChannelEntity(r.db, topic, channel)
+}
+
+func (r *listTopicChannelsRepo) GetStats(nsqdHosts []string, topic, channel string) ([]modelnsq.Stats, error) {
+	return nsqrepo.GetStats(nsqdHosts, topic, channel)
 }
