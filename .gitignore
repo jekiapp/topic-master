@@ -2,3 +2,4 @@
 topic-master
 *.db
 __debug_bin*
+*.json
