@@ -186,6 +186,28 @@ $(function() {
             }
             $('.topic-stats-depth').text(statsResp.data.depth);
             $('.topic-stats-messages').text(statsResp.data.messages);
+
+            // --- Update channel stats if present ---
+            if (statsResp.data.channel_stats) {
+                Object.entries(statsResp.data.channel_stats).forEach(function([channelName, stats]) {
+                    var $row = $(`tr[data-channel-name="${channelName}"]`);
+                    if ($row.length) {
+                        // Update states-cell
+                        var $states = $row.find('.states-cell .state-value');
+                        if ($states.length >= 3) {
+                            $states.eq(0).text(stats.in_flight);
+                            $states.eq(1).text(stats.requeued);
+                            $states.eq(2).text(stats.deferred);
+                        }
+                        // Update messages-cell
+                        var $messages = $row.find('.messages-cell .message-value');
+                        if ($messages.length >= 2) {
+                            $messages.eq(0).text(stats.depth);
+                            $messages.eq(1).text(stats.messages);
+                        }
+                    }
+                });
+            }
         }).fail(function() {
             $('.topic-stats-depth').text('-');
             $('.topic-stats-messages').text('-');

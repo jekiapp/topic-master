@@ -18,6 +18,7 @@ function updateChannelsTable(topic, hosts) {
 
             data.channels.forEach(channel => {
                 const row = document.createElement('tr');
+                row.setAttribute('data-channel-name', channel.name);
                 
                 // Name column
                 const nameCell = document.createElement('td');

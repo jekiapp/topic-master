@@ -66,6 +66,73 @@ func GetTopicStats(nsqdHost, topic string) (depth int, messages int, err error) 
 	return 0, 0, fmt.Errorf("topic %s not found in nsqd stats", topic)
 }
 
+// TopicStatsResult represents the complete stats for a topic including channels
+type TopicStatsResult struct {
+	TopicDepth    int                              `json:"topic_depth"`
+	TopicMessages int                              `json:"topic_messages"`
+	ChannelStats  map[string]modelnsq.ChannelStats `json:"channel_stats"`
+}
+
+// GetTopicStatsWithChannels fetches stats for a given topic and all its channels from a given nsqd host
+func GetTopicStatsWithChannels(nsqdHost, topic string) (TopicStatsResult, error) {
+	url := fmt.Sprintf("http://%s/stats?format=json", nsqdHost)
+	resp, err := http.Get(url)
+	if err != nil {
+		return TopicStatsResult{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return TopicStatsResult{}, fmt.Errorf("nsqd returned status %d", resp.StatusCode)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return TopicStatsResult{}, err
+	}
+
+	var parsed struct {
+		Topics []struct {
+			TopicName    string `json:"topic_name"`
+			Depth        int    `json:"depth"`
+			MessageCount int    `json:"message_count"`
+			Channels     []struct {
+				ChannelName   string `json:"channel_name"`
+				Depth         int    `json:"depth"`
+				MessageCount  int    `json:"message_count"`
+				InFlightCount int    `json:"in_flight_count"`
+				RequeueCount  int    `json:"requeue_count"`
+				DeferredCount int    `json:"deferred_count"`
+			} `json:"channels"`
+		} `json:"topics"`
+	}
+
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return TopicStatsResult{}, err
+	}
+
+	for _, t := range parsed.Topics {
+		if t.TopicName == topic {
+			result := TopicStatsResult{
+				TopicDepth:    t.Depth,
+				TopicMessages: t.MessageCount,
+				ChannelStats:  make(map[string]modelnsq.ChannelStats),
+			}
+
+			for _, c := range t.Channels {
+				result.ChannelStats[c.ChannelName] = modelnsq.ChannelStats{
+					Depth:    c.Depth,
+					Messages: c.MessageCount,
+					InFlight: c.InFlightCount,
+					Requeued: c.RequeueCount,
+					Deferred: c.DeferredCount,
+				}
+			}
+
+			return result, nil
+		}
+	}
+	return TopicStatsResult{}, fmt.Errorf("topic %s not found in nsqd stats", topic)
+}
+
 // DeleteTopicFromNsqd deletes a topic from the given nsqd host
 func DeleteTopicFromNsqd(host, topic string) error {
 	url := fmt.Sprintf("http://%s/topic/delete?topic=%s", host, topic)

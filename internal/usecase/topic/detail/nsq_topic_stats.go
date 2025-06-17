@@ -1,11 +1,3 @@
-// this usecase will return the stats for a given topic
-// the stats will be returned in the following format:
-// {
-//   "depth": 100,
-//   "messages": 5000
-// }
-// it will expect parameters of array of nsqd hosts and topic name
-
 package detail
 
 import (
@@ -15,42 +7,60 @@ import (
 	"strings"
 
 	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/model/nsq"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
 )
 
 // iNsqTopicStatsRepo abstracts fetching topic stats from nsqd hosts
 // params: hosts []string, topic string
-// returns: depth, messages, error
+// returns: TopicStatsResult, error
 //
 //go:generate mockgen -source=nsq_topic_stats.go -destination=mock_nsq_topic_stats_repo.go -package=detail iNsqTopicStatsRepo
 type iNsqTopicStatsRepo interface {
-	GetTopicStats(hosts []string, topic string) (depth int, messages int, err error)
+	GetTopicStatsWithChannels(hosts []string, topic string) (nsqrepo.TopicStatsResult, error)
 }
 
 type nsqTopicStatsRepo struct{}
 
-func (r *nsqTopicStatsRepo) GetTopicStats(hosts []string, topic string) (int, int, error) {
-	var totalDepth, totalMessages int
+func (r *nsqTopicStatsRepo) GetTopicStatsWithChannels(hosts []string, topic string) (nsqrepo.TopicStatsResult, error) {
+	var aggregatedResult nsqrepo.TopicStatsResult
+	aggregatedResult.ChannelStats = make(map[string]nsq.ChannelStats)
 	var errs []error
+
 	for _, host := range hosts {
-		depth, messages, err := nsqrepo.GetTopicStats(host, topic)
+		result, err := nsqrepo.GetTopicStatsWithChannels(host, topic)
 		if err != nil {
 			log.Printf("error getting topic stats for host %s: %v", host, err)
 			errs = append(errs, err)
 			continue
 		}
-		totalDepth += depth
-		totalMessages += messages
+
+		// Aggregate topic stats
+		aggregatedResult.TopicDepth += result.TopicDepth
+		aggregatedResult.TopicMessages += result.TopicMessages
+
+		// Aggregate channel stats
+		for channelName, channelStats := range result.ChannelStats {
+			existing := aggregatedResult.ChannelStats[channelName]
+			existing.Depth += channelStats.Depth
+			existing.Messages += channelStats.Messages
+			existing.InFlight += channelStats.InFlight
+			existing.Requeued += channelStats.Requeued
+			existing.Deferred += channelStats.Deferred
+			aggregatedResult.ChannelStats[channelName] = existing
+		}
 	}
+
 	if len(errs) > 0 {
-		return totalDepth, totalMessages, fmt.Errorf("error getting topic stats for hosts: %v", errs)
+		return aggregatedResult, fmt.Errorf("error getting topic stats for hosts: %v", errs)
 	}
-	return totalDepth, totalMessages, nil
+	return aggregatedResult, nil
 }
 
 type NsqTopicStatsResponse struct {
-	Depth    int `json:"depth"`
-	Messages int `json:"messages"`
+	Depth        int                         `json:"depth"`
+	Messages     int                         `json:"messages"`
+	ChannelStats map[string]nsq.ChannelStats `json:"channel_stats"`
 }
 
 type NsqTopicStatsUsecase struct {
@@ -79,18 +89,18 @@ func (uc NsqTopicStatsUsecase) HandleQuery(ctx context.Context, params map[strin
 	}
 	topic, ok := params["topic"]
 	if !ok {
-		return NsqTopicStatsResponse{}, nil // or return error
+		return NsqTopicStatsResponse{}, fmt.Errorf("topic is required")
 	}
-	if !ok {
-		return NsqTopicStatsResponse{}, nil // or return error
-	}
-	depth, messages, err := uc.repo.GetTopicStats(hosts, topic)
+
+	result, err := uc.repo.GetTopicStatsWithChannels(hosts, topic)
 	if err != nil {
 		return NsqTopicStatsResponse{}, err
 	}
+
 	return NsqTopicStatsResponse{
-		Depth:    depth,
-		Messages: messages,
+		Depth:        result.TopicDepth,
+		Messages:     result.TopicMessages,
+		ChannelStats: result.ChannelStats,
 	}, nil
 }
 
