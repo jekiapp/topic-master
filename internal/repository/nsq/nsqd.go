@@ -1,10 +1,12 @@
 package nsq
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
 )
@@ -75,7 +77,7 @@ type TopicStatsResult struct {
 
 // GetTopicStatsWithChannels fetches stats for a given topic and all its channels from a given nsqd host
 func GetTopicStatsWithChannels(nsqdHost, topic string) (TopicStatsResult, error) {
-	url := fmt.Sprintf("http://%s/stats?format=json", nsqdHost)
+	url := fmt.Sprintf("http://%s/stats?format=json&topic=%s", nsqdHost, topic)
 	resp, err := http.Get(url)
 	if err != nil {
 		return TopicStatsResult{}, err
@@ -180,8 +182,16 @@ func EmptyTopicOnNsqd(host, topic string) error {
 
 // IsTopicPausedOnNsqd checks if a topic is paused on the given nsqd host
 func IsTopicPausedOnNsqd(host, topic string) (bool, error) {
-	url := fmt.Sprintf("http://%s/stats?format=json", host)
-	resp, err := http.Get(url)
+	url := fmt.Sprintf("http://%s/stats?format=json&topic=%s", host, topic)
+	// get with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return false, err
+	}
+	// give timeout to all
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return false, err
 	}

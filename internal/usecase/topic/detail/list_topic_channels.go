@@ -66,7 +66,7 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 		return ListTopicChannelsResponse{}, err
 	}
 
-	channelStats, err := uc.repo.GetChannelStats(hosts, topic)
+	channelStats, err := topicLogic.GetChannelStatsFromHosts(uc.repo, hosts, topic)
 	if err != nil {
 		fmt.Printf("error getting channel stats: %v\n", err)
 	}
@@ -123,8 +123,8 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 //go:generate mockgen -source=list_topic_channels.go -destination=mock_list_topic_channels_repo.go -package=detail iListTopicChannelsRepo
 type iListTopicChannelsRepo interface {
 	topicLogic.ICreateChannel
+	topicLogic.IChannelStatsFetcher
 	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
-	GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error)
 	DeleteChannel(topic, channel string) error
 	CreateChannel(topic, channel string) (*entity.Entity, error)
 }
@@ -137,8 +137,8 @@ func (r *listTopicChannelsRepo) GetAllNsqTopicChannels(topic string) ([]entity.E
 	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
 }
 
-func (r *listTopicChannelsRepo) GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
-	return nsqrepo.GetAllChannelStats(hosts, topic)
+func (r *listTopicChannelsRepo) GetChannelStats(host string, topic string) (map[string]modelnsq.ChannelStats, error) {
+	return nsqrepo.GetChannelStats(host, topic)
 }
 
 func (r *listTopicChannelsRepo) DeleteChannel(topic, channel string) error {

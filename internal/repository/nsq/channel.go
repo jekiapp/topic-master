@@ -74,47 +74,6 @@ func DeleteNsqChannelEntity(db *buntdb.DB, topic, channel string) error {
 	return dbPkg.DeleteByIndex(db, tmp, entity.IdxEntity_TypeName)
 }
 
-// GetChannelStats gets the stats for a channel from nsqd
-func GetChannelStats(host, topic, channel string) (depth int, messages int, err error) {
-	url := fmt.Sprintf("http://%s/stats?format=json", host)
-	resp, err := http.Get(url)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return 0, 0, fmt.Errorf("nsqd returned status %d", resp.StatusCode)
-	}
-
-	var stats struct {
-		Topics []struct {
-			Name     string `json:"topic_name"`
-			Channels []struct {
-				Name     string `json:"channel_name"`
-				Depth    int    `json:"depth"`
-				Messages int    `json:"message_count"`
-			} `json:"channels"`
-		} `json:"topics"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
-		return 0, 0, err
-	}
-
-	for _, t := range stats.Topics {
-		if t.Name == topic {
-			for _, c := range t.Channels {
-				if c.Name == channel {
-					return c.Depth, c.Messages, nil
-				}
-			}
-		}
-	}
-
-	return 0, 0, fmt.Errorf("channel %s not found in topic %s", channel, topic)
-}
-
 // channelStatsResponse represents the raw response from NSQ stats API
 type channelStatsResponse struct {
 	Name          string `json:"channel_name"`
@@ -126,49 +85,40 @@ type channelStatsResponse struct {
 }
 
 // GetAllChannelStats gets stats for all channels in a topic from multiple nsqd hosts
-func GetAllChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
+func GetChannelStats(host string, topic string) (map[string]modelnsq.ChannelStats, error) {
 	stats := make(map[string]modelnsq.ChannelStats)
-	var errs []error
 
-	for _, host := range hosts {
-		url := fmt.Sprintf("http://%s/stats?format=json", host)
-		resp, err := http.Get(url)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
+	url := fmt.Sprintf("http://%s/stats?format=json&topic=%s", host, topic)
+	resp, err := http.Get(url)
+	if err != nil {
+		return stats, err
+	}
+	defer resp.Body.Close()
 
-		var nsqStats struct {
-			Topics []struct {
-				Name     string                 `json:"topic_name"`
-				Channels []channelStatsResponse `json:"channels"`
-			} `json:"topics"`
-		}
+	var nsqStats struct {
+		Topics []struct {
+			Name     string                 `json:"topic_name"`
+			Channels []channelStatsResponse `json:"channels"`
+		} `json:"topics"`
+	}
 
-		if err := json.NewDecoder(resp.Body).Decode(&nsqStats); err != nil {
-			resp.Body.Close()
-			errs = append(errs, err)
-			continue
-		}
-		resp.Body.Close()
+	if err := json.NewDecoder(resp.Body).Decode(&nsqStats); err != nil {
+		return stats, err
+	}
 
-		for _, t := range nsqStats.Topics {
-			if t.Name == topic {
-				for _, c := range t.Channels {
-					existing := stats[c.Name]
-					existing.Depth += c.Depth
-					existing.Messages += c.Messages
-					existing.InFlight += c.InFlightCount
-					existing.Requeued += c.RequeueCount
-					existing.Deferred += c.DeferredCount
-					stats[c.Name] = existing
-				}
+	for _, t := range nsqStats.Topics {
+		if t.Name == topic {
+			for _, c := range t.Channels {
+				existing := stats[c.Name]
+				existing.Depth += c.Depth
+				existing.Messages += c.Messages
+				existing.InFlight += c.InFlightCount
+				existing.Requeued += c.RequeueCount
+				existing.Deferred += c.DeferredCount
+				stats[c.Name] = existing
 			}
 		}
 	}
 
-	if len(errs) > 0 {
-		return stats, fmt.Errorf("error getting channel stats for hosts: %v", errs)
-	}
 	return stats, nil
 }

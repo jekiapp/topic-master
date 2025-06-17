@@ -6,8 +6,10 @@ package topic
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
 	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -98,4 +100,55 @@ func CreateChannel(db *buntdb.DB, topic, channel string, iCreateChannel ICreateC
 
 	log.Printf("[INFO] Channel %s created successfully for topic %s", channel, topic)
 	return entity, nil
+}
+
+// IChannelStatsFetcher abstracts fetching channel stats from a single host.
+type IChannelStatsFetcher interface {
+	GetChannelStats(host, topic string) (map[string]modelnsq.ChannelStats, error)
+}
+
+// GetChannelStatsFromHosts fetches channel stats for a topic from multiple hosts concurrently and aggregates the results.
+func GetChannelStatsFromHosts(fetcher IChannelStatsFetcher, hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
+	result := make(map[string]modelnsq.ChannelStats)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(hosts))
+
+	for _, host := range hosts {
+		host := host // capture range variable
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			stats, err := fetcher.GetChannelStats(host, topic)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			mu.Lock()
+			for ch, s := range stats {
+				existing := result[ch]
+				existing.Depth += s.Depth
+				existing.Messages += s.Messages
+				existing.InFlight += s.InFlight
+				existing.Requeued += s.Requeued
+				existing.Deferred += s.Deferred
+				result[ch] = existing
+			}
+			mu.Unlock()
+		}()
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	var err error
+	for e := range errCh {
+		if err == nil {
+			err = e
+		} else {
+			err = errors.Join(err, e)
+		}
+	}
+
+	return result, err
 }
