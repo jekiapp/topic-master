@@ -281,7 +281,7 @@ func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagin
 			return nil
 		}
 
-		return fmt.Errorf("pivot %s is not valid", pivot)
+		return fmt.Errorf("pivot %s is not valid (missing/unknown operator)", pivot)
 	})
 	if err != nil {
 		return nil, err

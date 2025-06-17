@@ -81,15 +81,17 @@ func NewSyncTopicsUsecase(db *buntdb.DB) SyncTopicsUsecase {
 }
 
 func (uc SyncTopicsUsecase) HandleQuery(ctx context.Context, _ map[string]string) (SyncTopicsResponse, error) {
-	topics, err := topicLogic.SyncTopics(uc.db, uc.repo)
+	_, err := topicLogic.SyncTopics(uc.db, uc.repo)
 	if err != nil {
 		return SyncTopicsResponse{Success: false, Error: err.Error()}, err
 	}
 
-	// sync channels
-	for _, topic := range topics {
-		topicLogic.SyncChannels(uc.db, topic, uc.repo)
-	}
+	// no need to sync channels on init
+	// the channel will be sync'ed when opening topic details
+	// // sync channels
+	// for _, topic := range topics {
+	// 	topicLogic.SyncChannels(uc.db, topic, uc.repo)
+	// }
 
 	return SyncTopicsResponse{Success: true}, nil
 }

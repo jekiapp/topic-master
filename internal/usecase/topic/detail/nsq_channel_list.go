@@ -13,11 +13,13 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-type ListTopicChannelsResponse struct {
-	Channels []ChannelResponse `json:"channels"`
+// NsqChannelListResponse and NsqChannelResponse for JSON alias
+
+type NsqChannelListResponse struct {
+	Channels []NsqChannelResponse `json:"channels"`
 }
 
-type ChannelResponse struct {
+type NsqChannelResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -29,29 +31,29 @@ type ChannelResponse struct {
 	Deferred    int    `json:"deferred"`
 }
 
-func NewListTopicChannelsUsecase(db *buntdb.DB) ListTopicChannelsUsecase {
-	return ListTopicChannelsUsecase{
+func NewNsqChannelListUsecase(db *buntdb.DB) NsqChannelListUsecase {
+	return NsqChannelListUsecase{
 		db:   db,
-		repo: &listTopicChannelsRepo{db: db},
+		repo: &nsqChannelListRepo{db: db},
 	}
 }
 
-type ListTopicChannelsUsecase struct {
+type NsqChannelListUsecase struct {
 	db   *buntdb.DB
-	repo iListTopicChannelsRepo
+	repo iNsqChannelListRepo
 }
 
 // HandleQuery handles HTTP query for listing channels by topic.
 // params should contain "topic" key and "hosts" key (comma-separated string).
-func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[string]string) (ListTopicChannelsResponse, error) {
+func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[string]string) (NsqChannelListResponse, error) {
 	topic, ok := params["topic"]
 	if !ok {
-		return ListTopicChannelsResponse{}, errors.New("topic is required")
+		return NsqChannelListResponse{}, errors.New("topic is required")
 	}
 
 	hostsStr, ok := params["hosts"]
 	if !ok {
-		return ListTopicChannelsResponse{}, errors.New("hosts is required")
+		return NsqChannelListResponse{}, errors.New("hosts is required")
 	}
 
 	hosts := []string{}
@@ -63,16 +65,16 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 
 	channelsDB, err := uc.repo.GetAllNsqTopicChannels(topic)
 	if err != nil && err != buntdb.ErrNotFound {
-		return ListTopicChannelsResponse{}, err
+		return NsqChannelListResponse{}, err
 	}
 
 	stats, err := uc.repo.GetStats(hosts, topic, "")
 	if err != nil {
-		return ListTopicChannelsResponse{}, err
+		return NsqChannelListResponse{}, err
 	}
 
 	if len(stats) == 0 {
-		return ListTopicChannelsResponse{}, errors.New("no stats found")
+		return NsqChannelListResponse{}, errors.New("no stats found")
 	}
 
 	channelStats := make(map[string]modelnsq.ChannelStats)
@@ -113,14 +115,14 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 	if hasChanges {
 		channelsDB, err = uc.repo.GetAllNsqTopicChannels(topic)
 		if err != nil {
-			return ListTopicChannelsResponse{}, err
+			return NsqChannelListResponse{}, err
 		}
 	}
 
-	channelResponses := make([]ChannelResponse, len(channelsDB))
+	channelResponses := make([]NsqChannelResponse, len(channelsDB))
 	for i, c := range channelsDB {
 		stats := channelStats[c.Name]
-		channelResponses[i] = ChannelResponse{
+		channelResponses[i] = NsqChannelResponse{
 			ID:          c.ID,
 			Name:        c.Name,
 			Description: c.Description,
@@ -133,37 +135,37 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 		}
 	}
 
-	return ListTopicChannelsResponse{Channels: channelResponses}, nil
+	return NsqChannelListResponse{Channels: channelResponses}, nil
 }
 
-//go:generate mockgen -source=list_topic_channels.go -destination=mock_list_topic_channels_repo.go -package=detail iListTopicChannelsRepo
-type iListTopicChannelsRepo interface {
+//go:generate mockgen -source=nsq_channel_list.go -destination=mock_nsq_channel_list_repo.go -package=detail iNsqChannelListRepo
+type iNsqChannelListRepo interface {
 	topicLogic.ICreateChannel
 	modelnsq.IStatsGetter
 	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
 	DeleteChannel(topic, channel string) error
 }
 
-type listTopicChannelsRepo struct {
+type nsqChannelListRepo struct {
 	db *buntdb.DB
 }
 
-func (r *listTopicChannelsRepo) GetAllNsqTopicChannels(topic string) ([]entity.Entity, error) {
+func (r *nsqChannelListRepo) GetAllNsqTopicChannels(topic string) ([]entity.Entity, error) {
 	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
 }
 
-func (r *listTopicChannelsRepo) DeleteChannel(topic, channel string) error {
+func (r *nsqChannelListRepo) DeleteChannel(topic, channel string) error {
 	return nsqrepo.DeleteNsqChannelEntity(r.db, topic, channel)
 }
 
-func (r *listTopicChannelsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
+func (r *nsqChannelListRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
 	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
 }
 
-func (r *listTopicChannelsRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
+func (r *nsqChannelListRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
 	return nsqrepo.CreateNsqChannelEntity(r.db, topic, channel)
 }
 
-func (r *listTopicChannelsRepo) GetStats(nsqdHosts []string, topic, channel string) ([]modelnsq.Stats, error) {
+func (r *nsqChannelListRepo) GetStats(nsqdHosts []string, topic, channel string) ([]modelnsq.Stats, error) {
 	return nsqrepo.GetStats(nsqdHosts, topic, channel)
 }
