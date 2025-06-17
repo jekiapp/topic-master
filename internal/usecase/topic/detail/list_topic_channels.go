@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	topicLogic "github.com/jekiapp/topic-master/internal/logic/topic"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
@@ -26,34 +27,6 @@ type ChannelResponse struct {
 	InFlight    int    `json:"in_flight"`
 	Requeued    int    `json:"requeued"`
 	Deferred    int    `json:"deferred"`
-}
-
-//go:generate mockgen -source=list_topic_channels.go -destination=mock_list_topic_channels_repo.go -package=detail iListTopicChannelsRepo
-type iListTopicChannelsRepo interface {
-	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
-	GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error)
-	DeleteChannel(topic, channel string) error
-	CreateChannel(topic, channel string) (*entity.Entity, error)
-}
-
-type listTopicChannelsRepo struct {
-	db *buntdb.DB
-}
-
-func (r *listTopicChannelsRepo) GetAllNsqTopicChannels(topic string) ([]entity.Entity, error) {
-	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
-}
-
-func (r *listTopicChannelsRepo) GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
-	return nsqrepo.GetAllChannelStats(hosts, topic)
-}
-
-func (r *listTopicChannelsRepo) DeleteChannel(topic, channel string) error {
-	return nsqrepo.DeleteNsqChannelEntity(r.db, topic, channel)
-}
-
-func (r *listTopicChannelsRepo) CreateChannel(topic, channel string) (*entity.Entity, error) {
-	return nsqrepo.CreateNsqChannelEntity(r.db, topic, channel)
 }
 
 func NewListTopicChannelsUsecase(db *buntdb.DB) ListTopicChannelsUsecase {
@@ -145,4 +118,41 @@ func (uc ListTopicChannelsUsecase) HandleQuery(ctx context.Context, params map[s
 	}
 
 	return ListTopicChannelsResponse{Channels: channelResponses}, nil
+}
+
+//go:generate mockgen -source=list_topic_channels.go -destination=mock_list_topic_channels_repo.go -package=detail iListTopicChannelsRepo
+type iListTopicChannelsRepo interface {
+	topicLogic.ICreateChannel
+	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
+	GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error)
+	DeleteChannel(topic, channel string) error
+	CreateChannel(topic, channel string) (*entity.Entity, error)
+}
+
+type listTopicChannelsRepo struct {
+	db *buntdb.DB
+}
+
+func (r *listTopicChannelsRepo) GetAllNsqTopicChannels(topic string) ([]entity.Entity, error) {
+	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
+}
+
+func (r *listTopicChannelsRepo) GetChannelStats(hosts []string, topic string) (map[string]modelnsq.ChannelStats, error) {
+	return nsqrepo.GetAllChannelStats(hosts, topic)
+}
+
+func (r *listTopicChannelsRepo) DeleteChannel(topic, channel string) error {
+	return nsqrepo.DeleteNsqChannelEntity(r.db, topic, channel)
+}
+
+func (r *listTopicChannelsRepo) CreateChannel(topic, channel string) (*entity.Entity, error) {
+	return topicLogic.CreateChannel(r.db, topic, channel, r)
+}
+
+func (r *listTopicChannelsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
+	return nsqrepo.GetAllNsqTopicChannels(r.db, topic)
+}
+
+func (r *listTopicChannelsRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
+	return nsqrepo.CreateNsqChannelEntity(r.db, topic, channel)
 }

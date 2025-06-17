@@ -56,7 +56,7 @@ func (r *syncTopicsRepo) GetAllChannels(topic string) ([]string, error) {
 	return nsq.GetAllChannels(topic)
 }
 
-func (r *syncTopicsRepo) GetAllNsqChannelEntities(topic string) ([]entity.Entity, error) {
+func (r *syncTopicsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
 	return nsq.GetAllNsqTopicChannels(r.db, topic)
 }
 

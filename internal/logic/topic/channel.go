@@ -13,9 +13,9 @@ import (
 )
 
 type ISyncChannels interface {
+	ICreateChannel
+
 	GetAllChannels(topic string) ([]string, error)
-	GetAllNsqChannelEntities(topic string) ([]entity.Entity, error)
-	CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error)
 	DeleteNsqChannelEntity(topic, channel string) error
 }
 
@@ -37,7 +37,7 @@ func SyncChannels(db *buntdb.DB, topic string, iSyncChannels ISyncChannels) erro
 	}
 
 	// Get all channel entities currently in the DB for the topic
-	dbEntities, err := iSyncChannels.GetAllNsqChannelEntities(topic)
+	dbEntities, err := iSyncChannels.GetAllNsqChannelByTopic(topic)
 	if err != nil && err != dbPkg.ErrNotFound {
 		return err
 	}
@@ -59,7 +59,7 @@ func SyncChannels(db *buntdb.DB, topic string, iSyncChannels ISyncChannels) erro
 	// For each channel in the source, if not found in DB, create it in DB
 	for c := range channelSet {
 		if _, ok := dbChannelSet[c]; !ok {
-			if _, createErr := iSyncChannels.CreateNsqChannelEntity(topic, c); createErr != nil {
+			if _, createErr := CreateChannel(db, topic, c, iSyncChannels); createErr != nil {
 				// Collect creation errors
 				errSet = errors.Join(errSet, errors.New("CreateNsqChannelEntity("+topic+","+c+"): "+createErr.Error()))
 			}
@@ -68,4 +68,34 @@ func SyncChannels(db *buntdb.DB, topic string, iSyncChannels ISyncChannels) erro
 
 	// Return any collected errors (nil if none)
 	return errSet
+}
+
+type ICreateChannel interface {
+	GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error)
+	CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error)
+}
+
+func CreateChannel(db *buntdb.DB, topic, channel string, iCreateChannel ICreateChannel) (*entity.Entity, error) {
+	// Check if the channel already exists in the database for the topic
+	dbEntities, err := iCreateChannel.GetAllNsqChannelByTopic(topic)
+	if err != nil && err != dbPkg.ErrNotFound {
+		return nil, err
+	}
+
+	// Check if channel already exists in DB
+	for _, entity := range dbEntities {
+		if entity.Name == channel {
+			log.Printf("[INFO] Channel %s already exists for topic %s", channel, topic)
+			return &entity, errors.New("channel already exists")
+		}
+	}
+
+	// Create channel entity in the database
+	entity, err := iCreateChannel.CreateNsqChannelEntity(topic, channel)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("[INFO] Channel %s created successfully for topic %s", channel, topic)
+	return entity, nil
 }
