@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"sync"
 	"time"
 
 	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
@@ -33,6 +35,74 @@ func GetNsqdsForTopic(lookupdURL, topic string) ([]modelnsq.Nsqd, error) {
 		return nil, err
 	}
 	return parsed.Producers, nil
+}
+
+// GetStats fetches stats for a given topic and channel from multiple nsqd hosts in parallel
+func GetStats(nsqdHosts []string, topic, channel string) ([]modelnsq.Stats, error) {
+	type result struct {
+		stat modelnsq.Stats
+		err  error
+	}
+	results := make(chan result)
+	var wg sync.WaitGroup
+	for _, host := range nsqdHosts {
+		wg.Add(1)
+		go func(nsqdHost string) {
+			defer wg.Done()
+			urlStr := fmt.Sprintf("http://%s/stats?format=json", nsqdHost)
+			if topic != "" {
+				urlStr += "&topic=" + url.QueryEscape(topic)
+				if channel != "" {
+					urlStr += "&channel=" + url.QueryEscape(channel)
+				}
+			}
+
+			resp, err := http.Get(urlStr)
+			if err != nil {
+				results <- result{err: err}
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				results <- result{err: fmt.Errorf("nsqd %s returned status %d", nsqdHost, resp.StatusCode)}
+				return
+			}
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				results <- result{err: err}
+				return
+			}
+			var parsed struct {
+				Topics []modelnsq.Stats `json:"topics"`
+			}
+			if err := json.Unmarshal(body, &parsed); err != nil {
+				results <- result{err: err}
+				return
+			}
+			for _, t := range parsed.Topics {
+				results <- result{stat: t}
+			}
+		}(host)
+	}
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	var stats []modelnsq.Stats
+	var firstErr error
+	for r := range results {
+		if r.err != nil && firstErr == nil {
+			firstErr = r.err
+		}
+		if r.err == nil {
+			stats = append(stats, r.stat)
+		}
+	}
+	if len(stats) == 0 && firstErr != nil {
+		return nil, firstErr
+	}
+	return stats, nil
 }
 
 // GetTopicStats fetches stats for a given topic from a given nsqd host
