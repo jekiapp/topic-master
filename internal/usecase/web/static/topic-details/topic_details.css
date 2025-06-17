@@ -269,26 +269,25 @@ body {
     align-items: flex-start;
 }
 
+#main-panel {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+#main-panel.shrink-panel {
+    flex: 1 1 0;
+    max-width: none;
+}
 #publish-panel, #tail-panel {
     flex: 0 0 20%;
     max-width: 20%;
     min-width: 0;
     box-sizing: border-box;
 }
-/*
-  To make publish-panel or tail-panel occupy 40% width when only one is visible,
-  add the 'wide-panel' class to the panel.
-*/
 .wide-panel {
     flex: 0 0 40% !important;
     max-width: 40% !important;
-}
-
-#main-panel {
-    flex: 0 0 55%;
-    max-width: 55%;
-    min-width: 0;
-    box-sizing: border-box;
 }
 
 @media (max-width: 900px) {

@@ -247,9 +247,9 @@ $(function() {
             autorefreshCountdown--;
             if (autorefreshCountdown > 0) {
                 $autorefresh.html('Refreshing...' + autorefreshCountdown);
-                if (autorefreshCountdown % 2 === 0) {
+                // if (autorefreshCountdown % 2 === 0) {
                     refreshStats();
-                }
+                // }
             } else {
                 clearInterval(autorefreshInterval);
                 $autorefresh.html(originalIconHtml);
@@ -272,6 +272,11 @@ $(function() {
             $('#tail-panel').addClass('wide-panel');
         } else {
             $('#tail-panel').removeClass('wide-panel');
+        }
+        if (publishVisible || tailVisible) {
+            $('#main-panel').addClass('shrink-panel');
+        } else {
+            $('#main-panel').removeClass('shrink-panel');
         }
     }
 
