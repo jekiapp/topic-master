@@ -5,6 +5,7 @@ package detail
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jekiapp/topic-master/internal/config"
 	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
@@ -102,7 +103,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		for _, host := range nsqdHosts {
 			paused, err := uc.repo.IsTopicPausedOnNsqd(host, topicName)
 			if err != nil {
-				return NsqTopicDetailResponse{}, fmt.Errorf("failed to check paused status on nsqd host %s: %w", host, err)
+				log.Printf("failed to check paused status on nsqd host %s: %v", host, err)
 			}
 			if paused {
 				platformStatus.IsPaused = true

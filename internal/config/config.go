@@ -45,7 +45,6 @@ func NewConfig(db *buntdb.DB) (*Config, error) {
 	if err := msgpack.Unmarshal([]byte(raw), &cfg); err != nil {
 		return nil, errors.New("failed to unmarshal topic-master_config: " + err.Error())
 	}
-
 	return &cfg, nil
 }
 
