@@ -5,6 +5,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/model/entity"
+	"github.com/jekiapp/topic-master/internal/repository"
+	dbPkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
 
@@ -31,6 +35,21 @@ func TruncateTable(db *buntdb.DB, prefix string) error {
 	})
 }
 
+// TruncateTable deletes all records in the application table.
+func TruncateEntity(db *buntdb.DB, entityType string) error {
+	repository.Init(&config.Config{}, db)
+	entities, err := dbPkg.SelectAll[entity.Entity](db, "="+entityType, entity.IdxEntity_TypeID)
+	if err != nil {
+		return err
+	}
+	for _, ent := range entities {
+		if err := dbPkg.DeleteByID[entity.Entity](db, ent.ID); err != nil {
+			return fmt.Errorf("failed to delete entity %s: %w", ent.ID, err)
+		}
+	}
+	return nil
+}
+
 // example: go run main.go ../../data/topic-master.db truncate entity
 func main() {
 	if len(os.Args) < 2 {
@@ -51,5 +70,12 @@ func main() {
 			log.Fatalf("failed to truncate table: %v", err)
 		}
 		fmt.Println("Table truncated successfully.")
+	}
+
+	if action == "truncate-channels" {
+		if err := TruncateEntity(db, entity.EntityType_NSQChannel); err != nil {
+			log.Fatalf("failed to truncate entity: %v", err)
+		}
+		fmt.Println("Entity truncated successfully.")
 	}
 }
