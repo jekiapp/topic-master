@@ -79,6 +79,33 @@ function updateChannelsTable(topic, hosts) {
                 });
                 row.appendChild(messagesCell);
 
+                // Actions column
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'actions-cell';
+                
+                // Create wrapper div for buttons
+                const actionsWrapper = document.createElement('div');
+                actionsWrapper.className = 'actions-wrapper';
+                
+                const actionButtons = [
+                    { name: 'bookmark', title: 'Bookmark Channel', icon: '📌' },
+                    { name: 'pause', title: 'Pause Channel', icon: '⏸️' },
+                    { name: 'delete', title: 'Delete Channel', icon: '🗑️' },
+                    { name: 'empty', title: 'Empty Channel', icon: '🧹' }
+                ];
+
+                actionButtons.forEach(action => {
+                    const button = document.createElement('button');
+                    button.className = `action-icon-btn btn-${action.name}`;
+                    button.title = action.title;
+                    button.textContent = action.icon;
+                    button.onclick = () => handleChannelAction(action.name, channel.name);
+                    actionsWrapper.appendChild(button);
+                });
+                
+                actionsCell.appendChild(actionsWrapper);
+                row.appendChild(actionsCell);
+
                 tbody.appendChild(row);
             });
         })
@@ -89,4 +116,29 @@ function refreshChannels(topic, hosts) {
     currentTopic = topic;
     nsqdHosts = hosts;
     updateChannelsTable(topic, hosts);
+}
+
+function handleChannelAction(action, channelName) {
+    console.log(`${action} action clicked for channel: ${channelName}`);
+    // TODO: Implement actual functionality for each action
+    switch(action) {
+        case 'bookmark':
+            alert(`Bookmark channel: ${channelName}`);
+            break;
+        case 'pause':
+            alert(`Pause channel: ${channelName}`);
+            break;
+        case 'delete':
+            if (confirm(`Are you sure you want to delete channel: ${channelName}?`)) {
+                alert(`Delete channel: ${channelName}`);
+            }
+            break;
+        case 'empty':
+            if (confirm(`Are you sure you want to empty channel: ${channelName}?`)) {
+                alert(`Empty channel: ${channelName}`);
+            }
+            break;
+        default:
+            console.log(`Unknown action: ${action}`);
+    }
 } 

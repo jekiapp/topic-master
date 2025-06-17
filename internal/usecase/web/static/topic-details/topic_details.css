@@ -365,29 +365,35 @@ body {
 .channels-table td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-purple, #b5a1d8);
+    vertical-align: middle;
 }
 
 .channels-table th {
     background-color: var(--header-bg-color);
     font-weight: bold;
+    text-align: center;
 }
 
 .channels-table tr:hover {
     background-color: var(--hover-bg-color);
 }
 
-.channels-table .states-cell,
-.channels-table .messages-cell {
-    display: flex;
-    gap: 16px;
-}
+/* States and Messages content styling is handled by individual items */
 
 .channels-table .state-item,
 .channels-table .message-item {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.channels-table .state-item:last-child,
+.channels-table .message-item:last-child {
+    margin-bottom: 0;
 }
 
 .channels-table .state-label,
@@ -399,4 +405,51 @@ body {
 .channels-table .state-value,
 .channels-table .message-value {
     font-weight: 500;
+}
+
+.channels-table .actions-cell {
+    text-align: center;
+}
+
+.channels-table .actions-wrapper {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-icon-btn {
+    background: none;
+    border: 1px solid var(--border-purple);
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s, transform 0.1s;
+    min-width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-icon-btn:hover {
+    background: var(--shadow-focus);
+    transform: scale(1.05);
+}
+
+.action-icon-btn.btn-bookmark:hover {
+    background: #fff3cd;
+}
+
+.action-icon-btn.btn-pause:hover {
+    background: #ffe5b4;
+}
+
+.action-icon-btn.btn-delete:hover {
+    background: #f8d7da;
+}
+
+.action-icon-btn.btn-empty:hover {
+    background: #e1ecf4;
 }
