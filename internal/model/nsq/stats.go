@@ -4,6 +4,10 @@ package nsq
 // json tags are provided for marshaling
 // Only relevant fields from stats.json are included
 
+type IStatsGetter interface {
+	GetStats(nsqdHosts []string, topic, channel string) ([]Stats, error)
+}
+
 type Stats struct {
 	TopicName    string    `json:"topic_name"`
 	Depth        int       `json:"depth"`

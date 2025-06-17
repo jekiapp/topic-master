@@ -10,6 +10,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/config"
 	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	nsqmodel "github.com/jekiapp/topic-master/internal/model/nsq"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/jekiapp/topic-master/pkg/util"
@@ -98,17 +99,17 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 
 	// --- Fill PlatformStatus ---
 	platformStatus := PlatformStatus{}
-	if len(nsqdHosts) > 0 {
-		// Check if topic is paused on all hosts
-		for _, host := range nsqdHosts {
-			paused, err := uc.repo.IsTopicPausedOnNsqd(host, topicName)
-			if err != nil {
-				log.Printf("failed to check paused status on nsqd host %s: %v", host, err)
-			}
-			if paused {
-				platformStatus.IsPaused = true
-				break
-			}
+
+	stats, err := uc.repo.GetStats(nsqdHosts, topicName, "")
+	if err != nil {
+		log.Printf("failed to get stats: %v", err)
+	}
+
+	// check if any of the nsqd hosts is paused
+	for _, stat := range stats {
+		if stat.Paused {
+			platformStatus.IsPaused = true
+			break
 		}
 	}
 
@@ -147,9 +148,9 @@ func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input Publish
 }
 
 type iNsqTopicDetailRepo interface {
+	nsqmodel.IStatsGetter
 	GetEntityByID(id string) (entity.Entity, error)
 	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
-	IsTopicPausedOnNsqd(host, topic string) (bool, error)
 	IsBookmarked(id, userID string) (bool, error)
 }
 
@@ -169,6 +170,6 @@ func (r *nsqTopicDetailRepo) GetNsqdHosts(lookupdURL, topicID string) ([]string,
 	return nsqlogic.GetNsqdHosts(lookupdURL, topicID)
 }
 
-func (r *nsqTopicDetailRepo) IsTopicPausedOnNsqd(host, topic string) (bool, error) {
-	return nsqrepo.IsTopicPausedOnNsqd(host, topic)
+func (r *nsqTopicDetailRepo) GetStats(nsqdHosts []string, topic, channel string) ([]nsqmodel.Stats, error) {
+	return nsqrepo.GetStats(nsqdHosts, topic, channel)
 }
