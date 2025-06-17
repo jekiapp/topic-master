@@ -18,14 +18,14 @@ import (
 )
 
 type NsqTopicDetailResponse struct {
-	ID             string         `json:"id"`
-	Name           string         `json:"name"`
-	EventTrigger   string         `json:"event_trigger"`
-	GroupOwner     string         `json:"group_owner"`
-	Bookmarked     bool           `json:"bookmarked"`
-	Permission     Permission     `json:"permission"`
-	NsqdHosts      []string       `json:"nsqd_hosts"`
-	PlatformStatus PlatformStatus `json:"platform_status"`
+	ID             string                `json:"id"`
+	Name           string                `json:"name"`
+	EventTrigger   string                `json:"event_trigger"`
+	GroupOwner     string                `json:"group_owner"`
+	Bookmarked     bool                  `json:"bookmarked"`
+	Permission     Permission            `json:"permission"`
+	NsqdHosts      []nsqmodel.SimpleNsqd `json:"nsqd_hosts"`
+	PlatformStatus PlatformStatus        `json:"platform_status"`
 }
 
 type PlatformStatus struct {
@@ -71,9 +71,10 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		nsqdHosts = nil // or log error, but don't fail the whole response
 	}
 
-	// detect if the hosts is docker network
-	// this is only happens in local development
-	nsqdHosts = util.ReplaceDockerHostWithLocalhost(nsqdHosts)
+	hosts := make([]string, 0, len(nsqdHosts))
+	for _, h := range nsqdHosts {
+		hosts = append(hosts, h.Address)
+	}
 
 	permission := Permission{}
 	if ent.GroupOwner == entity.GroupNone {
@@ -100,7 +101,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	// --- Fill PlatformStatus ---
 	platformStatus := PlatformStatus{}
 
-	stats, err := uc.repo.GetStats(nsqdHosts, topicName, "")
+	stats, err := uc.repo.GetStats(hosts, topicName, "")
 	if err != nil {
 		log.Printf("failed to get stats: %v", err)
 	}
@@ -150,7 +151,7 @@ func (uc NsqTopicDetailUsecase) HandlePublish(ctx context.Context, input Publish
 type iNsqTopicDetailRepo interface {
 	nsqmodel.IStatsGetter
 	GetEntityByID(id string) (entity.Entity, error)
-	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
+	GetNsqdHosts(lookupdURL, topic string) ([]nsqmodel.SimpleNsqd, error)
 	IsBookmarked(id, userID string) (bool, error)
 }
 
@@ -166,7 +167,7 @@ func (r *nsqTopicDetailRepo) GetEntityByID(topic string) (entity.Entity, error) 
 	return entityrepo.GetEntityByID(r.db, topic)
 }
 
-func (r *nsqTopicDetailRepo) GetNsqdHosts(lookupdURL, topicID string) ([]string, error) {
+func (r *nsqTopicDetailRepo) GetNsqdHosts(lookupdURL, topicID string) ([]nsqmodel.SimpleNsqd, error) {
 	return nsqlogic.GetNsqdHosts(lookupdURL, topicID)
 }
 

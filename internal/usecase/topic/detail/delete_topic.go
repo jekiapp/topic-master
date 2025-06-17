@@ -7,6 +7,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/config"
 	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	nsqmodel "github.com/jekiapp/topic-master/internal/model/nsq"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
@@ -32,7 +33,7 @@ type DeleteTopicUsecase struct {
 
 type iDeleteTopicRepo interface {
 	GetEntityByID(id string) (entity.Entity, error)
-	GetNsqdHosts(lookupdURL, topic string) ([]string, error)
+	GetNsqdHosts(lookupdURL, topic string) ([]nsqmodel.SimpleNsqd, error)
 	DeleteEntityByID(id string) error
 	DeleteTopicFromNsqd(host, topic string) error
 }
@@ -45,7 +46,7 @@ func (r *deleteTopicRepo) GetEntityByID(id string) (entity.Entity, error) {
 	return entityrepo.GetEntityByID(r.db, id)
 }
 
-func (r *deleteTopicRepo) GetNsqdHosts(lookupdURL, topicName string) ([]string, error) {
+func (r *deleteTopicRepo) GetNsqdHosts(lookupdURL, topicName string) ([]nsqmodel.SimpleNsqd, error) {
 	return nsqlogic.GetNsqdHosts(lookupdURL, topicName)
 }
 
@@ -83,7 +84,7 @@ func (uc DeleteTopicUsecase) Handle(ctx context.Context, params map[string]strin
 			return DeleteTopicResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 		}
 		for _, host := range nsqdHosts {
-			if err := uc.repo.DeleteTopicFromNsqd(host, ent.Name); err != nil {
+			if err := uc.repo.DeleteTopicFromNsqd(host.Address, ent.Name); err != nil {
 				return DeleteTopicResponse{}, fmt.Errorf("failed to delete topic from nsqd host %s: %w", host, err)
 			}
 		}

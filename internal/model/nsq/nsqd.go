@@ -11,3 +11,8 @@ type Nsqd struct {
 	HTTPPort         int    `json:"http_port"`
 	Version          string `json:"version"`
 }
+
+type SimpleNsqd struct {
+	Address  string `json:"address"`
+	HostName string `json:"host_name"`
+}

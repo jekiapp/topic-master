@@ -15,6 +15,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/config"
 	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	nsqmodel "github.com/jekiapp/topic-master/internal/model/nsq"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/tidwall/buntdb"
@@ -39,11 +40,12 @@ type NsqOpsPauseEmptyUsecase struct {
 
 type iNsqOpsPauseEmptyRepo interface {
 	GetEntityByID(id string) (entity.Entity, error)
-	GetNsqdHosts(lookupdURL, topicName string) ([]string, error)
+	GetNsqdHosts(lookupdURL, topicName string) ([]nsqmodel.SimpleNsqd, error)
 	PauseTopicOnNsqd(host, topic string) error
 	EmptyTopicOnNsqd(host, topic string) error
 	IsTopicPausedOnNsqd(host, topic string) (bool, error)
 	ResumeTopicOnNsqd(host, topic string) error
+	GetStats(nsqdHosts []string, topic, channel string) ([]nsqmodel.Stats, error)
 }
 
 type nsqOpsPauseEmptyRepo struct {
@@ -54,7 +56,7 @@ func (r *nsqOpsPauseEmptyRepo) GetEntityByID(id string) (entity.Entity, error) {
 	return entityrepo.GetEntityByID(r.db, id)
 }
 
-func (r *nsqOpsPauseEmptyRepo) GetNsqdHosts(lookupdURL, topicName string) ([]string, error) {
+func (r *nsqOpsPauseEmptyRepo) GetNsqdHosts(lookupdURL, topicName string) ([]nsqmodel.SimpleNsqd, error) {
 	return nsqlogic.GetNsqdHosts(lookupdURL, topicName)
 }
 
@@ -72,6 +74,10 @@ func (r *nsqOpsPauseEmptyRepo) IsTopicPausedOnNsqd(host, topic string) (bool, er
 
 func (r *nsqOpsPauseEmptyRepo) ResumeTopicOnNsqd(host, topic string) error {
 	return nsqrepo.ResumeTopicOnNsqd(host, topic)
+}
+
+func (r *nsqOpsPauseEmptyRepo) GetStats(nsqdHosts []string, topic, channel string) ([]nsqmodel.Stats, error) {
+	return nsqrepo.GetStats(nsqdHosts, topic, channel)
 }
 
 func NewNsqOpsPauseEmptyUsecase(cfg *config.Config, db *buntdb.DB) NsqOpsPauseEmptyUsecase {
@@ -99,13 +105,20 @@ func (uc NsqOpsPauseEmptyUsecase) HandlePause(ctx context.Context, params map[st
 	if err != nil {
 		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 	}
+
+	hosts := make([]string, 0, len(nsqdHosts))
+	for _, h := range nsqdHosts {
+		hosts = append(hosts, h.Address)
+	}
+
+	stats, err := uc.repo.GetStats(hosts, ent.Name, "")
+	if err != nil {
+		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get stats: %w", err)
+	}
+
 	pausedHosts := 0
-	for _, host := range nsqdHosts {
-		paused, err := uc.repo.IsTopicPausedOnNsqd(host, ent.Name)
-		if err != nil {
-			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to check paused status on nsqd host %s: %w", host, err)
-		}
-		if paused {
+	for _, stat := range stats {
+		if stat.Paused {
 			pausedHosts++
 		}
 	}
@@ -113,7 +126,7 @@ func (uc NsqOpsPauseEmptyUsecase) HandlePause(ctx context.Context, params map[st
 		return NsqOpsPauseEmptyResponse{Message: "Topic is already paused on all hosts"}, nil
 	}
 	for _, host := range nsqdHosts {
-		if err := uc.repo.PauseTopicOnNsqd(host, ent.Name); err != nil {
+		if err := uc.repo.PauseTopicOnNsqd(host.Address, ent.Name); err != nil {
 			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", host, err)
 		}
 	}
@@ -148,7 +161,7 @@ func (uc NsqOpsPauseEmptyUsecase) HandleResume(ctx context.Context, params map[s
 	}
 	resumedHosts := 0
 	for _, host := range nsqdHosts {
-		paused, err := uc.repo.IsTopicPausedOnNsqd(host, ent.Name)
+		paused, err := uc.repo.IsTopicPausedOnNsqd(host.Address, ent.Name)
 		if err != nil {
 			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to check paused status on nsqd host %s: %w", host, err)
 		}
@@ -160,7 +173,7 @@ func (uc NsqOpsPauseEmptyUsecase) HandleResume(ctx context.Context, params map[s
 		return NsqOpsPauseEmptyResponse{Message: "Topic is already resumed on all hosts"}, nil
 	}
 	for _, host := range nsqdHosts {
-		if err := uc.repo.ResumeTopicOnNsqd(host, ent.Name); err != nil {
+		if err := uc.repo.ResumeTopicOnNsqd(host.Address, ent.Name); err != nil {
 			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to resume topic on nsqd host %s: %w", host, err)
 		}
 	}
@@ -185,14 +198,14 @@ func (uc NsqOpsPauseEmptyUsecase) doNsqOps(ctx context.Context, id, action strin
 	switch action {
 	case "pause":
 		for _, host := range nsqdHosts {
-			if err := uc.repo.PauseTopicOnNsqd(host, ent.Name); err != nil {
+			if err := uc.repo.PauseTopicOnNsqd(host.Address, ent.Name); err != nil {
 				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", host, err)
 			}
 		}
 		return NsqOpsPauseEmptyResponse{Message: "Topic paused successfully"}, nil
 	case "empty":
 		for _, host := range nsqdHosts {
-			if err := uc.repo.EmptyTopicOnNsqd(host, ent.Name); err != nil {
+			if err := uc.repo.EmptyTopicOnNsqd(host.Address, ent.Name); err != nil {
 				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to empty topic on nsqd host %s: %w", host, err)
 			}
 		}
