@@ -25,6 +25,7 @@ type Channel struct {
 	RequeueCount  int      `json:"requeue_count"`
 	ClientCount   int      `json:"client_count"`
 	Clients       []Client `json:"clients"`
+	Paused        bool     `json:"paused"`
 }
 
 type Client struct {

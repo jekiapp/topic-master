@@ -32,6 +32,7 @@ type NsqChannelResponse struct {
 	InFlight     int    `json:"in_flight"`
 	Requeued     int    `json:"requeued"`
 	Deferred     int    `json:"deferred"`
+	IsPaused     bool   `json:"is_paused"`
 }
 
 func NewNsqChannelListUsecase(db *buntdb.DB) NsqChannelListUsecase {
@@ -89,6 +90,7 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 				InFlight: channel.InFlightCount,
 				Requeued: channel.RequeueCount,
 				Deferred: channel.DeferredCount,
+				Paused:   channel.Paused,
 			}
 		}
 	}
@@ -150,6 +152,7 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 			Requeued:     stats.Requeued,
 			Deferred:     stats.Deferred,
 			IsBookmarked: isBookmarked,
+			IsPaused:     stats.Paused,
 		}
 	}
 

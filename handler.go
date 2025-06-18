@@ -54,6 +54,7 @@ type Handler struct {
 	deleteTopicUC            topicDetailUC.DeleteTopicUsecase
 	nsqOpsPauseEmptyUC       topicDetailUC.NsqOpsPauseEmptyUsecase
 	nsqChannelListUC         topicDetailUC.NsqChannelListUsecase
+	nsqChannelOpsUC          topicDetailUC.NsqChannelOpsUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -94,6 +95,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		deleteTopicUC:            topicDetailUC.NewDeleteTopicUsecase(cfg, db),
 		nsqOpsPauseEmptyUC:       topicDetailUC.NewNsqOpsPauseEmptyUsecase(cfg, db),
 		nsqChannelListUC:         topicDetailUC.NewNsqChannelListUsecase(db),
+		nsqChannelOpsUC:          topicDetailUC.NewNsqChannelOpsUsecase(cfg, db),
 	}
 }
 
@@ -156,6 +158,9 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/topic/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleEmpty)))
 	mux.HandleFunc("/api/topic/nsq/resume", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleResume)))
 	mux.HandleFunc("/api/topic/nsq/list-channels", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelListUC.HandleQuery)))
+	mux.HandleFunc("/api/channel/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandlePause)))
+	mux.HandleFunc("/api/channel/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleEmpty)))
+	mux.HandleFunc("/api/channel/nsq/resume", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleResume)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
