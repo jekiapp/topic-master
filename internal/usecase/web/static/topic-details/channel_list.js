@@ -147,21 +147,36 @@ function updateChannelsTable(topic, hosts) {
                 };
                 actionsWrapper.appendChild(bookmarkImg);
 
-                // Other action buttons (pause, delete, empty)
-                const actionButtons = [
-                    { name: 'pause', title: 'Pause Channel', icon: '⏸️' },
-                    { name: 'delete', title: 'Delete Channel', icon: '🗑️' },
-                    { name: 'empty', title: 'Empty Channel', icon: '🧹' }
-                ];
-
-                actionButtons.forEach(action => {
-                    const button = document.createElement('button');
-                    button.className = `action-icon-btn btn-${action.name}`;
-                    button.title = action.title;
-                    button.textContent = action.icon;
-                    button.onclick = () => handleChannelAction(action.name, channel.name);
-                    actionsWrapper.appendChild(button);
-                });
+                // Other action buttons (pause/resume, delete, empty)
+                // Only show pause or resume based on is_paused
+                if (channel.is_paused) {
+                    const resumeBtn = document.createElement('button');
+                    resumeBtn.className = 'action-icon-btn btn-resume';
+                    resumeBtn.title = 'Resume Channel';
+                    resumeBtn.textContent = '▶️';
+                    resumeBtn.onclick = () => handleChannelAction('resume', channel.name);
+                    actionsWrapper.appendChild(resumeBtn);
+                } else {
+                    const pauseBtn = document.createElement('button');
+                    pauseBtn.className = 'action-icon-btn btn-pause';
+                    pauseBtn.title = 'Pause Channel';
+                    pauseBtn.textContent = '⏸️';
+                    pauseBtn.onclick = () => handleChannelAction('pause', channel.name);
+                    actionsWrapper.appendChild(pauseBtn);
+                }
+                // Delete and empty buttons
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'action-icon-btn btn-delete';
+                deleteBtn.title = 'Delete Channel';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.onclick = () => handleChannelAction('delete', channel.name);
+                actionsWrapper.appendChild(deleteBtn);
+                const emptyBtn = document.createElement('button');
+                emptyBtn.className = 'action-icon-btn btn-empty';
+                emptyBtn.title = 'Empty Channel';
+                emptyBtn.textContent = '🧹';
+                emptyBtn.onclick = () => handleChannelAction('empty', channel.name);
+                actionsWrapper.appendChild(emptyBtn);
                 
                 actionsCell.appendChild(actionsWrapper);
                 row.appendChild(actionsCell);
@@ -180,13 +195,66 @@ function refreshChannels(topic, hosts) {
 
 function handleChannelAction(action, channelName) {
     console.log(`${action} action clicked for channel: ${channelName}`);
-    // TODO: Implement actual functionality for each action
+    // Find the row and get the channel id
+    const row = document.querySelector(`tr[data-channel-name="${channelName}"]`);
+    const channelId = row ? row.getAttribute('data-channel-id') : null;
     switch(action) {
         case 'bookmark':
             alert(`Bookmark channel: ${channelName}`);
             break;
         case 'pause':
-            alert(`Pause channel: ${channelName}`);
+            if (!channelId) {
+                alert('Channel ID not found.');
+                return;
+            }
+            if (confirm(`Are you sure you want to pause channel: ${channelName}?`)) {
+                const btn = row.querySelector('.btn-pause');
+                if (btn) btn.disabled = true;
+                fetch(`/api/channel/nsq/pause?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && data.message) {
+                            alert(data.message);
+                        } else {
+                            alert('Channel paused successfully');
+                        }
+                        // Refresh channel list
+                        refreshChannels(currentTopic, nsqdHosts);
+                    })
+                    .catch(err => {
+                        alert('Failed to pause channel');
+                    })
+                    .finally(() => {
+                        if (btn) btn.disabled = false;
+                    });
+            }
+            break;
+        case 'resume':
+            if (!channelId) {
+                alert('Channel ID not found.');
+                return;
+            }
+            if (confirm(`Are you sure you want to resume channel: ${channelName}?`)) {
+                const btn = row.querySelector('.btn-resume');
+                if (btn) btn.disabled = true;
+                fetch(`/api/channel/nsq/resume?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && data.message) {
+                            alert(data.message);
+                        } else {
+                            alert('Channel resumed successfully');
+                        }
+                        // Refresh channel list
+                        refreshChannels(currentTopic, nsqdHosts);
+                    })
+                    .catch(err => {
+                        alert('Failed to resume channel');
+                    })
+                    .finally(() => {
+                        if (btn) btn.disabled = false;
+                    });
+            }
             break;
         case 'delete':
             if (confirm(`Are you sure you want to delete channel: ${channelName}?`)) {
@@ -194,8 +262,29 @@ function handleChannelAction(action, channelName) {
             }
             break;
         case 'empty':
+            if (!channelId) {
+                alert('Channel ID not found.');
+                return;
+            }
             if (confirm(`Are you sure you want to empty channel: ${channelName}?`)) {
-                alert(`Empty channel: ${channelName}`);
+                // Disable the button to prevent double click
+                const btn = row.querySelector('.btn-empty');
+                if (btn) btn.disabled = true;
+                fetch(`/api/channel/nsq/empty?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && data.message) {
+                            alert(data.message);
+                        } else {
+                            alert('Channel emptied successfully');
+                        }
+                    })
+                    .catch(err => {
+                        alert('Failed to empty channel');
+                    })
+                    .finally(() => {
+                        if (btn) btn.disabled = false;
+                    });
             }
             break;
         default:
