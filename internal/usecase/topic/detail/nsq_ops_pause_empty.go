@@ -18,6 +18,7 @@ import (
 	nsqmodel "github.com/jekiapp/topic-master/internal/model/nsq"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -125,9 +126,12 @@ func (uc NsqOpsPauseEmptyUsecase) HandlePause(ctx context.Context, params map[st
 	if pausedHosts == len(nsqdHosts) {
 		return NsqOpsPauseEmptyResponse{Message: "Topic is already paused on all hosts"}, nil
 	}
-	for _, host := range nsqdHosts {
-		if err := uc.repo.PauseTopicOnNsqd(host.Address, ent.Name); err != nil {
-			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", host, err)
+	errs := util.ParallelForEachHost(hosts, ent.Name, "", func(host, topic, _ string) error {
+		return uc.repo.PauseTopicOnNsqd(host, topic)
+	})
+	for i, e := range errs {
+		if e != nil {
+			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", hosts[i], e)
 		}
 	}
 	return NsqOpsPauseEmptyResponse{Message: "Topic paused successfully"}, nil
@@ -159,22 +163,17 @@ func (uc NsqOpsPauseEmptyUsecase) HandleResume(ctx context.Context, params map[s
 	if err != nil {
 		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 	}
-	resumedHosts := 0
-	for _, host := range nsqdHosts {
-		paused, err := uc.repo.IsTopicPausedOnNsqd(host.Address, ent.Name)
-		if err != nil {
-			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to check paused status on nsqd host %s: %w", host, err)
-		}
-		if !paused {
-			resumedHosts++
-		}
+
+	hosts := make([]string, 0, len(nsqdHosts))
+	for _, h := range nsqdHosts {
+		hosts = append(hosts, h.Address)
 	}
-	if resumedHosts == len(nsqdHosts) {
-		return NsqOpsPauseEmptyResponse{Message: "Topic is already resumed on all hosts"}, nil
-	}
-	for _, host := range nsqdHosts {
-		if err := uc.repo.ResumeTopicOnNsqd(host.Address, ent.Name); err != nil {
-			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to resume topic on nsqd host %s: %w", host, err)
+	errs := util.ParallelForEachHost(hosts, ent.Name, "", func(host, topic, _ string) error {
+		return uc.repo.ResumeTopicOnNsqd(host, topic)
+	})
+	for i, e := range errs {
+		if e != nil {
+			return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to resume topic on nsqd host %s: %w", hosts[i], e)
 		}
 	}
 	return NsqOpsPauseEmptyResponse{Message: "Topic resumed successfully"}, nil
@@ -195,18 +194,29 @@ func (uc NsqOpsPauseEmptyUsecase) doNsqOps(ctx context.Context, id, action strin
 		return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 	}
 
+	hosts := make([]string, 0, len(nsqdHosts))
+	for _, h := range nsqdHosts {
+		hosts = append(hosts, h.Address)
+	}
+
 	switch action {
 	case "pause":
-		for _, host := range nsqdHosts {
-			if err := uc.repo.PauseTopicOnNsqd(host.Address, ent.Name); err != nil {
-				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", host, err)
+		errs := util.ParallelForEachHost(hosts, ent.Name, "", func(host, topic, _ string) error {
+			return uc.repo.PauseTopicOnNsqd(host, topic)
+		})
+		for i, e := range errs {
+			if e != nil {
+				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to pause topic on nsqd host %s: %w", hosts[i], e)
 			}
 		}
 		return NsqOpsPauseEmptyResponse{Message: "Topic paused successfully"}, nil
 	case "empty":
-		for _, host := range nsqdHosts {
-			if err := uc.repo.EmptyTopicOnNsqd(host.Address, ent.Name); err != nil {
-				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to empty topic on nsqd host %s: %w", host, err)
+		errs := util.ParallelForEachHost(hosts, ent.Name, "", func(host, topic, _ string) error {
+			return uc.repo.EmptyTopicOnNsqd(host, topic)
+		})
+		for i, e := range errs {
+			if e != nil {
+				return NsqOpsPauseEmptyResponse{}, fmt.Errorf("failed to empty topic on nsqd host %s: %w", hosts[i], e)
 			}
 		}
 		return NsqOpsPauseEmptyResponse{Message: "Topic emptied successfully"}, nil
