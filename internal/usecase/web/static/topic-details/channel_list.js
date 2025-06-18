@@ -27,10 +27,16 @@ function updateChannelsTable(topic, hosts) {
             data.channels.forEach(channel => {
                 const row = document.createElement('tr');
                 row.setAttribute('data-channel-name', channel.name);
+                row.setAttribute('data-channel-id', channel.id);
                 
                 // Name column
                 const nameCell = document.createElement('td');
-                nameCell.textContent = channel.name;
+                nameCell.className = 'channel-name-cell';
+
+                // Channel name text
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = channel.name;
+                nameCell.appendChild(nameSpan);
                 row.appendChild(nameCell);
 
                 // States column
@@ -96,8 +102,53 @@ function updateChannelsTable(topic, hosts) {
                 const actionsWrapper = document.createElement('div');
                 actionsWrapper.className = 'actions-wrapper';
                 
+                // --- Bookmark PNG icon as action button ---
+                const bookmarkImg = document.createElement('img');
+                bookmarkImg.className = 'bookmark-img-channel';
+                bookmarkImg.style.width = '20px';
+                bookmarkImg.style.height = '20px';
+                bookmarkImg.style.verticalAlign = 'middle';
+                bookmarkImg.style.marginRight = '8px';
+                bookmarkImg.src = channel.is_bookmarked ? '/icons/bookmark-true.png' : '/icons/bookmark-false.png';
+                bookmarkImg.title = channel.is_bookmarked ? 'Remove Bookmark' : 'Add Bookmark';
+                bookmarkImg.style.cursor = (window.parent.isLogin && window.parent.isLogin()) ? 'pointer' : 'not-allowed';
+                bookmarkImg.onclick = function(e) {
+                    e.stopPropagation();
+                    if (!(window.parent.isLogin && window.parent.isLogin())) {
+                        alert('Please log in to bookmark channels.');
+                        return;
+                    }
+                    const newState = !channel.is_bookmarked;
+                    // Optimistic UI update
+                    bookmarkImg.src = newState ? '/icons/bookmark-true.png' : '/icons/bookmark-false.png';
+                    bookmarkImg.title = newState ? 'Remove Bookmark' : 'Add Bookmark';
+                    channel.is_bookmarked = newState;
+                    fetch('/api/entity/toggle-bookmark', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entity_id: channel.id, bookmark: newState })
+                    }).then(resp => {
+                        if (!resp.ok) {
+                            // Revert UI if failed
+                            bookmarkImg.src = !newState ? '/icons/bookmark-true.png' : '/icons/bookmark-false.png';
+                            bookmarkImg.title = !newState ? 'Remove Bookmark' : 'Add Bookmark';
+                            channel.is_bookmarked = !newState;
+                            resp.json().then(data => {
+                                alert(data.error || 'Failed to toggle bookmark');
+                            });
+                        }
+                    }).catch(() => {
+                        // Revert UI if failed
+                        bookmarkImg.src = !newState ? '/icons/bookmark-true.png' : '/icons/bookmark-false.png';
+                        bookmarkImg.title = !newState ? 'Remove Bookmark' : 'Add Bookmark';
+                        channel.is_bookmarked = !newState;
+                        alert('Failed to toggle bookmark');
+                    });
+                };
+                actionsWrapper.appendChild(bookmarkImg);
+
+                // Other action buttons (pause, delete, empty)
                 const actionButtons = [
-                    { name: 'bookmark', title: 'Bookmark Channel', icon: '📌' },
                     { name: 'pause', title: 'Pause Channel', icon: '⏸️' },
                     { name: 'delete', title: 'Delete Channel', icon: '🗑️' },
                     { name: 'empty', title: 'Empty Channel', icon: '🧹' }

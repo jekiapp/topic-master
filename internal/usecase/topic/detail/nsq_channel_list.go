@@ -9,7 +9,9 @@ import (
 	topicLogic "github.com/jekiapp/topic-master/internal/logic/topic"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	modelnsq "github.com/jekiapp/topic-master/internal/model/nsq"
+	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	nsqrepo "github.com/jekiapp/topic-master/internal/repository/nsq"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -20,15 +22,16 @@ type NsqChannelListResponse struct {
 }
 
 type NsqChannelResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Topic       string `json:"topic"`
-	Depth       int    `json:"depth"`
-	Messages    int    `json:"messages"`
-	InFlight    int    `json:"in_flight"`
-	Requeued    int    `json:"requeued"`
-	Deferred    int    `json:"deferred"`
+	ID           string `json:"id"`
+	IsBookmarked bool   `json:"is_bookmarked"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Topic        string `json:"topic"`
+	Depth        int    `json:"depth"`
+	Messages     int    `json:"messages"`
+	InFlight     int    `json:"in_flight"`
+	Requeued     int    `json:"requeued"`
+	Deferred     int    `json:"deferred"`
 }
 
 func NewNsqChannelListUsecase(db *buntdb.DB) NsqChannelListUsecase {
@@ -119,19 +122,34 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 		}
 	}
 
+	user := util.GetUserInfo(ctx)
+	userID := ""
+	if user != nil {
+		userID = user.ID
+	}
+
 	channelResponses := make([]NsqChannelResponse, len(channelsDB))
 	for i, c := range channelsDB {
+		isBookmarked := false
+		if userID != "" {
+			b, err := uc.repo.IsBookmarked(c.ID, userID)
+			if err == nil {
+				isBookmarked = b
+			}
+		}
+
 		stats := channelStats[c.Name]
 		channelResponses[i] = NsqChannelResponse{
-			ID:          c.ID,
-			Name:        c.Name,
-			Description: c.Description,
-			Topic:       c.Metadata["topic"],
-			Depth:       stats.Depth,
-			Messages:    stats.Messages,
-			InFlight:    stats.InFlight,
-			Requeued:    stats.Requeued,
-			Deferred:    stats.Deferred,
+			ID:           c.ID,
+			Name:         c.Name,
+			Description:  c.Description,
+			Topic:        c.Metadata["topic"],
+			Depth:        stats.Depth,
+			Messages:     stats.Messages,
+			InFlight:     stats.InFlight,
+			Requeued:     stats.Requeued,
+			Deferred:     stats.Deferred,
+			IsBookmarked: isBookmarked,
 		}
 	}
 
@@ -144,6 +162,7 @@ type iNsqChannelListRepo interface {
 	modelnsq.IStatsGetter
 	GetAllNsqTopicChannels(topic string) ([]entity.Entity, error)
 	DeleteChannel(topic, channel string) error
+	IsBookmarked(id, userID string) (bool, error)
 }
 
 type nsqChannelListRepo struct {
@@ -168,4 +187,8 @@ func (r *nsqChannelListRepo) CreateNsqChannelEntity(topic, channel string) (*ent
 
 func (r *nsqChannelListRepo) GetStats(nsqdHosts []string, topic, channel string) ([]modelnsq.Stats, error) {
 	return nsqrepo.GetStats(nsqdHosts, topic, channel)
+}
+
+func (r *nsqChannelListRepo) IsBookmarked(id, userID string) (bool, error) {
+	return entityrepo.IsBookmarked(r.db, id, userID)
 }
