@@ -40,6 +40,10 @@ func DefaultRegisteredClaims(userID string) jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{
 		Subject:   userID,
 		IssuedAt:  jwt.NewNumericDate(now),
-		ExpiresAt: jwt.NewNumericDate(now.Add(24 * time.Hour)),
+		ExpiresAt: jwt.NewNumericDate(now.Add(defaultJWTExpiry)),
 	}
 }
+
+const (
+	defaultJWTExpiry = 24 * time.Hour * 30 // 30 days
+)

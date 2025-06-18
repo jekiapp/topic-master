@@ -32,7 +32,6 @@ func (uc LogoutUsecase) Handle(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1, // Expire immediately
 	}
 	http.SetCookie(w, cookie)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"redirect": "/#all-topics"}`))
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -108,7 +108,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	rootMiddleware := handlerPkg.InitJWTMiddlewareWithRoot(string(h.config.SecretKey))
 
 	mux.HandleFunc("/api/login", h.loginUC.Handle)
-	mux.HandleFunc("/api/logout", h.logoutUC.Handle)
+	mux.HandleFunc("/logout", h.logoutUC.Handle)
 
 	mux.HandleFunc("/api/user/list", rootMiddleware(handlerPkg.HandleGenericPost(h.getUserListUC.Handle)))
 	mux.HandleFunc("/api/user/create", rootMiddleware(handlerPkg.HandleGenericPost(h.createUserUC.Handle)))
