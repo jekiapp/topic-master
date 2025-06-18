@@ -368,7 +368,7 @@ body {
 .channels-table td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid var(--border-purple, #b5a1d8);
+    border: 1px solid var(--border-purple, #b5a1d8);
     vertical-align: middle;
 }
 
