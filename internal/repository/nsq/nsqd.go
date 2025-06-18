@@ -304,3 +304,48 @@ func ResumeTopicOnNsqd(host, topic string) error {
 	}
 	return nil
 }
+
+// PauseChannelOnNsqd pauses a channel on the given nsqd host
+func PauseChannelOnNsqd(host, topic, channel string) error {
+	url := fmt.Sprintf("http://%s/channel/pause?topic=%s&channel=%s", host, topic, channel)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to pause channel on nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
+
+// EmptyChannelOnNsqd empties a channel on the given nsqd host
+func EmptyChannelOnNsqd(host, topic, channel string) error {
+	url := fmt.Sprintf("http://%s/channel/empty?topic=%s&channel=%s", host, topic, channel)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to empty channel on nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
+
+// ResumeChannelOnNsqd resumes a channel on the given nsqd host
+func ResumeChannelOnNsqd(host, topic, channel string) error {
+	url := fmt.Sprintf("http://%s/channel/unpause?topic=%s&channel=%s", host, topic, channel)
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("failed to resume channel on nsqd %s: %w", host, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("nsqd returned status %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
