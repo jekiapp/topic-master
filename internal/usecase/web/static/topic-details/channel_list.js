@@ -256,9 +256,32 @@ function handleChannelAction(action, channelName) {
                     });
             }
             break;
+        // ... existing code ...
         case 'delete':
+            if (!channelId) {
+                alert('Channel ID not found.');
+                return;
+            }
             if (confirm(`Are you sure you want to delete channel: ${channelName}?`)) {
-                alert(`Delete channel: ${channelName}`);
+                const btn = row.querySelector('.btn-delete');
+                if (btn) btn.disabled = true;
+                fetch(`/api/channel/nsq/delete?id=${encodeURIComponent(channelId)}`)
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && data.message) {
+                            alert(data.message);
+                        } else {
+                            alert('Channel deleted successfully');
+                        }
+                        // Refresh channel list
+                        refreshChannels(currentTopic, nsqdHosts);
+                    })
+                    .catch(err => {
+                        alert('Failed to delete channel');
+                    })
+                    .finally(() => {
+                        if (btn) btn.disabled = false;
+                    });
             }
             break;
         case 'empty':
