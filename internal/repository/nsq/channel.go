@@ -122,3 +122,21 @@ func GetChannelStats(host string, topic string) (map[string]modelnsq.ChannelStat
 
 	return stats, nil
 }
+
+// DeleteChannelFromNsqd deletes a channel from the given nsqd host for a topic
+func DeleteChannelFromNsqd(host, topic, channel string) error {
+	url := fmt.Sprintf("http://%s/channel/delete?topic=%s&channel=%s", host, topic, channel)
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create delete channel request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to delete channel: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("failed to delete channel, status: %s", resp.Status)
+	}
+	return nil
+}
