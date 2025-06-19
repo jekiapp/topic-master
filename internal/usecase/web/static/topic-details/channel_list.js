@@ -37,10 +37,23 @@ function updateChannelsTable(topic, hosts) {
                 const nameWrapper = document.createElement('div');
                 nameWrapper.className = 'channel-name-wrapper';
 
+                // Channel name row (name + paused label)
+                const nameRow = document.createElement('div');
+                nameRow.className = 'channel-name-row';
+
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = channel.name;
                 nameSpan.className = 'channel-name-bold';
-                nameWrapper.appendChild(nameSpan);
+                nameRow.appendChild(nameSpan);
+
+                if (channel.is_paused) {
+                    const pausedLabel = document.createElement('span');
+                    pausedLabel.textContent = 'paused';
+                    pausedLabel.className = 'channel-paused-label';
+                    nameRow.appendChild(pausedLabel);
+                }
+
+                nameWrapper.appendChild(nameRow);
 
                 if (channel.group_owner) {
                     const ownerDiv = document.createElement('div');

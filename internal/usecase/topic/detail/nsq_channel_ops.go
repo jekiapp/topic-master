@@ -12,6 +12,7 @@ package detail
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jekiapp/topic-master/internal/config"
 	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
@@ -102,8 +103,9 @@ func (uc NsqChannelOpsUsecase) HandlePause(ctx context.Context, params map[strin
 	if ent.Resource != "NSQ" {
 		return NsqChannelOpsResponse{}, fmt.Errorf("entity resource is not NSQ")
 	}
+	topic := ent.Metadata["topic"]
 
-	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, ent.Name)
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, topic)
 	if err != nil {
 		return NsqChannelOpsResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 	}
@@ -113,7 +115,7 @@ func (uc NsqChannelOpsUsecase) HandlePause(ctx context.Context, params map[strin
 		hosts = append(hosts, h.Address)
 	}
 
-	stats, err := uc.repo.GetStats(hosts, ent.Name, channel)
+	stats, err := uc.repo.GetStats(hosts, topic, channel)
 	if err != nil {
 		return NsqChannelOpsResponse{}, fmt.Errorf("failed to get stats: %w", err)
 	}
@@ -127,14 +129,24 @@ func (uc NsqChannelOpsUsecase) HandlePause(ctx context.Context, params map[strin
 	if pausedHosts == len(nsqdHosts) {
 		return NsqChannelOpsResponse{Message: "Channel is already paused on all hosts"}, nil
 	}
-	errs := util.ParallelForEachHost(hosts, ent.Name, channel, func(host, topic, channel string) error {
+	errs := util.ParallelForEachHost(hosts, topic, channel, func(host, topic, channel string) error {
 		return uc.repo.PauseChannelOnNsqd(host, topic, channel)
 	})
+	totalErrs := 0
+	nonNilErrs := make([]error, 0, len(errs))
 	for i, e := range errs {
 		if e != nil {
-			return NsqChannelOpsResponse{}, fmt.Errorf("failed to pause channel on nsqd host %s: %w", hosts[i], e)
+			totalErrs++
+			newErr := fmt.Errorf("failed to pause channel on nsqd host %s: %w", hosts[i], e)
+			nonNilErrs = append(nonNilErrs, newErr)
+			log.Println(newErr)
 		}
 	}
+
+	if totalErrs == len(errs) {
+		return NsqChannelOpsResponse{}, fmt.Errorf("failed to pause channel on all hosts %v", nonNilErrs)
+	}
+
 	return NsqChannelOpsResponse{Message: "Channel paused successfully"}, nil
 }
 
@@ -147,7 +159,45 @@ func (uc NsqChannelOpsUsecase) HandleEmpty(ctx context.Context, params map[strin
 	if !ok {
 		return NsqChannelOpsResponse{}, fmt.Errorf("channel is required")
 	}
-	return uc.doNsqChannelOps(ctx, id, channel, "empty")
+
+	ent, err := uc.repo.GetEntityByID(id)
+	if err != nil {
+		return NsqChannelOpsResponse{}, fmt.Errorf("entity not found: %w", err)
+	}
+
+	if ent.Resource != "NSQ" {
+		return NsqChannelOpsResponse{}, fmt.Errorf("entity resource is not NSQ")
+	}
+
+	topic := ent.Metadata["topic"]
+
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, topic)
+	if err != nil {
+		return NsqChannelOpsResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
+	}
+
+	hosts := make([]string, 0, len(nsqdHosts))
+	for _, h := range nsqdHosts {
+		hosts = append(hosts, h.Address)
+	}
+
+	errs := util.ParallelForEachHost(hosts, topic, channel, func(host, topic, channel string) error {
+		return uc.repo.EmptyChannelOnNsqd(host, topic, channel)
+	})
+	totalErrs := 0
+	nonNilErrs := make([]error, 0, len(errs))
+	for i, e := range errs {
+		if e != nil {
+			totalErrs++
+			newErr := fmt.Errorf("failed to empty channel on nsqd host %s: %w", hosts[i], e)
+			nonNilErrs = append(nonNilErrs, newErr)
+			log.Println(newErr)
+		}
+	}
+	if totalErrs == len(errs) {
+		return NsqChannelOpsResponse{}, fmt.Errorf("failed to empty channel on all hosts %v", nonNilErrs)
+	}
+	return NsqChannelOpsResponse{Message: "Channel emptied successfully"}, nil
 }
 
 func (uc NsqChannelOpsUsecase) HandleResume(ctx context.Context, params map[string]string) (NsqChannelOpsResponse, error) {
@@ -168,7 +218,9 @@ func (uc NsqChannelOpsUsecase) HandleResume(ctx context.Context, params map[stri
 		return NsqChannelOpsResponse{}, fmt.Errorf("entity resource is not NSQ")
 	}
 
-	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, ent.Name)
+	topic := ent.Metadata["topic"]
+
+	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, topic)
 	if err != nil {
 		return NsqChannelOpsResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
 	}
@@ -177,69 +229,21 @@ func (uc NsqChannelOpsUsecase) HandleResume(ctx context.Context, params map[stri
 	for _, h := range nsqdHosts {
 		hosts = append(hosts, h.Address)
 	}
-	errs := util.ParallelForEachHost(hosts, ent.Name, channel, func(host, topic, channel string) error {
+	errs := util.ParallelForEachHost(hosts, topic, channel, func(host, topic, channel string) error {
 		return uc.repo.ResumeChannelOnNsqd(host, topic, channel)
 	})
+	totalErrs := 0
+	nonNilErrs := make([]error, 0, len(errs))
 	for i, e := range errs {
 		if e != nil {
-			return NsqChannelOpsResponse{}, fmt.Errorf("failed to resume channel on nsqd host %s: %w", hosts[i], e)
+			totalErrs++
+			newErr := fmt.Errorf("failed to resume channel on nsqd host %s: %w", hosts[i], e)
+			nonNilErrs = append(nonNilErrs, newErr)
+			log.Println(newErr)
 		}
+	}
+	if totalErrs == len(errs) {
+		return NsqChannelOpsResponse{}, fmt.Errorf("failed to resume channel on all hosts %v", nonNilErrs)
 	}
 	return NsqChannelOpsResponse{Message: "Channel resumed successfully"}, nil
-}
-
-func (uc NsqChannelOpsUsecase) doNsqChannelOps(ctx context.Context, id, channel, action string) (NsqChannelOpsResponse, error) {
-	ent, err := uc.repo.GetEntityByID(id)
-	if err != nil {
-		return NsqChannelOpsResponse{}, fmt.Errorf("entity not found: %w", err)
-	}
-
-	if ent.Resource != "NSQ" {
-		return NsqChannelOpsResponse{}, fmt.Errorf("entity resource is not NSQ")
-	}
-
-	nsqdHosts, err := uc.repo.GetNsqdHosts(uc.cfg.NSQLookupdHTTPAddr, ent.Name)
-	if err != nil {
-		return NsqChannelOpsResponse{}, fmt.Errorf("failed to get nsqd hosts: %w", err)
-	}
-
-	hosts := make([]string, 0, len(nsqdHosts))
-	for _, h := range nsqdHosts {
-		hosts = append(hosts, h.Address)
-	}
-
-	switch action {
-	case "pause":
-		errs := util.ParallelForEachHost(hosts, ent.Name, channel, func(host, topic, channel string) error {
-			return uc.repo.PauseChannelOnNsqd(host, topic, channel)
-		})
-		for i, e := range errs {
-			if e != nil {
-				return NsqChannelOpsResponse{}, fmt.Errorf("failed to pause channel on nsqd host %s: %w", hosts[i], e)
-			}
-		}
-		return NsqChannelOpsResponse{Message: "Channel paused successfully"}, nil
-	case "empty":
-		errs := util.ParallelForEachHost(hosts, ent.Name, channel, func(host, topic, channel string) error {
-			return uc.repo.EmptyChannelOnNsqd(host, topic, channel)
-		})
-		for i, e := range errs {
-			if e != nil {
-				return NsqChannelOpsResponse{}, fmt.Errorf("failed to empty channel on nsqd host %s: %w", hosts[i], e)
-			}
-		}
-		return NsqChannelOpsResponse{Message: "Channel emptied successfully"}, nil
-	case "resume":
-		errs := util.ParallelForEachHost(hosts, ent.Name, channel, func(host, topic, channel string) error {
-			return uc.repo.ResumeChannelOnNsqd(host, topic, channel)
-		})
-		for i, e := range errs {
-			if e != nil {
-				return NsqChannelOpsResponse{}, fmt.Errorf("failed to resume channel on nsqd host %s: %w", hosts[i], e)
-			}
-		}
-		return NsqChannelOpsResponse{Message: "Channel resumed successfully"}, nil
-	default:
-		return NsqChannelOpsResponse{}, fmt.Errorf("invalid action: %s", action)
-	}
 }
