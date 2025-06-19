@@ -34,9 +34,22 @@ function updateChannelsTable(topic, hosts) {
                 nameCell.className = 'channel-name-cell';
 
                 // Channel name text
+                const nameWrapper = document.createElement('div');
+                nameWrapper.className = 'channel-name-wrapper';
+
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = channel.name;
-                nameCell.appendChild(nameSpan);
+                nameSpan.className = 'channel-name-bold';
+                nameWrapper.appendChild(nameSpan);
+
+                if (channel.group_owner) {
+                    const ownerDiv = document.createElement('div');
+                    ownerDiv.textContent = 'Owner: ' + channel.group_owner;
+                    ownerDiv.className = 'channel-group-owner';
+                    nameWrapper.appendChild(ownerDiv);
+                }
+
+                nameCell.appendChild(nameWrapper);
                 row.appendChild(nameCell);
 
                 // States column

@@ -25,6 +25,7 @@ type NsqChannelResponse struct {
 	ID           string `json:"id"`
 	IsBookmarked bool   `json:"is_bookmarked"`
 	Name         string `json:"name"`
+	GroupOwner   string `json:"group_owner"`
 	Description  string `json:"description"`
 	Topic        string `json:"topic"`
 	Depth        int    `json:"depth"`
@@ -144,6 +145,7 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 		channelResponses[i] = NsqChannelResponse{
 			ID:           c.ID,
 			Name:         c.Name,
+			GroupOwner:   c.GroupOwner,
 			Description:  c.Description,
 			Topic:        c.Metadata["topic"],
 			Depth:        stats.Depth,
