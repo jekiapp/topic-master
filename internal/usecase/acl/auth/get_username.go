@@ -10,9 +10,10 @@ import (
 
 // GetUsernameResponse is the response for GetUsernameUsecase
 type GetUsernameResponse struct {
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Root     bool   `json:"root"`
+	Name     string   `json:"name"`
+	Username string   `json:"username"`
+	Root     bool     `json:"root"`
+	Groups   []string `json:"groups"`
 }
 
 // GetUsernameUsecase provides the username from context
@@ -31,11 +32,13 @@ func (uc GetUsernameUsecase) Handle(ctx context.Context, params map[string]strin
 		return GetUsernameResponse{}, errors.New("user is not authenticated")
 	}
 	isRoot := false
+	groups := []string{}
 	for _, group := range user.Groups {
+		groups = append(groups, group.GroupName)
 		if group.GroupName == acl.GroupRoot {
 			isRoot = true
 			break
 		}
 	}
-	return GetUsernameResponse{Name: user.Name, Username: user.Username, Root: isRoot}, nil
+	return GetUsernameResponse{Name: user.Name, Username: user.Username, Root: isRoot, Groups: groups}, nil
 }
