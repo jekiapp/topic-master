@@ -245,13 +245,11 @@ function handleChannelAction(action, channelName) {
                 fetch(`/api/channel/nsq/pause?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        if (data && data.message) {
-                            alert(data.message);
-                        } else {
-                            alert('Channel paused successfully');
-                        }
                         // Refresh channel list
                         refreshChannels(currentTopic, nsqdHosts);
+                        if (window.fetchAndUpdateStats && window.currentTopicDetail) {
+                            window.fetchAndUpdateStats(window.currentTopicDetail);
+                        }
                     })
                     .catch(err => {
                         alert('Failed to pause channel');
@@ -272,13 +270,11 @@ function handleChannelAction(action, channelName) {
                 fetch(`/api/channel/nsq/resume?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        if (data && data.message) {
-                            alert(data.message);
-                        } else {
-                            alert('Channel resumed successfully');
-                        }
                         // Refresh channel list
                         refreshChannels(currentTopic, nsqdHosts);
+                        if (window.fetchAndUpdateStats && window.currentTopicDetail) {
+                            window.fetchAndUpdateStats(window.currentTopicDetail);
+                        }
                     })
                     .catch(err => {
                         alert('Failed to resume channel');
@@ -300,13 +296,11 @@ function handleChannelAction(action, channelName) {
                 fetch(`/api/channel/nsq/delete?id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        if (data && data.message) {
-                            alert(data.message);
-                        } else {
-                            alert('Channel deleted successfully');
-                        }
                         // Refresh channel list
                         refreshChannels(currentTopic, nsqdHosts);
+                        if (window.fetchAndUpdateStats && window.currentTopicDetail) {
+                            window.fetchAndUpdateStats(window.currentTopicDetail);
+                        }
                     })
                     .catch(err => {
                         alert('Failed to delete channel');
@@ -328,10 +322,10 @@ function handleChannelAction(action, channelName) {
                 fetch(`/api/channel/nsq/empty?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        if (data && data.message) {
-                            alert(data.message);
-                        } else {
-                            alert('Channel emptied successfully');
+                        // Refresh channel list
+                        refreshChannels(currentTopic, nsqdHosts);
+                        if (window.fetchAndUpdateStats && window.currentTopicDetail) {
+                            window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
                     })
                     .catch(err => {

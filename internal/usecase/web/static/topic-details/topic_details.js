@@ -16,6 +16,7 @@ $(function() {
 
     // --- Cache for topic detail ---
     var currentTopicDetail = null;
+    window.currentTopicDetail = null;
 
     // Fetch topic detail ONCE
     $.get('/api/topic/detail', { topic: topicID }, function(response) {
@@ -25,6 +26,7 @@ $(function() {
         }
         var detail = response.data;
         currentTopicDetail = detail;
+        window.currentTopicDetail = detail;
         $('.topic-name').text(detail.name);
         $('.group-owner').text(detail.group_owner);
         var $eventTrigger = $('.event-trigger-input');
@@ -234,6 +236,7 @@ $(function() {
             $('.topic-stats-messages').text('-');
         });
     }
+    window.fetchAndUpdateStats = fetchAndUpdateStats;
 
     // Only refresh stats, not topic detail
     function refreshStats() {
