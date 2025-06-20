@@ -57,10 +57,16 @@ function updateChannelsTable(topic, hosts) {
 
                 if (channel.group_owner) {
                     const ownerDiv = document.createElement('div');
+                    ownerDiv.className = 'channel-group-owner channel-sub-title';
                     ownerDiv.textContent = 'Owner: ' + channel.group_owner;
-                    ownerDiv.className = 'channel-group-owner';
                     nameWrapper.appendChild(ownerDiv);
                 }
+
+                // Add consumer count section
+                const consumerDiv = document.createElement('div');
+                consumerDiv.className = 'channel-consumer-count channel-sub-title ';
+                consumerDiv.textContent = 'Consumers: -';
+                nameWrapper.appendChild(consumerDiv);
 
                 nameCell.appendChild(nameWrapper);
                 row.appendChild(nameCell);

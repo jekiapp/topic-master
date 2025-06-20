@@ -221,6 +221,11 @@ $(function() {
                             $messages.eq(0).text(Number(stats.depth).toLocaleString());
                             $messages.eq(1).text(Number(stats.messages).toLocaleString());
                         }
+                        // Update consumer count section
+                        var $consumerDiv = $row.find('.channel-consumer-count');
+                        if ($consumerDiv.length) {
+                            $consumerDiv.text('Consumers: ' + (typeof stats.consumer_count !== 'undefined' ? stats.consumer_count : '-'));
+                        }
                     }
                 });
             }

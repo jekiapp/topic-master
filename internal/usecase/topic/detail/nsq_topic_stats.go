@@ -47,6 +47,7 @@ func (r *nsqTopicStatsRepo) GetTopicStatsWithChannels(hosts []string, topic stri
 			existing.InFlight += channelStats.InFlight
 			existing.Requeued += channelStats.Requeued
 			existing.Deferred += channelStats.Deferred
+			existing.ConsumerCount += channelStats.ConsumerCount
 			aggregatedResult.ChannelStats[channelName] = existing
 		}
 	}

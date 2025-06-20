@@ -28,11 +28,6 @@ type NsqChannelResponse struct {
 	GroupOwner   string `json:"group_owner"`
 	Description  string `json:"description"`
 	Topic        string `json:"topic"`
-	Depth        int    `json:"depth"`
-	Messages     int    `json:"messages"`
-	InFlight     int    `json:"in_flight"`
-	Requeued     int    `json:"requeued"`
-	Deferred     int    `json:"deferred"`
 	IsPaused     bool   `json:"is_paused"`
 }
 
@@ -86,12 +81,13 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 	for _, stat := range stats {
 		for _, channel := range stat.Channels {
 			channelStats[channel.ChannelName] = modelnsq.ChannelStats{
-				Depth:    channel.Depth,
-				Messages: channel.MessageCount,
-				InFlight: channel.InFlightCount,
-				Requeued: channel.RequeueCount,
-				Deferred: channel.DeferredCount,
-				Paused:   channel.Paused,
+				Depth:         channel.Depth,
+				Messages:      channel.MessageCount,
+				InFlight:      channel.InFlightCount,
+				Requeued:      channel.RequeueCount,
+				Deferred:      channel.DeferredCount,
+				Paused:        channel.Paused,
+				ConsumerCount: channel.ClientCount,
 			}
 		}
 	}
@@ -148,11 +144,6 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 			GroupOwner:   c.GroupOwner,
 			Description:  c.Description,
 			Topic:        c.Metadata["topic"],
-			Depth:        stats.Depth,
-			Messages:     stats.Messages,
-			InFlight:     stats.InFlight,
-			Requeued:     stats.Requeued,
-			Deferred:     stats.Deferred,
 			IsBookmarked: isBookmarked,
 			IsPaused:     stats.Paused,
 		}

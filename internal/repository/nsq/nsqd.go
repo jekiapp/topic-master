@@ -173,6 +173,7 @@ func GetTopicStatsWithChannels(nsqdHost, topic string) (TopicStatsResult, error)
 				InFlightCount int    `json:"in_flight_count"`
 				RequeueCount  int    `json:"requeue_count"`
 				DeferredCount int    `json:"deferred_count"`
+				ClientCount   int    `json:"client_count"`
 			} `json:"channels"`
 		} `json:"topics"`
 	}
@@ -191,11 +192,12 @@ func GetTopicStatsWithChannels(nsqdHost, topic string) (TopicStatsResult, error)
 
 			for _, c := range t.Channels {
 				result.ChannelStats[c.ChannelName] = modelnsq.ChannelStats{
-					Depth:    c.Depth,
-					Messages: c.MessageCount,
-					InFlight: c.InFlightCount,
-					Requeued: c.RequeueCount,
-					Deferred: c.DeferredCount,
+					Depth:         c.Depth,
+					Messages:      c.MessageCount,
+					InFlight:      c.InFlightCount,
+					Requeued:      c.RequeueCount,
+					Deferred:      c.DeferredCount,
+					ConsumerCount: c.ClientCount,
 				}
 			}
 
