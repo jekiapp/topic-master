@@ -44,14 +44,15 @@ const (
 // Application represents a user's request to obtain a permission.
 // or a new signup request
 type Application struct {
-	ID            string    `json:"id"`             // UUID
-	Title         string    `json:"title"`          // Title of the application
-	UserID        string    `json:"user_id"`        // Reference to User.ID (the applicant)
-	PermissionIDs []string  `json:"permission_ids"` // Reference to Permission.ID (the requested permission)
-	Reason        string    `json:"reason"`         // Reason for the application
-	Status        string    `json:"status"`         // Overall status (e.g., pending, approved, rejected)
-	CreatedAt     time.Time `json:"created_at"`     // When the application was created
-	UpdatedAt     time.Time `json:"updated_at"`     // Last update timestamp
+	ID            string            `json:"id"`             // UUID
+	Title         string            `json:"title"`          // Title of the application
+	UserID        string            `json:"user_id"`        // Reference to User.ID (the applicant)
+	PermissionIDs []string          `json:"permission_ids"` // Reference to Permission.ID (the requested permission)
+	Reason        string            `json:"reason"`         // Reason for the application
+	Status        string            `json:"status"`         // Overall status (e.g., pending, approved, rejected)
+	MetaData      map[string]string `json:"meta_data"`      // Meta data for the application
+	CreatedAt     time.Time         `json:"created_at"`     // When the application was created
+	UpdatedAt     time.Time         `json:"updated_at"`     // Last update timestamp
 }
 
 func (a *Application) GetPrimaryKey(id string) string {
