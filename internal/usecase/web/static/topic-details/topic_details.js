@@ -159,11 +159,8 @@ $(function() {
             $resumeBtn.hide();
         }
 
-        // Fetch topic stats using hosts and topic name
-        fetchAndUpdateStats(detail);
-
         // update channel here
-        refreshChannels(detail.name, detail.nsqd_hosts);
+        refreshChannels(detail);
 
         // Claim link
         $('.claim-link').off('click').on('click', function() {
