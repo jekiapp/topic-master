@@ -4,6 +4,7 @@
     <title>Topic Detail</title>
     <link rel="stylesheet" href="/colors.css">
     <link rel="stylesheet" href="/topic-details/topic_details.css">
+    <link rel="stylesheet" href="/modal.css">
 </head>
 <body>
     <a href="javascript:void(0)" class="back-link" id="back-link">&#8592; Back</a>
@@ -29,7 +30,7 @@
                 <div class="topic-detail-row">
                     <div>
                         <div class="topic-meta">
-                            <div><strong>Group Owner:</strong> <span class="group-owner"></span></div>
+                            <div><strong>Group Owner:</strong> <span class="group-owner"></span> <span class="claim-link" style="font-size:0.85em; color:#1e90ff; cursor:pointer; text-decoration:underline; margin-left:8px;">Claim</span></div>
                         </div>
                         <div class="event-trigger-section ">
                             <label for="event-trigger-input"><strong>Event Trigger:</strong></label>
@@ -112,6 +113,8 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="/topic-details/tail_msg.js"></script>
     <script src="/topic-details/channel_list.js"></script>
+    <script src="/modal.js"></script>
+    <script src="/claim.js"></script>
     <script src="/topic-details/topic_details.js"></script>
 </body>
 </html>

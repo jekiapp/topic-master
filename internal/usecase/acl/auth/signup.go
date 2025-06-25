@@ -149,8 +149,8 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	}
 
 	adminUserIDs, err := uc.repo.GetAdminUserIDsByGroupID(req.GroupID)
-	if err != nil {
-		return SignupResponse{}, errors.New("failed to get admin user ids")
+	if err != nil && err != buntdb.ErrNotFound {
+		return SignupResponse{}, errors.New("failed to get admin user ids: " + err.Error())
 	}
 
 	// merge together adminUserIDs and rootMembers

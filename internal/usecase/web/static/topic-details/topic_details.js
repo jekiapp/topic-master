@@ -164,6 +164,11 @@ $(function() {
 
         // update channel here
         refreshChannels(detail.name, detail.nsqd_hosts);
+
+        // Claim link
+        $('.claim-link').off('click').on('click', function() {
+            window.showClaimModal(detail.id, detail.name, window.handleClaimEntity);
+        });
     }).fail(function() {
         alert('Failed to load topic detail');
     });

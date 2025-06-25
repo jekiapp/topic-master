@@ -5,6 +5,14 @@ window.showClaimModal = function(entityId, entityName, onSubmit) {
     user = user ? JSON.parse(user) : null;
     var groups = (user && user.groups) ? user.groups : [];
 
+    if (!user) {
+        window.showModalOverlay('<div style="min-width:250px;"><h3 style="margin-top:0;">Please login to claim</h3><div style="text-align:right;"><button id="claim-login-alert-btn">OK</button></div></div>');
+        $('#claim-login-alert-btn').on('click', function() {
+            window.hideModalOverlay();
+        });
+        return;
+    }
+
     // Build dropdown options
     var groupOptions = groups.map(function(group) {
         return '<option value="' + group + '">' + group + '</option>';
@@ -38,5 +46,24 @@ window.showClaimModal = function(entityId, entityName, onSubmit) {
             onSubmit({ entityId, entityName, group: selectedGroup });
         }
         window.hideModalOverlay();
+    });
+};
+
+window.handleClaimEntity = function({ entityId, entityName, group }) {
+    $.ajax({
+        url: '/api/entity/claim',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ entity_id: entityId, group_name: group }),
+        success: function(resp) {
+            alert('Claim request submitted successfully.');
+        },
+        error: function(xhr) {
+            var msg = 'Failed to submit claim request';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                msg += ': ' + xhr.responseJSON.error;
+            }
+            alert(msg);
+        }
     });
 };

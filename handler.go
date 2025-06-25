@@ -56,6 +56,7 @@ type Handler struct {
 	nsqChannelListUC         topicDetailUC.NsqChannelListUsecase
 	nsqChannelOpsUC          topicDetailUC.NsqChannelOpsUsecase
 	deleteChannelUC          topicDetailUC.DeleteChannelUsecase
+	claimEntityUC            aclAuth.ClaimEntityUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -98,6 +99,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		nsqChannelListUC:         topicDetailUC.NewNsqChannelListUsecase(db),
 		nsqChannelOpsUC:          topicDetailUC.NewNsqChannelOpsUsecase(cfg, db),
 		deleteChannelUC:          topicDetailUC.NewDeleteChannelUsecase(cfg, db),
+		claimEntityUC:            aclAuth.NewClaimEntityUsecase(db),
 	}
 }
 
@@ -164,6 +166,8 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/channel/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleEmpty)))
 	mux.HandleFunc("/api/channel/nsq/resume", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleResume)))
 	mux.HandleFunc("/api/channel/nsq/delete", sessionMiddleware(handlerPkg.HandleGenericGet(h.deleteChannelUC.Handle)))
+
+	mux.HandleFunc("/api/entity/claim", authMiddleware(handlerPkg.HandleGenericPost(h.claimEntityUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
