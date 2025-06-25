@@ -20,11 +20,12 @@ $(document).ready(function() {
                     row.append($('<td>').text(app.title));
                     row.append($('<td>').text(app.status));
                     row.append($('<td>').text(app.reason));
+                    row.append($('<td>').text(app.applicant_name));
                     // Format created_at as HH:mm DD/MM/YYYY
                     var createdAt = new Date(app.created_at);
                     var formattedDate = createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' +
                         createdAt.toLocaleDateString('en-GB');
-                    row.append($('<td>').text(formattedDate));
+                    row.append($('<td>').addClass('created-at-cell').text(formattedDate));
                     tbody.append(row);
                 });
             },

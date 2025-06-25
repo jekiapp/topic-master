@@ -20,12 +20,18 @@ import (
 type ListMyAssignmentRequest struct{}
 
 type ListMyAssignmentResponse struct {
-	Applications []acl.Application `json:"applications"`
+	Applications []applicationResponse `json:"applications"`
+}
+
+type applicationResponse struct {
+	acl.Application
+	ApplicantName string `json:"applicant_name"`
 }
 
 type iAssignmentRepo interface {
 	ListAssignmentsByReviewerID(reviewerID string) ([]acl.ApplicationAssignment, error)
 	GetApplicationByID(appID string) (acl.Application, error)
+	GetUserByID(userID string) (acl.User, error)
 }
 
 type assignmentRepoImpl struct {
@@ -39,6 +45,10 @@ func (r *assignmentRepoImpl) ListAssignmentsByReviewerID(reviewerID string) ([]a
 
 func (r *assignmentRepoImpl) GetApplicationByID(appID string) (acl.Application, error) {
 	return dbpkg.GetByID[acl.Application](r.db, appID)
+}
+
+func (r *assignmentRepoImpl) GetUserByID(userID string) (acl.User, error) {
+	return dbpkg.GetByID[acl.User](r.db, userID)
 }
 
 type ListMyAssignmentUsecase struct {
@@ -69,5 +79,17 @@ func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req map[string]str
 			log.Println("error getting application by id", err)
 		}
 	}
-	return ListMyAssignmentResponse{Applications: apps}, nil
+	appsResp := []applicationResponse{}
+	for _, app := range apps {
+		user, err := uc.repo.GetUserByID(app.UserID)
+		name := ""
+		if err == nil {
+			name = user.Username
+		}
+		appsResp = append(appsResp, applicationResponse{
+			Application:   app,
+			ApplicantName: name,
+		})
+	}
+	return ListMyAssignmentResponse{Applications: appsResp}, nil
 }

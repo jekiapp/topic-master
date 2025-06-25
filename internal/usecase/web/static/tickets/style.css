@@ -69,3 +69,8 @@ tr:hover {
     color: var(--primary-purple);
     display: inline-block;
 }
+
+.created-at-cell {
+    font-size: 0.92em;
+    color: #888;
+}
