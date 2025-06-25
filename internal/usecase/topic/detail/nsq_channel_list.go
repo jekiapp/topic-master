@@ -119,6 +119,9 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 		if err != nil {
 			return NsqChannelListResponse{}, err
 		}
+		for _, c := range channelsDB {
+			channelsMap[c.Name] = c
+		}
 	}
 
 	user := util.GetUserInfo(ctx)
@@ -127,8 +130,12 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 		userID = user.ID
 	}
 
-	channelResponses := make([]NsqChannelResponse, len(channelsDB))
-	for i, c := range channelsDB {
+	channelResponses := make([]NsqChannelResponse, 0, len(channelStats))
+	for name, cstats := range channelStats {
+		c, ok := channelsMap[name]
+		if !ok {
+			continue
+		}
 		isBookmarked := false
 		if userID != "" {
 			b, err := uc.repo.IsBookmarked(c.ID, userID)
@@ -137,16 +144,15 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 			}
 		}
 
-		stats := channelStats[c.Name]
-		channelResponses[i] = NsqChannelResponse{
+		channelResponses = append(channelResponses, NsqChannelResponse{
 			ID:           c.ID,
 			Name:         c.Name,
 			GroupOwner:   c.GroupOwner,
 			Description:  c.Description,
 			Topic:        c.Metadata["topic"],
 			IsBookmarked: isBookmarked,
-			IsPaused:     stats.Paused,
-		}
+			IsPaused:     cstats.Paused,
+		})
 	}
 
 	return NsqChannelListResponse{Channels: channelResponses}, nil

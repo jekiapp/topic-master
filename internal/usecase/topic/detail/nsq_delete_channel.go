@@ -3,6 +3,7 @@ package detail
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jekiapp/topic-master/internal/config"
 	nsqlogic "github.com/jekiapp/topic-master/internal/logic/nsq"
@@ -71,7 +72,7 @@ func (uc DeleteChannelUsecase) Handle(ctx context.Context, params map[string]str
 	})
 	for _, e := range errs {
 		if e != nil {
-			return DeleteChannelResponse{}, fmt.Errorf("failed to delete channel from some nsqd: %w", e)
+			log.Println("failed to delete channel from some nsqd", e)
 		}
 	}
 
