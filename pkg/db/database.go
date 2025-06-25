@@ -47,8 +47,9 @@ type DeleteRecordByID interface {
 }
 
 type Pagination struct {
-	Page  int // 1-based
-	Limit int
+	Page    int // 1-based
+	Limit   int
+	HasNext bool
 }
 
 func Insert(db *buntdb.DB, record GetRecordByIndexes) error {
@@ -195,9 +196,11 @@ func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagin
 			pagination.Page = 1
 		}
 		if pagination.Page > 1 {
-			skip = (pagination.Page - 1) * pagination.Limit
+			skip = (pagination.Page - 1) * limit
 		}
+		limit = limit + 1
 	}
+	// add 1 to limit to check if there is next page
 	idx := 0
 	collected := 0
 
@@ -288,6 +291,10 @@ func SelectPaginated[T any](db *buntdb.DB, pivot string, indexName string, pagin
 	}
 	if len(results) == 0 {
 		return results, ErrNotFound
+	}
+	if len(results) == limit && pagination != nil {
+		pagination.HasNext = true
+		results = results[:len(results)-1]
 	}
 	return results, nil
 }

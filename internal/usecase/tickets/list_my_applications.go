@@ -17,10 +17,11 @@ type ListMyApplicationsRequest struct{}
 
 type ListMyApplicationsResponse struct {
 	Applications []myApplicationResponse `json:"applications"`
+	HasNext      bool                    `json:"has_next"`
 }
 
 type iMyApplicationRepo interface {
-	ListApplicationsByUserIDDesc(userID string) ([]acl.Application, error)
+	ListApplicationsByUserIDDescPaginated(userID string, page, limit int) ([]acl.Application, bool, error)
 	GetUserByID(userID string) (acl.User, error)
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
 }
@@ -35,9 +36,14 @@ type applicationRepoImpl struct {
 	db *buntdb.DB
 }
 
-func (r *applicationRepoImpl) ListApplicationsByUserIDDesc(userID string) ([]acl.Application, error) {
+func (r *applicationRepoImpl) ListApplicationsByUserIDDescPaginated(userID string, page, limit int) ([]acl.Application, bool, error) {
 	pivot := fmt.Sprintf("%s:%d", userID, time.Now().Unix())
-	return dbpkg.SelectAll[acl.Application](r.db, "-<="+pivot, acl.IdxApplication_UserID_CreatedAt)
+	pagination := &dbpkg.Pagination{Page: page, Limit: limit}
+	apps, err := dbpkg.SelectPaginated[acl.Application](r.db, "-<="+pivot, acl.IdxApplication_UserID_CreatedAt, pagination)
+	if err != nil && err != dbpkg.ErrNotFound {
+		return nil, false, err
+	}
+	return apps, pagination.HasNext, nil
 }
 
 func (r *applicationRepoImpl) GetUserByID(userID string) (acl.User, error) {
@@ -63,7 +69,15 @@ func (uc ListMyApplicationsUsecase) Handle(ctx context.Context, req map[string]s
 	if user == nil {
 		return ListMyApplicationsResponse{}, fmt.Errorf("unauthorized: user info not found")
 	}
-	apps, err := uc.repo.ListApplicationsByUserIDDesc(user.ID)
+	// parse page and limit from req
+	page, limit := 1, 10
+	if v, ok := req["page"]; ok {
+		fmt.Sscanf(v, "%d", &page)
+	}
+	if v, ok := req["limit"]; ok {
+		fmt.Sscanf(v, "%d", &limit)
+	}
+	apps, hasNext, err := uc.repo.ListApplicationsByUserIDDescPaginated(user.ID, page, limit)
 	if err != nil && err != dbpkg.ErrNotFound {
 		return ListMyApplicationsResponse{}, err
 	}
@@ -93,7 +107,7 @@ func (uc ListMyApplicationsUsecase) Handle(ctx context.Context, req map[string]s
 			AssigneeNames: joinNames(assigneeNames),
 		})
 	}
-	return ListMyApplicationsResponse{Applications: appsResp}, nil
+	return ListMyApplicationsResponse{Applications: appsResp, HasNext: hasNext}, nil
 }
 
 // joinNames joins names with comma, returns empty string if none
