@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	TableApplication      = "application"
-	IdxApplication_UserID = TableApplication + ":user_id"
-	IdxApplication_Status = TableApplication + ":status"
+	TableApplication                = "application"
+	IdxApplication_UserID           = TableApplication + ":user_id"
+	IdxApplication_Status           = TableApplication + ":status"
+	IdxApplication_UserID_CreatedAt = TableApplication + ":user_id_created_at"
 
 	// Status constants
 	StatusWaitingForApproval = "waiting for approval"
@@ -74,13 +75,19 @@ func (a Application) GetIndexes() []db.Index {
 			Pattern: fmt.Sprintf("%s:*:%s", TableApplication, "status"),
 			Type:    buntdb.IndexString,
 		},
+		{
+			Name:    IdxApplication_UserID_CreatedAt,
+			Pattern: fmt.Sprintf("%s:*:%s", TableApplication, "user_id_created_at"),
+			Type:    buntdb.IndexString,
+		},
 	}
 }
 
 func (a Application) GetIndexValues() map[string]string {
 	return map[string]string{
-		"user_id": a.UserID,
-		"status":  a.Status,
+		"user_id":            a.UserID,
+		"status":             a.Status,
+		"user_id_created_at": fmt.Sprintf("%s:%d", a.UserID, a.CreatedAt.Unix()),
 	}
 }
 

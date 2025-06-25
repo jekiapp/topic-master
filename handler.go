@@ -43,6 +43,7 @@ type Handler struct {
 	signupUC                 aclAuth.SignupUsecase
 	viewSignupApplicationUC  aclAuth.ViewSignupApplicationUsecase
 	listMyAssignmentUC       tickets.ListMyAssignmentUsecase
+	listMyApplicationsUC     tickets.ListMyApplicationsUsecase
 	ticketDetailUC           tickets.TicketDetailUsecase
 	actionCoordinatorUC      *action.ActionCoordinator
 	getUsernameUC            aclAuth.GetUsernameUsecase
@@ -86,6 +87,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		signupUC:                 aclAuth.NewSignupUsecase(db),
 		viewSignupApplicationUC:  aclAuth.NewViewSignupApplicationUsecase(db),
 		listMyAssignmentUC:       tickets.NewListMyAssignmentUsecase(db),
+		listMyApplicationsUC:     tickets.NewListMyApplicationsUsecase(db),
 		ticketDetailUC:           tickets.NewTicketDetailUsecase(db),
 		actionCoordinatorUC:      action.NewActionCoordinator(db),
 		getUsernameUC:            aclAuth.NewGetUsernameUsecase(),
@@ -143,6 +145,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/signup/app", handlerPkg.HandleGenericGet(h.viewSignupApplicationUC.Handle))
 
 	mux.HandleFunc("/api/tickets/list-my-assignment", authMiddleware(handlerPkg.HandleGenericGet(h.listMyAssignmentUC.Handle)))
+	mux.HandleFunc("/api/tickets/list-my-applications", authMiddleware(handlerPkg.HandleGenericGet(h.listMyApplicationsUC.Handle)))
 	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.HandleGenericGet(h.ticketDetailUC.Handle)))
 	mux.HandleFunc("/api/tickets/action", authMiddleware(handlerPkg.HandleGenericPost(h.actionCoordinatorUC.Handle)))
 
