@@ -17,10 +17,9 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-type ListMyAssignmentRequest struct{}
-
 type ListMyAssignmentResponse struct {
 	Applications []applicationResponse `json:"applications"`
+	HasNext      bool                  `json:"has_next"`
 }
 
 type applicationResponse struct {
@@ -29,7 +28,7 @@ type applicationResponse struct {
 }
 
 type iAssignmentRepo interface {
-	ListAssignmentsByReviewerID(reviewerID string) ([]acl.ApplicationAssignment, error)
+	ListAssignmentsByReviewerIDPaginated(reviewerID string, page, limit int) ([]acl.ApplicationAssignment, bool, error)
 	GetApplicationByID(appID string) (acl.Application, error)
 	GetUserByID(userID string) (acl.User, error)
 }
@@ -38,9 +37,18 @@ type assignmentRepoImpl struct {
 	db *buntdb.DB
 }
 
-func (r *assignmentRepoImpl) ListAssignmentsByReviewerID(reviewerID string) ([]acl.ApplicationAssignment, error) {
+func (r *assignmentRepoImpl) ListAssignmentsByReviewerIDPaginated(reviewerID string, page, limit int) ([]acl.ApplicationAssignment, bool, error) {
 	pivot := fmt.Sprintf("%s:%d", reviewerID, time.Now().Unix())
-	return dbpkg.SelectAll[acl.ApplicationAssignment](r.db, "-<="+pivot, acl.IdxAppAssign_ReviewerID)
+	assignments, err := dbpkg.SelectPaginated[acl.ApplicationAssignment](r.db, "-<="+pivot, acl.IdxAppAssign_ReviewerID, &dbpkg.Pagination{Page: page, Limit: limit + 1})
+	if err != nil && err != dbpkg.ErrNotFound {
+		return nil, false, err
+	}
+	hasNext := false
+	if len(assignments) > limit {
+		hasNext = true
+		assignments = assignments[:limit]
+	}
+	return assignments, hasNext, nil
 }
 
 func (r *assignmentRepoImpl) GetApplicationByID(appID string) (acl.Application, error) {
@@ -66,7 +74,15 @@ func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req map[string]str
 	if user == nil {
 		return ListMyAssignmentResponse{}, fmt.Errorf("unauthorized: user info not found")
 	}
-	assignments, err := uc.repo.ListAssignmentsByReviewerID(user.ID)
+	// parse page and limit from req
+	page, limit := 1, 20
+	if v, ok := req["page"]; ok {
+		fmt.Sscanf(v, "%d", &page)
+	}
+	if v, ok := req["limit"]; ok {
+		fmt.Sscanf(v, "%d", &limit)
+	}
+	assignments, hasNext, err := uc.repo.ListAssignmentsByReviewerIDPaginated(user.ID, page, limit)
 	if err != nil && err != dbpkg.ErrNotFound {
 		return ListMyAssignmentResponse{}, err
 	}
@@ -91,5 +107,5 @@ func (uc ListMyAssignmentUsecase) Handle(ctx context.Context, req map[string]str
 			ApplicantName: name,
 		})
 	}
-	return ListMyAssignmentResponse{Applications: appsResp}, nil
+	return ListMyAssignmentResponse{Applications: appsResp, HasNext: hasNext}, nil
 }

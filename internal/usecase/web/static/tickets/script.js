@@ -1,33 +1,44 @@
 $(document).ready(function() {
+    // Pagination state for assignments
+    var assignmentsPage = 1;
+    var assignmentsLimit = 10;
+    var assignmentsHasNext = false;
+
     // Fetch and display assignments
     function loadAssignments() {
         $.ajax({
             url: '/api/tickets/list-my-assignment',
             method: 'GET',
+            data: { page: assignmentsPage, limit: assignmentsLimit },
             success: function(response) {
                 var tbody = $('#assignments-tbody');
                 tbody.empty();
                 var apps = response.data.applications;
+                assignmentsHasNext = !!response.data.has_next;
                 if (!Array.isArray(apps) || apps.length === 0) {
                     var emptyRow = $('<tr>').append(
-                        $('<td colspan="4" style="text-align:center;">').text('No assignments found')
+                        $('<td colspan="5" style="text-align:center;">').text('No assignments found')
                     );
                     tbody.append(emptyRow);
-                    return;
+                } else {
+                    apps.forEach(function(app) {
+                        var row = $('<tr>').attr('data-app-id', app.id);
+                        row.append($('<td>').text(app.title));
+                        row.append($('<td>').text(app.status));
+                        row.append($('<td>').text(app.reason));
+                        row.append($('<td>').text(app.applicant_name));
+                        // Format created_at as HH:mm DD/MM/YYYY
+                        var createdAt = new Date(app.created_at);
+                        var formattedDate = createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' +
+                            createdAt.toLocaleDateString('en-GB');
+                        row.append($('<td>').addClass('created-at-cell').text(formattedDate));
+                        tbody.append(row);
+                    });
                 }
-                apps.forEach(function(app) {
-                    var row = $('<tr>').attr('data-app-id', app.id);
-                    row.append($('<td>').text(app.title));
-                    row.append($('<td>').text(app.status));
-                    row.append($('<td>').text(app.reason));
-                    row.append($('<td>').text(app.applicant_name));
-                    // Format created_at as HH:mm DD/MM/YYYY
-                    var createdAt = new Date(app.created_at);
-                    var formattedDate = createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' +
-                        createdAt.toLocaleDateString('en-GB');
-                    row.append($('<td>').addClass('created-at-cell').text(formattedDate));
-                    tbody.append(row);
-                });
+                // Update pagination controls
+                $('#assignments-page').text('Page ' + assignmentsPage);
+                $('#assignments-prev').prop('disabled', assignmentsPage === 1);
+                $('#assignments-next').prop('disabled', !assignmentsHasNext);
             },
             error: function() {
                 alert('Failed to load assignments.');
@@ -78,6 +89,20 @@ $(document).ready(function() {
             }
         });
     }
+
+    // Pagination button handlers
+    $('#assignments-prev').on('click', function() {
+        if (assignmentsPage > 1) {
+            assignmentsPage--;
+            loadAssignments();
+        }
+    });
+    $('#assignments-next').on('click', function() {
+        if (assignmentsHasNext) {
+            assignmentsPage++;
+            loadAssignments();
+        }
+    });
 
     loadAssignments();
     loadMyApplications();
