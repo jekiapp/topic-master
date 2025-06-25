@@ -35,37 +35,22 @@ func NewSignupHandler(db *buntdb.DB) *SignupHandler {
 func (h *SignupHandler) HandleSignup(ctx context.Context, req ActionRequest) (ActionResponse, error) {
 	switch req.Action {
 	case acl.ActionApprove:
-		return h.handleApprove(ctx, req)
+		return h.handleApprove(ctx, req, nil)
 	case acl.ActionReject:
-		return h.handleReject(ctx, req)
+		return h.handleReject(ctx, req, nil)
 	default:
 		return ActionResponse{Status: "error", Message: fmt.Sprintf("Invalid action: %s", req.Action)}, nil
 	}
 }
 
-func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (ActionResponse, error) {
+// Coordinator must pass all assigneeIDs; eligibility and assignment fetching is already checked in coordinator
+func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest, assigneeIDs []string) (ActionResponse, error) {
 	// validate eligibility
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
 	}
-	assignments, err := h.repo.ListAssignmentsByApplicationID(req.ApplicationID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to get assignments"}, err
-	}
-
-	eligible := false
-	for _, assignment := range assignments {
-		if assignment.ReviewerID == user.ID {
-			eligible = true
-			break
-		}
-	}
-	if !eligible {
-		return ActionResponse{Status: "error", Message: "You are not eligible to approve this application"}, nil
-	}
-
-	// 2. Get application
+	// 1. Get application
 	app, err := h.repo.GetApplicationByID(req.ApplicationID)
 	if err != nil {
 		return ActionResponse{Status: "error", Message: "Application not found"}, err
@@ -78,18 +63,20 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
 	}
 
-	// 3. Get all assignments for this application
-
-	for i, assignment := range assignments {
-		if assignment.ReviewerID == user.ID {
-			assignments[i].ReviewStatus = acl.ReviewStatusApproved
-			assignments[i].ReviewedAt = time.Now()
-			assignments[i].UpdatedAt = time.Now()
-		} else {
-			assignments[i].ReviewStatus = acl.ReviewStatusPassed
-			assignments[i].UpdatedAt = time.Now()
+	// 3. Update assignments using provided assigneeIDs
+	for _, reviewerID := range assigneeIDs {
+		assignment := acl.ApplicationAssignment{
+			ApplicationID: app.ID,
+			ReviewerID:    reviewerID,
+			UpdatedAt:     time.Now(),
 		}
-		if err := h.repo.UpdateApplicationAssignment(assignments[i]); err != nil {
+		if reviewerID == user.ID {
+			assignment.ReviewStatus = acl.ReviewStatusApproved
+			assignment.ReviewedAt = time.Now()
+		} else {
+			assignment.ReviewStatus = acl.ReviewStatusPassed
+		}
+		if err := h.repo.UpdateApplicationAssignment(assignment); err != nil {
 			log.Println("Failed to update assignment", err)
 		}
 	}
@@ -122,29 +109,13 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest) (A
 	return ActionResponse{Status: "success", Message: "Signup completed"}, nil
 }
 
-func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (ActionResponse, error) {
-
+// Coordinator must pass all assigneeIDs; eligibility and assignment fetching is already checked in coordinator
+func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest, assigneeIDs []string) (ActionResponse, error) {
 	// validate eligibility
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
 	}
-	assignments, err := h.repo.ListAssignmentsByApplicationID(req.ApplicationID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to get assignments"}, err
-	}
-
-	eligible := false
-	for _, assignment := range assignments {
-		if assignment.ReviewerID == user.ID {
-			eligible = true
-			break
-		}
-	}
-	if !eligible {
-		return ActionResponse{Status: "error", Message: "You are not eligible to reject this application"}, nil
-	}
-
 	// 1. Get application by id
 	app, err := h.repo.GetApplicationByID(req.ApplicationID)
 	if err != nil {
@@ -158,17 +129,20 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest) (Ac
 		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
 	}
 
-	// 3. Update all assignments
-	for i, assignment := range assignments {
-		if assignment.ReviewerID == user.ID {
-			assignments[i].ReviewStatus = acl.ReviewStatusRejected
-			assignments[i].ReviewedAt = time.Now()
-			assignments[i].UpdatedAt = time.Now()
-		} else {
-			assignments[i].ReviewStatus = acl.ReviewStatusPassed
-			assignments[i].UpdatedAt = time.Now()
+	// 3. Update assignments using provided assigneeIDs
+	for _, reviewerID := range assigneeIDs {
+		assignment := acl.ApplicationAssignment{
+			ApplicationID: app.ID,
+			ReviewerID:    reviewerID,
+			UpdatedAt:     time.Now(),
 		}
-		if err := h.repo.UpdateApplicationAssignment(assignments[i]); err != nil {
+		if reviewerID == user.ID {
+			assignment.ReviewStatus = acl.ReviewStatusRejected
+			assignment.ReviewedAt = time.Now()
+		} else {
+			assignment.ReviewStatus = acl.ReviewStatusPassed
+		}
+		if err := h.repo.UpdateApplicationAssignment(assignment); err != nil {
 			log.Println("Failed to update assignment", err)
 		}
 	}

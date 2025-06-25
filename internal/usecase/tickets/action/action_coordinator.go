@@ -70,6 +70,10 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 		return ActionResponse{}, err
 	}
 
+	if err := ac.validateActor(ctx, req.ApplicationID); err != nil {
+		return ActionResponse{}, err
+	}
+
 	for _, permID := range app.PermissionIDs {
 		if strings.Contains(permID, "signup") {
 			if ac.signupHandler != nil {
@@ -79,16 +83,21 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 
 		if strings.HasPrefix(permID, "claim") {
 			permIDsplit := strings.Split(permID, ":")
-			entityType := permIDsplit[1]
-			entityName := permIDsplit[2]
+			if len(permIDsplit) != 2 {
+				return ActionResponse{}, errors.New("invalid permission id")
+			}
+			entityID := permIDsplit[1]
 
-			groupName := "" // TODO: get it from app metadata
+			groupName := app.MetaData[entityID+":group_name"]
 
-			ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
-				EntityTypeID: entityType,
-				EntityName:   entityName,
-				GroupName:    groupName,
+			response, err := ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
+				EntityID:  entityID,
+				GroupName: groupName,
 			})
+			if err != nil {
+				return ActionResponse{}, err
+			}
+			return response, nil
 		}
 
 		// perm, err := ac.repo.GetPermissionByID(permID)
