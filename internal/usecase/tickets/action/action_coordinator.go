@@ -41,7 +41,7 @@ func NewActionCoordinator(db *buntdb.DB) *ActionCoordinator {
 	}
 }
 
-func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) ([]string, error) {
+func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) ([]acl.ApplicationAssignment, error) {
 	// validate the actor
 	user := util.GetUserInfo(ctx)
 	if user == nil {
@@ -51,10 +51,7 @@ func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) ([
 	if err != nil {
 		return nil, err
 	}
-	assigneeIDs := []string{}
-	for _, assignment := range assignments {
-		assigneeIDs = append(assigneeIDs, assignment.ReviewerID)
-	}
+
 	isAssignee := false
 	for _, assignment := range assignments {
 		if assignment.ReviewerID == user.ID {
@@ -65,7 +62,7 @@ func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) ([
 	if !isAssignee {
 		return nil, errors.New("you are not eligible to perform this action")
 	}
-	return assigneeIDs, nil
+	return assignments, nil
 }
 
 func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (ActionResponse, error) {
@@ -74,7 +71,7 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 		return ActionResponse{}, err
 	}
 
-	assigneeIDs, err := ac.validateActor(ctx, req.ApplicationID)
+	assignments, err := ac.validateActor(ctx, req.ApplicationID)
 	if err != nil {
 		return ActionResponse{}, err
 	}
@@ -98,7 +95,7 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 				AppID:       req.ApplicationID,
 				EntityID:    entityID,
 				GroupName:   groupName,
-				AssigneeIDs: assigneeIDs,
+				Assignments: assignments,
 			})
 			if err != nil {
 				return ActionResponse{}, err

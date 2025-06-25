@@ -14,11 +14,11 @@ import (
 )
 
 type ClaimEntityInput struct {
-	Action      string   `json:"action"`
-	AppID       string   `json:"app_id"`
-	EntityID    string   `json:"entity_id"`
-	GroupName   string   `json:"group_name"`
-	AssigneeIDs []string `json:"assignee_ids"`
+	Action      string
+	AppID       string
+	EntityID    string
+	GroupName   string
+	Assignments []acl.ApplicationAssignment
 }
 
 type ClaimEntityResponse struct {
@@ -36,36 +36,34 @@ func NewClaimEntityHandler(db *buntdb.DB) *ClaimEntityHandler {
 
 // Approve claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
-func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, appID, entityID, groupName string, assigneeIDs []string) error {
-	ent, err := h.repo.GetEntityByID(entityID)
+func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, input ClaimEntityInput) error {
+	ent, err := h.repo.GetEntityByID(input.EntityID)
 	if err != nil {
 		return err
 	}
-	ent.GroupOwner = groupName
+	ent.GroupOwner = input.GroupName
 	ent.Status = entity.EntityStatus_Active
 	ent.UpdatedAt = time.Now()
 	if err := h.repo.UpdateEntity(ent); err != nil {
 		return err
 	}
 	// Mark application as completed
-	app, err := h.repo.GetApplicationByID(appID)
+	app, err := h.repo.GetApplicationByID(input.AppID)
 	if err == nil {
 		app.Status = acl.StatusCompleted
 		app.UpdatedAt = time.Now()
-		h.repo.UpdateApplication(app)
+		err = h.repo.UpdateApplication(app)
+		if err != nil {
+			return err
+		}
 	}
 	// Update assignments
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return errors.New("unauthorized")
 	}
-	for _, reviewerID := range assigneeIDs {
-		assignment := acl.ApplicationAssignment{
-			ApplicationID: appID,
-			ReviewerID:    reviewerID,
-			UpdatedAt:     time.Now(),
-		}
-		if reviewerID == user.ID {
+	for _, assignment := range input.Assignments {
+		if assignment.ReviewerID == user.ID {
 			assignment.ReviewStatus = acl.ReviewStatusApproved
 			assignment.ReviewedAt = time.Now()
 		} else {
@@ -76,7 +74,7 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, appID, entityID,
 	// Add history
 	h.repo.CreateApplicationHistory(acl.ApplicationHistory{
 		ID:            uuid.NewString(),
-		ApplicationID: appID,
+		ApplicationID: input.AppID,
 		Action:        acl.ActionApprove,
 		ActorID:       user.ID,
 		Comment:       ent.TypeID + " claim approved",
@@ -89,31 +87,29 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, appID, entityID,
 
 // Reject claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
-func (h *ClaimEntityHandler) HandleReject(ctx context.Context, appID, entityID string, assigneeIDs []string) error {
-	ent, err := h.repo.GetEntityByID(entityID)
+func (h *ClaimEntityHandler) HandleReject(ctx context.Context, input ClaimEntityInput) error {
+	ent, err := h.repo.GetEntityByID(input.EntityID)
 	if err != nil {
 		return err
 	}
 
 	// Mark application as completed
-	app, err := h.repo.GetApplicationByID(appID)
+	app, err := h.repo.GetApplicationByID(input.AppID)
 	if err == nil {
 		app.Status = acl.StatusCompleted
 		app.UpdatedAt = time.Now()
-		h.repo.UpdateApplication(app)
+		err = h.repo.UpdateApplication(app)
+		if err != nil {
+			return err
+		}
 	}
 	// Update assignments
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return errors.New("unauthorized")
 	}
-	for _, reviewerID := range assigneeIDs {
-		assignment := acl.ApplicationAssignment{
-			ApplicationID: appID,
-			ReviewerID:    reviewerID,
-			UpdatedAt:     time.Now(),
-		}
-		if reviewerID == user.ID {
+	for _, assignment := range input.Assignments {
+		if assignment.ReviewerID == user.ID {
 			assignment.ReviewStatus = acl.ReviewStatusRejected
 			assignment.ReviewedAt = time.Now()
 		} else {
@@ -124,7 +120,7 @@ func (h *ClaimEntityHandler) HandleReject(ctx context.Context, appID, entityID s
 	// Add history
 	h.repo.CreateApplicationHistory(acl.ApplicationHistory{
 		ID:            uuid.NewString(),
-		ApplicationID: appID,
+		ApplicationID: input.AppID,
 		Action:        acl.ActionReject,
 		ActorID:       user.ID,
 		Comment:       ent.TypeID + " claim rejected",
@@ -138,9 +134,9 @@ func (h *ClaimEntityHandler) HandleReject(ctx context.Context, appID, entityID s
 // Existing claim handler (for direct claim)
 func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEntityInput) error {
 	if req.Action == acl.ActionApprove {
-		return h.HandleApprove(ctx, req.AppID, req.EntityID, req.GroupName, req.AssigneeIDs)
+		return h.HandleApprove(ctx, req)
 	} else if req.Action == acl.ActionReject {
-		return h.HandleReject(ctx, req.AppID, req.EntityID, req.AssigneeIDs)
+		return h.HandleReject(ctx, req)
 	}
 	return nil
 }
