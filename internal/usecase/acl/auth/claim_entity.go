@@ -170,7 +170,7 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 		ApplicationID: app.ID,
 		Action:        "Create claim entity ticket",
 		ActorID:       user.ID,
-		Comment:       fmt.Sprintf("Initial claim entity %s by %s", req.EntityID, user.Name),
+		Comment:       fmt.Sprintf("Initial claim %s %s by %s", entityObj.TypeID, entityObj.Name, user.Name),
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
