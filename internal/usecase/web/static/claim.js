@@ -27,6 +27,10 @@ window.showClaimModal = function(entityId, entityName, onSubmit) {
                     ${groupOptions}
                 </select>
             </div>
+            <div style="margin-bottom:1em;">
+                <label for="claim-reason-textarea">Reason:</label>
+                <textarea id="claim-reason-textarea" rows="2" style="width:100%;margin-top:0.5em;"></textarea>
+            </div>
             <div style="text-align:right;">
                 <button id="claim-cancel-btn" style="margin-right:0.5em;">Cancel</button>
                 <button id="claim-submit-btn">Submit</button>
@@ -42,19 +46,20 @@ window.showClaimModal = function(entityId, entityName, onSubmit) {
 
     $('#claim-submit-btn').on('click', function() {
         var selectedGroup = $('#claim-group-select').val();
+        var reason = $('#claim-reason-textarea').val();
         if (typeof onSubmit === 'function') {
-            onSubmit({ entityId, entityName, group: selectedGroup });
+            onSubmit({ entityId, entityName, group: selectedGroup, reason });
         }
         window.hideModalOverlay();
     });
 };
 
-window.handleClaimEntity = function({ entityId, entityName, group }) {
+window.handleClaimEntity = function({ entityId, entityName, group, reason }) {
     $.ajax({
         url: '/api/entity/claim',
         method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ entity_id: entityId, group_name: group }),
+        data: JSON.stringify({ entity_id: entityId, group_name: group, reason: reason }),
         success: function(resp) {
             alert('Claim request submitted successfully.');
         },

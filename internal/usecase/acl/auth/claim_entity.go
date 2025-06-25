@@ -19,6 +19,7 @@ import (
 type ClaimEntityRequest struct {
 	EntityID  string `json:"entity_id"`
 	GroupName string `json:"group_name"`
+	Reason    string `json:"reason"`
 }
 
 type ClaimEntityResponse struct {
@@ -125,8 +126,9 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 		Title:         fmt.Sprintf("Claim %s:%s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
 		UserID:        user.ID,
 		PermissionIDs: []string{"claim:" + req.EntityID},
-		Reason:        fmt.Sprintf("Request to claim %s '%s' for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
+		Reason:        req.Reason,
 		Status:        acl.StatusWaitingForApproval,
+		MetaData:      map[string]string{req.EntityID + ":group_name": req.GroupName},
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	entitymodel "github.com/jekiapp/topic-master/internal/model/entity"
 	dbpkg "github.com/jekiapp/topic-master/pkg/db"
 	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
@@ -72,9 +73,21 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	if err != nil {
 		return TicketDetailResponse{}, fmt.Errorf("ticket %s not found", ticketID)
 	}
-	applicant, err := uc.repo.GetUserPendingByID(app.UserID)
-	if err != nil {
-		return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
+
+	// if the permission is not signup (check the first permissionIDs, then get user by id)
+	var applicant acl.User
+	if len(app.PermissionIDs) > 0 && strings.HasPrefix(app.PermissionIDs[0], "signup:") {
+		userPending, err := uc.repo.GetUserPendingByID(app.UserID)
+		if err != nil {
+			return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
+		}
+		applicant = userPending.User
+	} else {
+		user, err := uc.repo.GetUserByID(app.UserID)
+		if err != nil {
+			return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
+		}
+		applicant = user
 	}
 
 	assignments, err := uc.repo.ListAssignmentsByApplicationID(ticketID)
@@ -143,7 +156,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 			Reason: app.Reason,
 			Status: app.Status,
 		},
-		Applicant:       applicant.User,
+		Applicant:       applicant,
 		Assignees:       assignees,
 		Histories:       historiesResponse,
 		CreatedAt:       app.CreatedAt.Format(time.RFC822Z),
@@ -152,7 +165,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 
 	permissions := []permissionResponse{}
 	for _, permissionID := range app.PermissionIDs {
-		if strings.Contains(permissionID, "signup") {
+		if strings.HasPrefix(permissionID, "signup") {
 			permissions = append(permissions, permissionResponse{
 				Name:        permissionID,
 				Description: "Signup application",
@@ -160,14 +173,19 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 			continue
 		}
 
-		permission, err := uc.repo.GetPermissionByID(permissionID)
-		if err != nil {
-			return TicketDetailResponse{}, fmt.Errorf("permission not found: %w", err)
+		if strings.HasPrefix(permissionID, "claim") {
+			entityID := strings.TrimPrefix(permissionID, "claim:")
+			entity, err := uc.repo.GetEntityByID(entityID)
+			if err != nil {
+				return TicketDetailResponse{}, fmt.Errorf("entity not found: %w", err)
+			}
+			groupName := app.MetaData[entityID+":group_name"]
+			permissions = append(permissions, permissionResponse{
+				Name:        "claim:" + entity.Name,
+				Description: groupName,
+			})
+			continue
 		}
-		permissions = append(permissions, permissionResponse{
-			Name:        permission.Name,
-			Description: permission.Description,
-		})
 	}
 	response.Ticket.Permissions = permissions
 	return response, nil
@@ -180,6 +198,7 @@ type iTicketDetailRepo interface {
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
 	ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error)
 	GetPermissionByID(id string) (acl.Permission, error)
+	GetEntityByID(id string) (entitymodel.Entity, error)
 }
 
 type ticketDetailRepo struct {
@@ -209,6 +228,10 @@ func (r *ticketDetailRepo) ListHistoriesByApplicationID(appID string) ([]acl.App
 
 func (r *ticketDetailRepo) GetPermissionByID(id string) (acl.Permission, error) {
 	return dbpkg.GetByID[acl.Permission](r.db, id)
+}
+
+func (r *ticketDetailRepo) GetEntityByID(id string) (entitymodel.Entity, error) {
+	return dbpkg.GetByID[entitymodel.Entity](r.db, id)
 }
 
 type TicketDetailUsecase struct {
