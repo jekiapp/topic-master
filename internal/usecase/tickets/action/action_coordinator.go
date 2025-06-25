@@ -41,15 +41,19 @@ func NewActionCoordinator(db *buntdb.DB) *ActionCoordinator {
 	}
 }
 
-func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) error {
+func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) ([]string, error) {
 	// validate the actor
 	user := util.GetUserInfo(ctx)
 	if user == nil {
-		return errors.New("unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 	assignments, err := ac.repo.ListAssignmentsByApplicationID(appID)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	assigneeIDs := []string{}
+	for _, assignment := range assignments {
+		assigneeIDs = append(assigneeIDs, assignment.ReviewerID)
 	}
 	isAssignee := false
 	for _, assignment := range assignments {
@@ -59,9 +63,9 @@ func (ac *ActionCoordinator) validateActor(ctx context.Context, appID string) er
 		}
 	}
 	if !isAssignee {
-		return errors.New("you are not eligible to perform this action")
+		return nil, errors.New("you are not eligible to perform this action")
 	}
-	return nil
+	return assigneeIDs, nil
 }
 
 func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (ActionResponse, error) {
@@ -70,15 +74,14 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 		return ActionResponse{}, err
 	}
 
-	if err := ac.validateActor(ctx, req.ApplicationID); err != nil {
+	assigneeIDs, err := ac.validateActor(ctx, req.ApplicationID)
+	if err != nil {
 		return ActionResponse{}, err
 	}
 
 	for _, permID := range app.PermissionIDs {
-		if strings.Contains(permID, "signup") {
-			if ac.signupHandler != nil {
-				return ac.signupHandler.HandleSignup(ctx, req)
-			}
+		if strings.HasPrefix(permID, "signup") {
+			return ac.signupHandler.HandleSignup(ctx, req)
 		}
 
 		if strings.HasPrefix(permID, "claim") {
@@ -90,22 +93,19 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 
 			groupName := app.MetaData[entityID+":group_name"]
 
-			response, err := ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
-				EntityID:  entityID,
-				GroupName: groupName,
+			err := ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
+				Action:      req.Action,
+				AppID:       req.ApplicationID,
+				EntityID:    entityID,
+				GroupName:   groupName,
+				AssigneeIDs: assigneeIDs,
 			})
 			if err != nil {
 				return ActionResponse{}, err
 			}
-			return response, nil
+			continue
 		}
 
-		// perm, err := ac.repo.GetPermissionByID(permID)
-		// if err != nil {
-		// 	return ActionResponse{}, err
-		// }
-
-		// else: handle other permissions as needed (placeholder)
 	}
 	return ActionResponse{Status: "success", Message: "Action completed"}, nil
 }

@@ -2,6 +2,7 @@ package action
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,8 +14,11 @@ import (
 )
 
 type ClaimEntityInput struct {
-	EntityID  string `json:"entity_id"`
-	GroupName string `json:"group_name"`
+	Action      string   `json:"action"`
+	AppID       string   `json:"app_id"`
+	EntityID    string   `json:"entity_id"`
+	GroupName   string   `json:"group_name"`
+	AssigneeIDs []string `json:"assignee_ids"`
 }
 
 type ClaimEntityResponse struct {
@@ -32,16 +36,16 @@ func NewClaimEntityHandler(db *buntdb.DB) *ClaimEntityHandler {
 
 // Approve claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
-func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, entityID, groupName, appID string, assigneeIDs []string) (ClaimEntityResponse, error) {
+func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, appID, entityID, groupName string, assigneeIDs []string) error {
 	ent, err := h.repo.GetEntityByID(entityID)
 	if err != nil {
-		return ClaimEntityResponse{Status: "error", Message: "Entity not found"}, err
+		return err
 	}
 	ent.GroupOwner = groupName
 	ent.Status = entity.EntityStatus_Active
 	ent.UpdatedAt = time.Now()
 	if err := h.repo.UpdateEntity(ent); err != nil {
-		return ClaimEntityResponse{Status: "error", Message: "Failed to update entity"}, err
+		return err
 	}
 	// Mark application as completed
 	app, err := h.repo.GetApplicationByID(appID)
@@ -53,7 +57,7 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, entityID, groupN
 	// Update assignments
 	user := util.GetUserInfo(ctx)
 	if user == nil {
-		return ClaimEntityResponse{Status: "error", Message: "Unauthorized"}, nil
+		return errors.New("unauthorized")
 	}
 	for _, reviewerID := range assigneeIDs {
 		assignment := acl.ApplicationAssignment{
@@ -75,26 +79,22 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, entityID, groupN
 		ApplicationID: appID,
 		Action:        acl.ActionApprove,
 		ActorID:       user.ID,
-		Comment:       "Entity claim approved",
+		Comment:       ent.TypeID + " claim approved",
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	})
 
-	return ClaimEntityResponse{Status: "success", Message: "Entity claim approved"}, nil
+	return nil
 }
 
 // Reject claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
-func (h *ClaimEntityHandler) HandleReject(ctx context.Context, entityID, appID string, assigneeIDs []string) (ClaimEntityResponse, error) {
+func (h *ClaimEntityHandler) HandleReject(ctx context.Context, appID, entityID string, assigneeIDs []string) error {
 	ent, err := h.repo.GetEntityByID(entityID)
 	if err != nil {
-		return ClaimEntityResponse{Status: "error", Message: "Entity not found"}, err
+		return err
 	}
-	ent.Status = entity.EntityStatus_Deleted
-	ent.UpdatedAt = time.Now()
-	if err := h.repo.UpdateEntity(ent); err != nil {
-		return ClaimEntityResponse{Status: "error", Message: "Failed to update entity"}, err
-	}
+
 	// Mark application as completed
 	app, err := h.repo.GetApplicationByID(appID)
 	if err == nil {
@@ -105,7 +105,7 @@ func (h *ClaimEntityHandler) HandleReject(ctx context.Context, entityID, appID s
 	// Update assignments
 	user := util.GetUserInfo(ctx)
 	if user == nil {
-		return ClaimEntityResponse{Status: "error", Message: "Unauthorized"}, nil
+		return errors.New("unauthorized")
 	}
 	for _, reviewerID := range assigneeIDs {
 		assignment := acl.ApplicationAssignment{
@@ -127,28 +127,22 @@ func (h *ClaimEntityHandler) HandleReject(ctx context.Context, entityID, appID s
 		ApplicationID: appID,
 		Action:        acl.ActionReject,
 		ActorID:       user.ID,
-		Comment:       "Entity claim rejected",
+		Comment:       ent.TypeID + " claim rejected",
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	})
 
-	return ClaimEntityResponse{Status: "success", Message: "Entity claim rejected"}, nil
+	return nil
 }
 
 // Existing claim handler (for direct claim)
-func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEntityInput) (ActionResponse, error) {
-	ent, err := h.repo.GetEntityByID(req.EntityID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Entity not found"}, err
+func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEntityInput) error {
+	if req.Action == acl.ActionApprove {
+		return h.HandleApprove(ctx, req.AppID, req.EntityID, req.GroupName, req.AssigneeIDs)
+	} else if req.Action == acl.ActionReject {
+		return h.HandleReject(ctx, req.AppID, req.EntityID, req.AssigneeIDs)
 	}
-
-	ent.GroupOwner = req.GroupName
-	ent.UpdatedAt = time.Now()
-	if err := h.repo.UpdateEntity(ent); err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to update entity"}, err
-	}
-
-	return ActionResponse{Status: "success", Message: "Entity claimed successfully"}, nil
+	return nil
 }
 
 type iClaimEntityRepo interface {
