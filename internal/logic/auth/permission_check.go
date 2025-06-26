@@ -11,7 +11,7 @@ import (
 type ICheckUserActionPermission interface {
 	GetEntityByID(id string) (*entity.Entity, error)
 	GetGroupsByUserID(userID string) ([]acl.GroupRole, error)
-	GetPermissionByActionEntity(userID, entityID, action string) (*acl.Permission, error)
+	GetPermissionByActionEntity(userID, entityID, action string) (acl.Permission, error)
 }
 
 // CheckUserEntityActionPermission checks if a user can perform an action on an entity.
@@ -45,7 +45,7 @@ func CheckUserActionPermission(user acl.User, entityID string, action string, de
 
 	// 5. Query permission by action/entity/user
 	perm, err := deps.GetPermissionByActionEntity(user.ID, entityID, action)
-	if err == nil && perm != nil {
+	if err == nil && perm.UserID == user.ID {
 		return nil
 	}
 

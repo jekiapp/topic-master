@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/jekiapp/topic-master/internal/config"
-	acl "github.com/jekiapp/topic-master/internal/usecase/acl"
 	aclAuth "github.com/jekiapp/topic-master/internal/usecase/acl/auth"
 	aclGroup "github.com/jekiapp/topic-master/internal/usecase/acl/group"
 	aclUser "github.com/jekiapp/topic-master/internal/usecase/acl/user"
@@ -28,7 +27,6 @@ type Handler struct {
 	assignUserToGroupUC      aclUserGroup.AssignUserToGroupUsecase
 	deleteUserUC             aclUser.DeleteUserUsecase
 	createGroupUC            aclGroup.CreateGroupUsecase
-	createPermissionUC       acl.CreatePermissionUsecase
 	changePasswordUC         aclUser.ChangePasswordUsecase
 	syncTopicsUC             topicUC.SyncTopicsUsecase
 	webUC                    *webUC.WebUsecase
@@ -58,6 +56,7 @@ type Handler struct {
 	nsqChannelOpsUC          topicDetailUC.NsqChannelOpsUsecase
 	deleteChannelUC          topicDetailUC.DeleteChannelUsecase
 	claimEntityUC            aclAuth.ClaimEntityUsecase
+	checkActionAuthUC        aclAuth.CheckActionAuthUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -72,7 +71,6 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		assignUserToGroupUC:      aclUserGroup.NewAssignUserToGroupUsecase(db),
 		deleteUserUC:             aclUser.NewDeleteUserUsecase(db),
 		createGroupUC:            aclGroup.NewCreateGroupUsecase(db),
-		createPermissionUC:       acl.NewCreatePermissionUsecase(db),
 		changePasswordUC:         aclUser.NewChangePasswordUsecase(db),
 		syncTopicsUC:             topicUC.NewSyncTopicsUsecase(db),
 		webUC:                    webUsecase,
@@ -102,6 +100,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		nsqChannelOpsUC:          topicDetailUC.NewNsqChannelOpsUsecase(cfg, db),
 		deleteChannelUC:          topicDetailUC.NewDeleteChannelUsecase(cfg, db),
 		claimEntityUC:            aclAuth.NewClaimEntityUsecase(db),
+		checkActionAuthUC:        aclAuth.NewCheckActionAuthUsecase(db),
 	}
 }
 
@@ -170,6 +169,8 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/channel/nsq/delete", sessionMiddleware(handlerPkg.HandleGenericGet(h.deleteChannelUC.Handle)))
 
 	mux.HandleFunc("/api/entity/claim", authMiddleware(handlerPkg.HandleGenericPost(h.claimEntityUC.Handle)))
+
+	mux.HandleFunc("/api/auth/check-action", handlerPkg.HandleGenericPost(h.checkActionAuthUC.Handle))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }
