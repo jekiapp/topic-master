@@ -94,6 +94,10 @@ $(function() {
     mainIframe.attr('src', 'tickets/detail/index.html');
   }
 
+  function showTicketsNew() {
+    mainIframe.attr('src', 'tickets/new/index.html');
+  }
+
   // Add event listener for Tickets menu
   $(window).on('hashchange', handleHashChange);
 
@@ -113,6 +117,8 @@ $(function() {
       showAccessControl();
     } else if (hash === '#tickets') {
       showTickets();
+    } else if (hash.startsWith('#tickets-new')) {
+      showTicketsNew();
     } else if (hash.startsWith('#ticket-detail')) {
       showTicketDetail();
     } else if (hash === '#all-topics') {

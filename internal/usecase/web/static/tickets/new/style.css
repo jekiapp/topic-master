@@ -1,0 +1,47 @@
+.app-new-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 32px 24px;
+}
+.form-group {
+    margin-bottom: 18px;
+}
+.form-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+.form-permission {
+    margin-bottom: 8px;
+}
+#submit-btn {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+}
+#submit-btn:hover {
+    background: #0056b3;
+}
+.error {
+    color: red;
+    margin-bottom: 16px;
+}
+.back-link {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 1.1em;
+}
+.back-link:hover {
+    text-decoration: underline;
+} 
