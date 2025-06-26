@@ -76,8 +76,19 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		hosts = append(hosts, h.Address)
 	}
 
+	topicOwned := false
+	user := util.GetUserInfo(ctx)
+	if user != nil {
+		for _, group := range user.Groups {
+			if group.GroupID == ent.GroupOwner {
+				topicOwned = true
+				break
+			}
+		}
+	}
+
 	permission := Permission{}
-	if ent.GroupOwner == entity.GroupNone {
+	if ent.GroupOwner == entity.GroupNone || topicOwned {
 		permission = Permission{
 			CanPause:              true,
 			CanPublish:            true,
@@ -90,7 +101,6 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 
 	// --- Fill Bookmarked ---
 	bookmarked := false
-	user := util.GetUserInfo(ctx)
 	if user != nil && user.ID != "" {
 		isB, err := uc.repo.IsBookmarked(ent.ID, user.ID)
 		if err == nil {
