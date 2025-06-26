@@ -35,7 +35,7 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 	for _, adminID := range adminIDs {
 		user, err := userRepo.GetUserByID(uc.db, adminID)
 		if err == nil {
-			reviewers = append(reviewers, reviewerResponse{Username: user.Username})
+			reviewers = append(reviewers, reviewerResponse{Username: user.Username, Name: user.Name})
 		}
 	}
 

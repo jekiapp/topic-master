@@ -28,6 +28,7 @@ type applicantResponse struct {
 
 type reviewerResponse struct {
 	Username string `json:"username"`
+	Name     string `json:"name"`
 }
 
 type fieldResponse struct {
