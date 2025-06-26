@@ -53,6 +53,19 @@ function updateChannelsTable(topic, hosts) {
                     nameRow.appendChild(pausedLabel);
                 }
 
+                // Add claim link next to channel name
+                const claimLink = document.createElement('a');
+                claimLink.href = 'javascript:void(0)';
+                claimLink.className = 'claim-link';
+                claimLink.style.marginLeft = '10px';
+                claimLink.textContent = 'Claim';
+                claimLink.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.showClaimModal(channel.id, channel.name, window.handleClaimEntity);
+                };
+                nameRow.appendChild(claimLink);
+
                 nameWrapper.appendChild(nameRow);
 
                 if (channel.group_owner) {
@@ -209,16 +222,6 @@ function updateChannelsTable(topic, hosts) {
                 emptyBtn.textContent = '🧹';
                 emptyBtn.onclick = () => handleChannelAction('empty', channel.name);
                 actionsWrapper.appendChild(emptyBtn);
-                // Claim button
-                const claimBtn = document.createElement('button');
-                claimBtn.className = 'action-icon-btn btn-claim';
-                claimBtn.title = 'Claim Channel';
-                claimBtn.textContent = 'Claim';
-                claimBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    window.showClaimModal(channel.id, channel.name, window.handleClaimEntity);
-                };
-                actionsWrapper.appendChild(claimBtn);
                 
                 actionsCell.appendChild(actionsWrapper);
                 row.appendChild(actionsCell);
