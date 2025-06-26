@@ -61,7 +61,24 @@ window.handleClaimEntity = function({ entityId, entityName, group, reason }) {
         contentType: 'application/json',
         data: JSON.stringify({ entity_id: entityId, group_name: group, reason: reason }),
         success: function(resp) {
-            alert('Claim request submitted successfully.');
+            const data = resp.data;
+            var link = data.link_redirect || '#';
+            var host = window.location.origin;
+            var modalHtml = `
+                <div style="min-width:300px;">
+                    <h3 style="margin-top:0;">Created ticket</h3>
+                    <div style="margin-bottom:1em;">
+                        <a href="${host}${link}" target="_blank">${host}${link}</a>
+                    </div>
+                    <div style="text-align:right;">
+                        <button id="claim-ticket-close-btn">Close</button>
+                    </div>
+                </div>
+            `;
+            window.showModalOverlay(modalHtml);
+            $('#claim-ticket-close-btn').on('click', function() {
+                window.hideModalOverlay();
+            });
         },
         error: function(xhr) {
             var msg = 'Failed to submit claim request';

@@ -24,6 +24,7 @@ type ClaimEntityRequest struct {
 
 type ClaimEntityResponse struct {
 	ApplicationID string `json:"application_id"`
+	LinkRedirect  string `json:"link_redirect"`
 }
 
 type iClaimEntityRepo interface {
@@ -168,12 +169,14 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 	history := &acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
-		Action:        "Create claim entity ticket",
+		Action:        "Create claim ticket",
 		ActorID:       user.ID,
-		Comment:       fmt.Sprintf("Initial claim %s %s by %s", entityObj.TypeID, entityObj.Name, user.Name),
+		Comment:       fmt.Sprintf("Initial claim %s %s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
 	_ = uc.repo.CreateApplicationHistory(*history)
-	return ClaimEntityResponse{ApplicationID: app.ID}, nil
+
+	linkRedirect := fmt.Sprintf("/#ticket-detail?id=%s", app.ID)
+	return ClaimEntityResponse{ApplicationID: app.ID, LinkRedirect: linkRedirect}, nil
 }
