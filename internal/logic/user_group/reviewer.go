@@ -8,8 +8,13 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-func GetReviewerIDsByGroupID(db *buntdb.DB, groupID string) ([]string, error) {
-	adminIDs, err := userRepo.GetAdminUserIDsByGroupID(db, groupID)
+func GetReviewerIDsByGroupID(db *buntdb.DB, groupName string) ([]string, error) {
+	group, err := userRepo.GetGroupByName(db, groupName)
+	if err != nil {
+		return nil, err
+	}
+
+	adminIDs, err := userRepo.GetAdminUserIDsByGroupID(db, group.ID)
 	if err != nil {
 		return nil, err
 	}

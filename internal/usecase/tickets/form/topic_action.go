@@ -53,13 +53,14 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 		{Label: "Topic Name", Type: "text", Required: true, DefaultValue: topicEntity.Name, Editable: false},
 		{Label: "Topic Description", Type: "textarea", Required: false, DefaultValue: topicEntity.Description, Editable: false},
 		{Label: "Topic Owner", Type: "text", Required: true, DefaultValue: topicEntity.GroupOwner, Editable: false},
-		{Label: "Reason", Type: "textarea", Required: true, DefaultValue: "", Editable: true, Permissions: permissions},
+		{Label: "Reason", Type: "textarea", Required: true, DefaultValue: "", Editable: true},
 	}
 
 	return NewApplicationResponse{
-		Title:     "Topic Action Form",
-		Type:      TopicFormType,
-		Reviewers: reviewers,
-		Fields:    fields,
+		Title:       "Topic Action Form",
+		Type:        TopicFormType,
+		Reviewers:   reviewers,
+		Fields:      fields,
+		Permissions: permissions,
 	}, nil
 }

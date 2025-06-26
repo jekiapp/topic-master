@@ -13,11 +13,12 @@ type NewApplicationRequest struct {
 }
 
 type NewApplicationResponse struct {
-	Title     string             `json:"title"`
-	Applicant applicantResponse  `json:"applicant"`
-	Type      string             `json:"type"` // topic, group, user
-	Reviewers []reviewerResponse `json:"reviewers"`
-	Fields    []fieldResponse    `json:"fields"`
+	Title       string               `json:"title"`
+	Applicant   applicantResponse    `json:"applicant"`
+	Type        string               `json:"type"` // topic, group, user
+	Reviewers   []reviewerResponse   `json:"reviewers"`
+	Fields      []fieldResponse      `json:"fields"`
+	Permissions []permissionResponse `json:"permissions"`
 }
 
 type applicantResponse struct {
@@ -30,12 +31,11 @@ type reviewerResponse struct {
 }
 
 type fieldResponse struct {
-	Label        string               `json:"label"`
-	Type         string               `json:"type"` // text, bool, textarea, hidden
-	Required     bool                 `json:"required"`
-	DefaultValue string               `json:"default_value"`
-	Editable     bool                 `json:"editable"`
-	Permissions  []permissionResponse `json:"permissions"`
+	Label        string `json:"label"`
+	Type         string `json:"type"` // text, bool, textarea, hidden
+	Required     bool   `json:"required"`
+	DefaultValue string `json:"default_value"`
+	Editable     bool   `json:"editable"`
 }
 
 type permissionResponse struct {
