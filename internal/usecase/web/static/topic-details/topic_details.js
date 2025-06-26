@@ -141,12 +141,15 @@ $(function() {
             }
         });
 
-        // Enable/disable buttons based on permission
-        $('.btn-pause').prop('disabled', !detail.permission.can_pause);
-        $('.btn-publish').prop('disabled', !detail.permission.can_publish);
-        $('.btn-tail').prop('disabled', !detail.permission.can_tail);
-        $('.btn-delete').prop('disabled', !detail.permission.can_delete);
-        $('.btn-drain').prop('disabled', !detail.permission.can_empty_queue);
+        // Helper for permission and login check
+        function checkActionPermission(permissionFlag, groupOwner, actionName) {
+            if (permissionFlag) return true;
+            if (!(window.parent.isLogin && window.parent.isLogin())) {
+                window.parent.showModalOverlay(`This topic is owned by ${escapeHtml(groupOwner)}. You must login to perform this action`);
+                return false;
+            }
+            return true;
+        }
 
         // Toggle Pause/Resume button visibility based on paused status
         var $pauseBtn = $('.btn-pause');
@@ -165,6 +168,183 @@ $(function() {
         // Claim link
         $('.claim-link').off('click').on('click', function() {
             window.showClaimModal(detail.id, detail.name, window.handleClaimEntity);
+        });
+
+        // --- Pause button logic ---
+        $('.btn-pause').off('click').on('click', function() {
+            if (!currentTopicDetail) return;
+            if (!checkActionPermission(currentTopicDetail.permission.can_pause, currentTopicDetail.group_owner, 'pause')) return;
+            var modalHtml = [
+                '<div style="text-align:center;">',
+                '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to pause this topic?</div>',
+                '<button id="modal-pause-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Pause</button>',
+                '<button id="modal-pause-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+                '</div>'
+            ].join('');
+            window.parent.showModalOverlay(modalHtml);
+            setTimeout(function() {
+                $('#modal-pause-confirm', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                    var $btn = $('.btn-pause');
+                    $btn.prop('disabled', true);
+                    $.ajax({
+                        url: '/api/topic/nsq/pause?id=' + currentTopicDetail.id,
+                        method: 'GET',
+                        success: function(resp) {
+                            showStatus('Topic paused successfully', 'green');
+                            location.reload();
+                        },
+                        error: function(xhr) {
+                            var msg = 'Failed to pause topic';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                msg += ': ' + xhr.responseJSON.error;
+                            }
+                            showStatus(msg, 'red');
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+                $('#modal-pause-cancel', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                });
+            }, 100);
+        });
+
+        // --- Resume button logic ---
+        $('.btn-resume').off('click').on('click', function() {
+            if (!currentTopicDetail) return;
+            if (!checkActionPermission(currentTopicDetail.permission.can_pause, currentTopicDetail.group_owner, 'resume')) return;
+            var modalHtml = [
+                '<div style="text-align:center;">',
+                '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to resume this topic?</div>',
+                '<button id="modal-resume-confirm" style="margin-right:18px;padding:8px 18px;background:#c7efc0;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Resume</button>',
+                '<button id="modal-resume-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+                '</div>'
+            ].join('');
+            window.parent.showModalOverlay(modalHtml);
+            setTimeout(function() {
+                $('#modal-resume-confirm', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                    var $btn = $('.btn-resume');
+                    $btn.prop('disabled', true);
+                    $.ajax({
+                        url: '/api/topic/nsq/resume?id=' + currentTopicDetail.id,
+                        method: 'GET',
+                        success: function(resp) {
+                            showStatus('Topic resumed successfully', 'green');
+                            location.reload();
+                        },
+                        error: function(xhr) {
+                            var msg = 'Failed to resume topic';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                msg += ': ' + xhr.responseJSON.error;
+                            }
+                            showStatus(msg, 'red');
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+                $('#modal-resume-cancel', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                });
+            }, 100);
+        });
+
+        // --- Delete button logic ---
+        $('.btn-delete').off('click').on('click', function() {
+            if (!currentTopicDetail) return;
+            if (!checkActionPermission(currentTopicDetail.permission.can_delete, currentTopicDetail.group_owner, 'delete')) return;
+            var modalHtml = [
+                '<div style="text-align:center;">',
+                '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to delete this topic? This cannot be undone.</div>',
+                '<button id="modal-delete-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Delete</button>',
+                '<button id="modal-delete-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+                '</div>'
+            ].join('');
+            window.parent.showModalOverlay(modalHtml);
+            setTimeout(function() {
+                $('#modal-delete-confirm', window.parent.document).off('click').on('click', function() {
+                    var $btn = $('.btn-delete');
+                    $btn.prop('disabled', true);
+                    window.parent.hideModalOverlay();
+                    $.ajax({
+                        url: '/api/topic/delete?id=' + currentTopicDetail.id,
+                        method: 'GET',
+                        success: function(resp) {
+                            showStatus('Topic deleted successfully', 'green');
+                            setTimeout(function() { window.location.href = '/'; }, 1200);
+                        },
+                        error: function(xhr) {
+                            var msg = 'Failed to delete topic';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                msg += ': ' + xhr.responseJSON.error;
+                            }
+                            showStatus(msg, 'red');
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+                $('#modal-delete-cancel', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                });
+            }, 0);
+        });
+
+        // --- Empty/Drain button logic ---
+        $('.btn-drain, .btn-empty').off('click').on('click', function() {
+            if (!currentTopicDetail) return;
+            if (!checkActionPermission(currentTopicDetail.permission.can_empty_queue, currentTopicDetail.group_owner, 'empty')) return;
+            var modalHtml = [
+                '<div style="text-align:center;">',
+                '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to empty the queue for this topic? This cannot be undone.</div>',
+                '<button id="modal-empty-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Empty</button>',
+                '<button id="modal-empty-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
+                '</div>'
+            ].join('');
+            window.parent.showModalOverlay(modalHtml);
+            setTimeout(function() {
+                $('#modal-empty-confirm', window.parent.document).off('click').on('click', function() {
+                    var $btn = $('.btn-empty');
+                    $btn.prop('disabled', true);
+                    window.parent.hideModalOverlay();
+                    $.ajax({
+                        url: '/api/topic/nsq/empty?id=' + currentTopicDetail.id,
+                        method: 'GET',
+                        success: function(resp) {
+                            showStatus('Queue emptied successfully', 'green');
+                            refreshStats();
+                        },
+                        error: function(xhr) {
+                            var msg = 'Failed to empty queue';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                msg += ': ' + xhr.responseJSON.error;
+                            }
+                            showStatus(msg, 'red');
+                        },
+                        complete: function() {
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+                $('#modal-empty-cancel', window.parent.document).off('click').on('click', function() {
+                    window.parent.hideModalOverlay();
+                });
+            }, 0);
+        });
+
+        // --- Publish button logic ---
+        $('.btn-publish').off('click').on('click', function() {
+            if (!currentTopicDetail) return;
+            if (!checkActionPermission(currentTopicDetail.permission.can_publish, currentTopicDetail.group_owner, 'publish')) return;
+            $('#publish-panel').show();
+            $('.btn-publish').prop('disabled', true);
+            adjustPanelWidths();
         });
     }).fail(function() {
         alert('Failed to load topic detail');
@@ -290,11 +470,6 @@ $(function() {
         }
     }
 
-    $('.btn-publish').on('click', function() {
-        $('#publish-panel').show();
-        $('.btn-publish').prop('disabled', true);
-        adjustPanelWidths();
-    });
     $('#close-publish-panel').on('click', function() {
         $('#publish-panel').hide();
         $('#publish-textarea').val('');
@@ -358,173 +533,6 @@ $(function() {
             return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
         });
     }
-
-    // --- Action buttons: Pause, Delete, Empty Queue ---
-    $('.btn-pause').on('click', function() {
-        if (!currentTopicDetail) return;
-        var modalHtml = [
-            '<div style="text-align:center;">',
-            '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to pause this topic?</div>',
-            '<button id="modal-pause-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Pause</button>',
-            '<button id="modal-pause-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
-            '</div>'
-        ].join('');
-        window.parent.showModalOverlay(modalHtml);
-        setTimeout(function() {
-            $('#modal-pause-confirm', window.parent.document).off('click').on('click', function() {
-                window.parent.hideModalOverlay();
-                var $btn = $('.btn-pause');
-                $btn.prop('disabled', true);
-                $.ajax({
-                    url: '/api/topic/nsq/pause?id=' + currentTopicDetail.id,
-                    method: 'GET',
-                    success: function(resp) {
-                        showStatus('Topic paused successfully', 'green');
-                        // Refresh topic detail to update UI
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        var msg = 'Failed to pause topic';
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            msg += ': ' + xhr.responseJSON.error;
-                        }
-                        showStatus(msg, 'red');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false);
-                    }
-                });
-            });
-            $('#modal-pause-cancel', window.parent.document).off('click').on('click', function() {
-                window.parent.hideModalOverlay();
-            });
-        }, 100);
-    });
-
-    // --- Resume button logic ---
-    $('.btn-resume').on('click', function() {
-        if (!currentTopicDetail) return;
-        var modalHtml = [
-            '<div style="text-align:center;">',
-            '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to resume this topic?</div>',
-            '<button id="modal-resume-confirm" style="margin-right:18px;padding:8px 18px;background:#c7efc0;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Resume</button>',
-            '<button id="modal-resume-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
-            '</div>'
-        ].join('');
-        window.parent.showModalOverlay(modalHtml);
-        setTimeout(function() {
-            $('#modal-resume-confirm', window.parent.document).off('click').on('click', function() {
-                window.parent.hideModalOverlay();
-                var $btn = $('.btn-resume');
-                $btn.prop('disabled', true);
-                $.ajax({
-                    url: '/api/topic/nsq/resume?id=' + currentTopicDetail.id,
-                    method: 'GET',
-                    success: function(resp) {
-                        showStatus('Topic resumed successfully', 'green');
-                        // Refresh topic detail to update UI
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        var msg = 'Failed to resume topic';
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            msg += ': ' + xhr.responseJSON.error;
-                        }
-                        showStatus(msg, 'red');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false);
-                    }
-                });
-            });
-            $('#modal-resume-cancel', window.parent.document).off('click').on('click', function() {
-                window.parent.hideModalOverlay();
-            });
-        }, 100);
-    });
-
-    $('.btn-delete').on('click', function() {
-        if (!currentTopicDetail) return;
-        var modalHtml = [
-            '<div style="text-align:center;">',
-            '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to delete this topic? This cannot be undone.</div>',
-            '<button id="modal-delete-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Delete</button>',
-            '<button id="modal-delete-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
-            '</div>'
-        ].join('');
-        window.parent.showModalOverlay(modalHtml);
-        setTimeout(function() {
-            $('#modal-delete-confirm', window.parent.document).off('click').on('click', function() {
-                var $btn = $('.btn-delete');
-                $btn.prop('disabled', true);
-                window.parent.hideModalOverlay();
-                $.ajax({
-                    url: '/api/topic/delete?id=' + currentTopicDetail.id,
-                    method: 'GET',
-                    success: function(resp) {
-                        showStatus('Topic deleted successfully', 'green');
-                        setTimeout(function() { window.location.href = '/'; }, 1200);
-                    },
-                    error: function(xhr) {
-                        var msg = 'Failed to delete topic';
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            msg += ': ' + xhr.responseJSON.error;
-                        }
-                        showStatus(msg, 'red');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false);
-                    }
-                });
-            });
-            $('#modal-delete-cancel', window.parent.document).off('click').on('click', function() {
-                window.parent.hideModalOverlay();
-            });
-        }, 0);
-    });
-
-    $('.btn-empty').on('click', function() {
-        if (!currentTopicDetail) return;
-        // Use modal overlay for confirmation
-        
-            var modalHtml = [
-                '<div style="text-align:center;">',
-                '<div style="font-size:1.1em;margin-bottom:18px;">Are you sure you want to empty the queue for this topic? This cannot be undone.</div>',
-                '<button id="modal-empty-confirm" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Yes, Empty</button>',
-                '<button id="modal-empty-cancel" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">Cancel</button>',
-                '</div>'
-            ].join('');
-            window.parent.showModalOverlay(modalHtml);
-            // Attach handlers after modal is shown
-            setTimeout(function() {
-                $('#modal-empty-confirm', window.parent.document).off('click').on('click', function() {
-                    var $btn = $('.btn-empty');
-                    $btn.prop('disabled', true);
-                    window.parent.hideModalOverlay();
-                    $.ajax({
-                        url: '/api/topic/nsq/empty?id=' + currentTopicDetail.id,
-                        method: 'GET',
-                        success: function(resp) {
-                            showStatus('Queue emptied successfully', 'green');
-                            refreshStats();
-                        },
-                        error: function(xhr) {
-                            var msg = 'Failed to empty queue';
-                            if (xhr.responseJSON && xhr.responseJSON.error) {
-                                msg += ': ' + xhr.responseJSON.error;
-                            }
-                            showStatus(msg, 'red');
-                        },
-                        complete: function() {
-                            $btn.prop('disabled', false);
-                        }
-                    });
-                });
-                $('#modal-empty-cancel', window.parent.document).off('click').on('click', function() {
-                    window.parent.hideModalOverlay();
-                });
-        }, 0);
-    });
 
     // Helper to show status messages
     function showStatus(msg, color) {

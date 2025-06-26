@@ -1,5 +1,19 @@
 // Tail panel logic for topic details
 
+// Helper for permission and login check
+function checkActionPermission(permissionFlag, groupOwner, actionName) {
+    if (permissionFlag) return true;
+    if (!(window.parent.isLogin && window.parent.isLogin())) {
+        if (window.parent.showModalOverlay) {
+            window.parent.showModalOverlay(`This topic is owned by ${escapeHtml(groupOwner)}. You must login to perform this action`);
+        } else {
+            alert(`This topic is owned by ${groupOwner}. You must login to perform this action`);
+        }
+        return false;
+    }
+    return true;
+}
+
 function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
     var tailSocket = null;
     var $tailPanel = $('#tail-panel');
@@ -23,6 +37,9 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
     setTailingActive(false);
 
     $tailBtn.on('click', function() {
+        var currentTopicDetail = getCurrentTopicDetail && getCurrentTopicDetail();
+        if (!currentTopicDetail) return;
+        if (!checkActionPermission(currentTopicDetail.permission.can_tail, currentTopicDetail.group_owner, 'tail')) return;
         $tailPanel.show();
         $tailPanelBtn.show();
         $tailStopBtn.hide();
@@ -151,7 +168,7 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
 
     // Helper to escape HTML
     function escapeHtml(text) {
-        return text.replace(/[&<>"]'/g, function(m) {
+        return text.replace(/[&<>"']/g, function(m) {
             return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
         });
     }
