@@ -8,33 +8,39 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+const (
+	PermissionAction_Publish = "publish"
+	PermissionAction_Tail    = "tail"
+	PermissionAction_Delete  = "delete"
+	PermissionAction_Empty   = "empty"
+	PermissionAction_Pause   = "pause"
+)
+
 // Permission represents an action or resource (master)
 type Permission struct {
-	ID          string // UUID
-	Name        string // Permission action name (publish, tail, delete, etc)
-	EntityID    string // Reference to Entity.ID
-	Type        string // Type of the permission (e.g. "group", "user")
-	Description string // Description of the permission ("publishing topic", "tailing topic", etc)
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID        string // UUID
+	Action    string // Permission action name (publish, tail, delete, etc)
+	UserID    string // Reference to User.ID
+	EntityID  string // Reference to Entity.ID
+	CreatedAt time.Time
 }
 
 const (
-	TablePermission          = "permission"
-	IdxPermission_Type       = TablePermission + ":type"
-	IdxPermission_NameEntity = TablePermission + ":name_entity"
+	TablePermission                = "permission"
+	IdxPermission_Entity           = TablePermission + ":entity"
+	IdxPermission_ActionEntityUser = TablePermission + ":action_entity_user"
 )
 
 func (p Permission) GetIndexes() []db.Index {
 	return []db.Index{
 		{
-			Name:    IdxPermission_Type,
-			Pattern: fmt.Sprintf("%s:*:%s", TablePermission, "type"),
+			Name:    IdxPermission_ActionEntityUser,
+			Pattern: fmt.Sprintf("%s:*:%s", TablePermission, "action_entity_user"),
 			Type:    buntdb.IndexString,
 		},
 		{
-			Name:    IdxPermission_NameEntity,
-			Pattern: fmt.Sprintf("%s:*:%s", TablePermission, "name_entity"),
+			Name:    IdxPermission_Entity,
+			Pattern: fmt.Sprintf("%s:*:%s", TablePermission, "entity"),
 			Type:    buntdb.IndexString,
 		},
 	}
@@ -49,8 +55,8 @@ func (p *Permission) GetPrimaryKey(id string) string {
 
 func (p Permission) GetIndexValues() map[string]string {
 	return map[string]string{
-		"type":        p.Type,
-		"name_entity": fmt.Sprintf("%s:%s", p.Name, p.EntityID),
+		"entity":             p.EntityID,
+		"action_entity_user": fmt.Sprintf("%s:%s:%s", p.Action, p.EntityID, p.UserID),
 	}
 }
 
