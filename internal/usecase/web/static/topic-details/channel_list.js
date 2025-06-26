@@ -209,6 +209,16 @@ function updateChannelsTable(topic, hosts) {
                 emptyBtn.textContent = '🧹';
                 emptyBtn.onclick = () => handleChannelAction('empty', channel.name);
                 actionsWrapper.appendChild(emptyBtn);
+                // Claim button
+                const claimBtn = document.createElement('button');
+                claimBtn.className = 'action-icon-btn btn-claim';
+                claimBtn.title = 'Claim Channel';
+                claimBtn.textContent = 'Claim';
+                claimBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.showClaimModal(channel.id, channel.name, window.handleClaimEntity);
+                };
+                actionsWrapper.appendChild(claimBtn);
                 
                 actionsCell.appendChild(actionsWrapper);
                 row.appendChild(actionsCell);
