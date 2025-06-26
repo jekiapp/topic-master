@@ -1,9 +1,17 @@
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background: var(--primary-bg);
+    margin: 0;
+    padding: 0;
+}
+
 .app-new-container {
     max-width: 600px;
     margin: 40px auto;
-    background: #fff;
+    background: var(--primary-white);
+    color: var(--primary-purple);
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 8px var(--shadow-purple);
     padding: 32px 24px;
 }
 .form-group {
@@ -15,6 +23,7 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1em;
+    font-family: inherit;
 }
 .form-permission {
     margin-bottom: 8px;
@@ -27,6 +36,7 @@
     border-radius: 4px;
     font-size: 1em;
     cursor: pointer;
+    font-family: inherit;
 }
 #submit-btn:hover {
     background: #0056b3;
@@ -38,10 +48,35 @@
 .back-link {
     display: inline-block;
     margin-bottom: 16px;
-    color: #007bff;
+    color: var(--accent-purple);
     text-decoration: none;
     font-size: 1.1em;
+    font-weight: 500;
+    background: none;
+    border-radius: 6px;
+    padding: 6px 14px 6px 8px;
+    transition: background 0.15s, color 0.15s;
 }
 .back-link:hover {
+    background: var(--shadow-focus);
+    color: var(--primary-purple);
     text-decoration: underline;
+}
+
+/* Section styling for Reviewers and Permissions */
+.section {
+    background: var(--primary-white);
+    border: 1.5px solid var(--border-purple);
+    border-radius: 12px;
+    padding: 18px 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px var(--shadow-purple);
+}
+.section-title {
+    color: var(--accent-purple);
+    font-size: 1.13em;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 12px;
+    letter-spacing: 0.2px;
 } 

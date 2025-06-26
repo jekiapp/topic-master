@@ -57,10 +57,10 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 
 	// hardcoded fields
 	fields := []fieldResponse{
-		{Label: "Topic Name", Type: "text", Required: true, DefaultValue: topicEntity.Name, Editable: false},
-		{Label: "Topic Description", Type: "textarea", Required: false, DefaultValue: topicEntity.Description, Editable: false},
-		{Label: "Topic Owner", Type: "text", Required: true, DefaultValue: topicEntity.GroupOwner, Editable: false},
-		{Label: "Reason", Type: "textarea", Required: true, DefaultValue: "", Editable: true},
+		{Label: "Topic Name", Type: "label", DefaultValue: topicEntity.Name, Editable: false},
+		{Label: "Topic Description", Type: "label-multiline", DefaultValue: topicEntity.Description, Editable: false},
+		{Label: "Topic Owner", Type: "label", DefaultValue: topicEntity.GroupOwner, Editable: false},
+		{Label: "Reason", Type: "textarea", DefaultValue: "", Editable: true},
 	}
 
 	return NewApplicationResponse{

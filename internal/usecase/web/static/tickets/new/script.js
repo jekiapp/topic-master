@@ -12,22 +12,20 @@ $(function() {
     function renderForm(data) {
         const $section = $('#form-section');
         $section.empty();
+        
         if (!data) {
             $section.append('<div class="error">Failed to load form data.</div>');
             return;
         }
         // Title
         $('#form-title').text(data.title || 'New Application');
+
+        // Start Application Info section
+        let appInfoHtml = '<div class="section"><div class="section-title">Application Info</div>';
         // Applicant
-        $section.append('<div><strong>Applicant:</strong> ' +
-            escapeHtml(data.applicant.name) + ' (' + escapeHtml(data.applicant.username) + ')</div>');
-        // Reviewers
-        if (data.reviewers && data.reviewers.length > 0) {
-            const reviewers = data.reviewers.map(r => escapeHtml(r.name) + ' (' + escapeHtml(r.username) + ')').join(', ');
-            $section.append('<div><strong>Reviewers:</strong> ' + reviewers + '</div>');
-        }
+        appInfoHtml += '<div class="form-group"><strong>Applicant:</strong> ' +
+            escapeHtml(data.applicant.name) + ' (' + escapeHtml(data.applicant.username) + ')</div>';
         // Form fields
-        const $form = $('<form id="new-app-form"></form>');
         if (data.fields && data.fields.length > 0) {
             data.fields.forEach(function(field, idx) {
                 const id = 'field-' + idx;
@@ -38,31 +36,56 @@ $(function() {
                     inputHtml = `<input type="text" id="${id}" name="${escapeHtml(field.label)}" value="${escapeHtml(field.default_value)}" ${required} ${editable} class="form-input">`;
                 } else if (field.type === 'textarea') {
                     inputHtml = `<textarea id="${id}" name="${escapeHtml(field.label)}" ${required} ${editable} class="form-input">${escapeHtml(field.default_value)}</textarea>`;
+                } else if (field.type === 'label') {
+                    inputHtml = `<span class=\"form-label\" id=\"${id}\" style=\"color:#555;margin-left:8px;\">${escapeHtml(field.default_value)}</span>`;
+                } else if (field.type === 'label-multiline') {
+                    inputHtml = `<div class=\"form-label-multiline\" id=\"${id}\" style=\"white-space:pre-line;padding:8px 0 4px 0;color:#555;\">${escapeHtml(field.default_value)}</div>`;
                 }
-                $form.append(
-                    `<div class="form-group">
-                        <label for="${id}">${escapeHtml(field.label)}${field.required ? ' <span style="color:red">*</span>' : ''}</label><br>
-                        ${inputHtml}
-                    </div>`
-                );
+                if (field.type === 'label') {
+                    appInfoHtml +=
+                        `<div class=\"form-group\">
+                            <label for=\"${id}\"><strong>${escapeHtml(field.label)}</strong> : ${inputHtml}</label>
+                        </div>`;
+                } else {
+                    appInfoHtml +=
+                        `<div class=\"form-group\">
+                            <label for=\"${id}\"><strong>${escapeHtml(field.label)}</strong> : </label><br>
+                            ${inputHtml}
+                        </div>`;
+                }
             });
         }
-        // Permissions
+        appInfoHtml += '</div>';
+        $section.append(appInfoHtml);
+
+        // Reviewers section
+        if (data.reviewers && data.reviewers.length > 0) {
+            const reviewers = data.reviewers.map(r => escapeHtml(r.name) + ' (' + escapeHtml(r.username) + ')').join(', ');
+            $section.append(
+                `<div class="section">
+                    <div class="section-title">Reviewers</div>
+                    <div>${reviewers}</div>
+                </div>`
+            );
+        }
+
+        // Permissions section
         if (data.permissions && data.permissions.length > 0) {
-            $form.append('<div class="form-group"><strong>Permissions:</strong></div>');
+            let permHtml = `<div class="section">
+                <div class="section-title">Permissions</div>`;
             data.permissions.forEach(function(p, idx) {
                 const id = 'perm-' + idx;
-                $form.append(
+                permHtml +=
                     `<div class="form-permission">
                         <input type="checkbox" id="${id}" name="permissions" value="${escapeHtml(p.name)}">
                         <label for="${id}">${escapeHtml(p.name)} <span style="color:#888">(${escapeHtml(p.description)})</span></label>
-                    </div>`
-                );
+                    </div>`;
             });
+            permHtml += '</div>';
+            $section.append(permHtml);
         }
         // Submit button
-        $form.append('<button type="submit" id="submit-btn">Submit</button>');
-        $section.append($form);
+        $section.append('<button type="button" id="submit-btn">Submit</button>');
     }
 
     // Helper to extract query params from parent hash
