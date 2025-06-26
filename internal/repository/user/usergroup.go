@@ -51,7 +51,7 @@ func GetGroupByName(dbConn *buntdb.DB, name string) (acl.Group, error) {
 
 func ListUserGroupsByGroupID(dbConn *buntdb.DB, groupID string, limit int) ([]acl.UserGroup, error) {
 	all, err := db.SelectPaginated[acl.UserGroup](dbConn, "="+groupID, acl.IdxUserGroup_GroupID, &db.Pagination{Limit: limit})
-	if err != nil {
+	if err != nil && err != db.ErrNotFound {
 		return nil, err
 	}
 	if limit > 0 && len(all) > limit {
