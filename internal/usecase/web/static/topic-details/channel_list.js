@@ -225,14 +225,18 @@ function updateChannelsTable(topic, hosts) {
 
                 tbody.appendChild(row);
             });
+            // Fetch topic stats using hosts and topic name
+            if (window.fetchAndUpdateStats && window.currentTopicDetail) {
+                window.fetchAndUpdateStats(window.currentTopicDetail);
+            }
         })
         .catch(error => console.error('Error fetching channels:', error));
 }
 
-function refreshChannels(topic, hosts) {
-    currentTopic = topic;
-    nsqdHosts = hosts;
-    updateChannelsTable(topic, hosts);
+function refreshChannels(detail) {
+    currentTopic = detail.name;
+    nsqdHosts = detail.nsqd_hosts;
+    updateChannelsTable(detail.name, detail.nsqd_hosts);
 }
 
 function handleChannelAction(action, channelName) {
