@@ -11,13 +11,13 @@ import (
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/jekiapp/topic-master/pkg/db"
+	util "github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
 type CheckActionAuthRequest struct {
-	User     acl.User `json:"user"`
-	EntityID string   `json:"entity_id"`
-	Action   string   `json:"action"`
+	EntityID string `json:"entity_id"`
+	Action   string `json:"action"`
 }
 
 type CheckActionAuthResponse struct {
@@ -66,7 +66,11 @@ func NewCheckActionAuthUsecase(db *buntdb.DB) CheckActionAuthUsecase {
 }
 
 func (uc CheckActionAuthUsecase) Handle(ctx context.Context, req CheckActionAuthRequest) (CheckActionAuthResponse, error) {
-	err := auth.CheckUserActionPermission(req.User, req.EntityID, req.Action, uc.repo)
+	user := util.GetUserInfo(ctx)
+	if user == nil {
+		return CheckActionAuthResponse{Allowed: false, Error: "user not found"}, nil
+	}
+	err := auth.CheckUserActionPermission(*user, req.EntityID, req.Action, uc.repo)
 	if err != nil {
 		return CheckActionAuthResponse{Allowed: false, Error: err.Error()}, nil
 	}

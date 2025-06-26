@@ -170,7 +170,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/entity/claim", authMiddleware(handlerPkg.HandleGenericPost(h.claimEntityUC.Handle)))
 
-	mux.HandleFunc("/api/auth/check-action", handlerPkg.HandleGenericPost(h.checkActionAuthUC.Handle))
+	mux.HandleFunc("/api/auth/check-action", authMiddleware(handlerPkg.HandleGenericPost(h.checkActionAuthUC.Handle)))
 
 	mux.HandleFunc("/", handlerPkg.HandleStatic(h.webUC.RenderIndex))
 }

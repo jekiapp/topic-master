@@ -1,17 +1,45 @@
 // Tail panel logic for topic details
 
-// Helper for permission and login check
-function checkActionPermission(permissionFlag, groupOwner, actionName) {
-    if (permissionFlag) return true;
+// Helper for permission and login check (async)
+function checkActionPermissionAsync(permissionFlag, groupOwner, actionName, entityId, cb) {
+    if (permissionFlag) { cb(true); return; }
     if (!(window.parent.isLogin && window.parent.isLogin())) {
         if (window.parent.showModalOverlay) {
             window.parent.showModalOverlay(`This topic is owned by ${escapeHtml(groupOwner)}. You must login to perform this action`);
         } else {
             alert(`This topic is owned by ${groupOwner}. You must login to perform this action`);
         }
-        return false;
+        cb(false); return;
     }
-    return true;
+    // User is logged in, check with backend
+    $.ajax({
+        url: '/api/auth/check-action',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ action: actionName, entity_id: entityId }),
+        success: function(resp) {
+            if (resp && resp.allowed) {
+                cb(true);
+            } else {
+                if (window.parent.showModalOverlay) {
+                    window.parent.showModalOverlay(`You do not have permission to perform this action.`);
+                } else {
+                    alert('You do not have permission to perform this action.');
+                }
+                cb(false);
+            }
+        },
+        error: function(xhr) {
+            let msg = 'Permission check failed';
+            if (xhr.responseJSON && xhr.responseJSON.error) msg += ': ' + xhr.responseJSON.error;
+            if (window.parent.showModalOverlay) {
+                window.parent.showModalOverlay(msg);
+            } else {
+                alert(msg);
+            }
+            cb(false);
+        }
+    });
 }
 
 function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
@@ -39,12 +67,20 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
     $tailBtn.on('click', function() {
         var currentTopicDetail = getCurrentTopicDetail && getCurrentTopicDetail();
         if (!currentTopicDetail) return;
-        if (!checkActionPermission(currentTopicDetail.permission.can_tail, currentTopicDetail.group_owner, 'tail')) return;
-        $tailPanel.show();
-        $tailPanelBtn.show();
-        $tailStopBtn.hide();
-        $tailStatus.text('');
-        if (adjustPanelWidths) adjustPanelWidths();
+        checkActionPermissionAsync(
+            currentTopicDetail.permission.can_tail,
+            currentTopicDetail.group_owner,
+            'tail',
+            currentTopicDetail.id,
+            function(allowed) {
+                if (!allowed) return;
+                $tailPanel.show();
+                $tailPanelBtn.show();
+                $tailStopBtn.hide();
+                $tailStatus.text('');
+                if (adjustPanelWidths) adjustPanelWidths();
+            }
+        );
     });
     $tailCloseBtn.on('click', function() {
         $tailPanel.hide();
