@@ -37,7 +37,7 @@ type Permission struct {
 	CanPublish            bool `json:"can_publish"`
 	CanTail               bool `json:"can_tail"`
 	CanDelete             bool `json:"can_delete"`
-	CanEmptyQueue         bool `json:"can_empty_queue"`
+	CanEmpty              bool `json:"can_empty"`
 	CanUpdateEventTrigger bool `json:"can_update_event_trigger"`
 }
 
@@ -80,7 +80,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 	user := util.GetUserInfo(ctx)
 	if user != nil {
 		for _, group := range user.Groups {
-			if group.GroupID == ent.GroupOwner {
+			if group.GroupName == ent.GroupOwner {
 				topicOwned = true
 				break
 			}
@@ -94,7 +94,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 			CanPublish:            true,
 			CanTail:               true,
 			CanDelete:             true,
-			CanEmptyQueue:         true,
+			CanEmpty:              true,
 			CanUpdateEventTrigger: true,
 		}
 	}
