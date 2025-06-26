@@ -65,9 +65,35 @@ $(function() {
         $section.append($form);
     }
 
+    // Helper to extract query params from parent hash
+    function getQueryParamsFromParentHash() {
+        let hash = '';
+        if (window.parent && window.parent.location && window.parent.location.hash) {
+            hash = window.parent.location.hash;
+        } else {
+            hash = window.location.hash;
+        }
+        const queryIndex = hash.indexOf('?');
+        let params = {};
+        if (queryIndex !== -1) {
+            const queryString = hash.substring(queryIndex + 1);
+            const urlParams = new URLSearchParams(queryString);
+            for (const [key, value] of urlParams.entries()) {
+                params[key] = value;
+            }
+        }
+        return params;
+    }
+
     // Fetch form data
+    const params = getQueryParamsFromParentHash();
+    let apiUrl = '/api/tickets/new-application-form';
+    const queryArr = [];
+    if (params.type) queryArr.push('type=' + encodeURIComponent(params.type));
+    if (params.entity_id) queryArr.push('entity_id=' + encodeURIComponent(params.entity_id));
+    if (queryArr.length > 0) apiUrl += '?' + queryArr.join('&');
     $.ajax({
-        url: '/api/tickets/new-application-form',
+        url: apiUrl,
         method: 'GET',
         success: function(resp) {
             if (resp && resp.data) {

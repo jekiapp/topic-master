@@ -2,10 +2,12 @@ package form
 
 import (
 	"context"
+	"errors"
 
 	usergrouplogic "github.com/jekiapp/topic-master/internal/logic/user_group"
 	entityRepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	userRepo "github.com/jekiapp/topic-master/internal/repository/user"
+	util "github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -20,6 +22,11 @@ func NewFormTopicActionUsecase(db *buntdb.DB) TopicActionUsecase {
 }
 
 func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) (NewApplicationResponse, error) {
+	userInfo := util.GetUserInfo(ctx)
+	if userInfo == nil {
+		return NewApplicationResponse{}, errors.New("user not found")
+	}
+
 	// get entity from db
 	topicEntity, err := entityRepo.GetEntityByID(uc.db, entityID)
 	if err != nil {
@@ -58,6 +65,7 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 
 	return NewApplicationResponse{
 		Title:       "Topic Action Form",
+		Applicant:   applicantResponse{Username: userInfo.Username, Name: userInfo.Name},
 		Type:        TopicFormType,
 		Reviewers:   reviewers,
 		Fields:      fields,
