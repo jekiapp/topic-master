@@ -9,6 +9,11 @@ $(function() {
         return $('<div>').text(text).html();
     }
 
+    // Helper to make a safe HTML id from a label
+    function makeIdFromLabel(label) {
+        return label.replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
     function renderForm(data) {
         const $section = $('#form-section');
         $section.empty();
@@ -28,7 +33,7 @@ $(function() {
         // Form fields
         if (data.fields && data.fields.length > 0) {
             data.fields.forEach(function(field, idx) {
-                const id = 'field-' + idx;
+                const id = makeIdFromLabel(field.label);
                 let inputHtml = '';
                 const required = field.required ? 'required' : '';
                 const editable = field.editable ? '' : 'readonly';
@@ -43,15 +48,10 @@ $(function() {
                 }
                 if (field.type === 'label') {
                     appInfoHtml +=
-                        `<div class=\"form-group\">
-                            <label for=\"${id}\"><strong>${escapeHtml(field.label)}</strong> : ${inputHtml}</label>
-                        </div>`;
+                        `<div class=\"form-group\">\n                            <label for=\"${id}\"><strong>${escapeHtml(field.label)}</strong> : ${inputHtml}</label>\n                        </div>`;
                 } else {
                     appInfoHtml +=
-                        `<div class=\"form-group\">
-                            <label for=\"${id}\"><strong>${escapeHtml(field.label)}</strong> : </label><br>
-                            ${inputHtml}
-                        </div>`;
+                        `<div class=\"form-group\">\n                            <label for=\"${id}\"><strong>${escapeHtml(field.label)}</strong> : </label><br>\n                            ${inputHtml}\n                        </div>`;
                 }
             });
         }
@@ -131,4 +131,51 @@ $(function() {
     });
 
     // (Submission logic can be added here if needed)
+    // --- Submission logic start ---
+    $(document).on('click', '#submit-btn', function() {
+        // Collect entity_id and application_type from query params
+        const params = getQueryParamsFromParentHash();
+        const entityId = params.entity_id || '';
+        const applicationType = params.type || 'topic';
+        // Collect reason by label-based id
+        const reason = $('#Reason').val() || '';
+        // Collect permissions from checked checkboxes by name
+        const permissions = $("input[type='checkbox'][name='permissions']:checked").map(function() {
+            return this.value;
+        }).get();
+        // Basic validation
+        if (!entityId || !reason || permissions.length === 0) {
+            alert('Please provide a reason and select at least one permission.');
+            return;
+        }
+        // Prepare payload
+        const payload = {
+            entity_id: entityId,
+            application_type: applicationType,
+            reason: reason,
+            permission: permissions
+        };
+        // POST to backend
+        $.ajax({
+            url: '/api/tickets/submit-application',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(resp) {
+                if (resp && resp.app_url) {
+                    window.parent.location.hash = resp.app_url;
+                } else {
+                    alert('Submission succeeded but no redirect URL returned.');
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Submission failed.';
+                if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
+                    msg += '\n' + xhr.responseJSON.error;
+                }
+                alert(msg);
+            }
+        });
+    });
+    // --- Submission logic end ---
 }); 
