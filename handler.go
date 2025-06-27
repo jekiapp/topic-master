@@ -57,7 +57,7 @@ type Handler struct {
 	nsqChannelListUC         topicDetailUC.NsqChannelListUsecase
 	nsqChannelOpsUC          topicDetailUC.NsqChannelOpsUsecase
 	deleteChannelUC          topicDetailUC.DeleteChannelUsecase
-	claimEntityUC            aclAuth.ClaimEntityUsecase
+	claimEntityUC            entityUC.ClaimEntityUsecase
 	checkActionAuthUC        aclAuth.CheckActionAuthUsecase
 	newApplicationUC         ticketsform.NewApplicationUsecase
 	submitApplicationUC      submit.SubmitApplicationUsecase
@@ -103,7 +103,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		nsqChannelListUC:         topicDetailUC.NewNsqChannelListUsecase(db),
 		nsqChannelOpsUC:          topicDetailUC.NewNsqChannelOpsUsecase(cfg, db),
 		deleteChannelUC:          topicDetailUC.NewDeleteChannelUsecase(cfg, db),
-		claimEntityUC:            aclAuth.NewClaimEntityUsecase(db),
+		claimEntityUC:            entityUC.NewClaimEntityUsecase(db),
 		checkActionAuthUC:        aclAuth.NewCheckActionAuthUsecase(db),
 		newApplicationUC:         ticketsform.NewNewApplicationUsecase(db),
 		submitApplicationUC:      submit.NewSubmitApplicationUsecase(db),
