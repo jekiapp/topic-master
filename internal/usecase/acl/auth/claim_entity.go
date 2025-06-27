@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
-	"github.com/google/uuid"
+	"github.com/jekiapp/topic-master/internal/logic/auth"
 	usergrouplogic "github.com/jekiapp/topic-master/internal/logic/user_group"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	entitymodel "github.com/jekiapp/topic-master/internal/model/entity"
@@ -122,52 +121,20 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 		return ClaimEntityResponse{}, errors.New("entity not found")
 	}
 
-	// Create application
-	app := &acl.Application{
-		ID:            uuid.NewString(),
-		Title:         fmt.Sprintf("Claim %s:%s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
-		UserID:        user.ID,
-		PermissionIDs: []string{"claim:" + req.EntityID},
-		Reason:        req.Reason,
-		Status:        acl.StatusWaitingForApproval,
-		MetaData:      map[string]string{req.EntityID + ":group_name": req.GroupName},
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+	input := auth.CreateApplicationInput{
+		Title:              fmt.Sprintf("Claim %s:%s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
+		ApplicationType:    acl.ApplicationType_Claim,
+		PermissionIDs:      []string{"claim:" + req.EntityID},
+		Reason:             req.Reason,
+		ReviewerGroupID:    group.ID,
+		MetaData:           map[string]string{req.EntityID + ":group_name": req.GroupName},
+		HistoryInitAction:  "Create claim ticket",
+		HistoryInitComment: fmt.Sprintf("Initial claim %s %s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
 	}
-	if err := uc.repo.CreateApplication(*app); err != nil {
+	out, err := auth.CreateApplication(ctx, input, uc.repo)
+	if err != nil {
 		return ClaimEntityResponse{}, err
 	}
-
-	adminUserIDs, err := uc.repo.GetReviewerIDsByGroupID(group.ID)
-	if err != nil {
-		return ClaimEntityResponse{}, errors.New("failed to get admin user ids")
-	}
-
-	for _, userID := range adminUserIDs {
-		assignment := &acl.ApplicationAssignment{
-			ID:            uuid.NewString(),
-			ApplicationID: app.ID,
-			ReviewerID:    userID,
-			ReviewStatus:  acl.ActionWaitingForApproval,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
-		}
-		if err := uc.repo.CreateApplicationAssignment(*assignment); err != nil {
-			return ClaimEntityResponse{}, err
-		}
-	}
-	// Insert application history
-	history := &acl.ApplicationHistory{
-		ID:            uuid.NewString(),
-		ApplicationID: app.ID,
-		Action:        "Create claim ticket",
-		ActorID:       user.ID,
-		Comment:       fmt.Sprintf("Initial claim %s %s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-	_ = uc.repo.CreateApplicationHistory(*history)
-
-	linkRedirect := fmt.Sprintf("/#ticket-detail?id=%s", app.ID)
-	return ClaimEntityResponse{ApplicationID: app.ID, LinkRedirect: linkRedirect}, nil
+	linkRedirect := fmt.Sprintf("/#ticket-detail?id=%s", out.ApplicationID)
+	return ClaimEntityResponse{ApplicationID: out.ApplicationID, LinkRedirect: linkRedirect}, nil
 }
