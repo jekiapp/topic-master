@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	usergrouplogic "github.com/jekiapp/topic-master/internal/logic/user_group"
+	"github.com/jekiapp/topic-master/internal/model/acl"
 	entityRepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	userRepo "github.com/jekiapp/topic-master/internal/repository/user"
 	util "github.com/jekiapp/topic-master/pkg/util"
@@ -47,12 +48,12 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 	}
 
 	// hardcoded permissions
-	permissions := []permissionResponse{
-		{Name: "publish", Description: "Publish messages"},
-		{Name: "tail", Description: "Tail messages"},
-		{Name: "drain", Description: "Drain topic"},
-		{Name: "pause", Description: "Pause topic"},
-		{Name: "delete", Description: "Delete topic"},
+	permissions := []acl.Permission{
+		acl.Permission_Topic_Publish,
+		acl.Permission_Topic_Tail,
+		acl.Permission_Topic_Drain,
+		acl.Permission_Topic_Pause,
+		acl.Permission_Topic_Delete,
 	}
 
 	// hardcoded fields
@@ -66,7 +67,7 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 	return NewApplicationResponse{
 		Title:       "Topic Action Form",
 		Applicant:   applicantResponse{Username: userInfo.Username, Name: userInfo.Name},
-		Type:        TopicFormType,
+		Type:        acl.ApplicationType_TopicForm,
 		Reviewers:   reviewers,
 		Fields:      fields,
 		Permissions: permissions,

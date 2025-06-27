@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/tidwall/buntdb"
 )
 
@@ -13,12 +14,12 @@ type NewApplicationRequest struct {
 }
 
 type NewApplicationResponse struct {
-	Title       string               `json:"title"`
-	Applicant   applicantResponse    `json:"applicant"`
-	Type        string               `json:"type"` // topic, group, user
-	Reviewers   []reviewerResponse   `json:"reviewers"`
-	Fields      []fieldResponse      `json:"fields"`
-	Permissions []permissionResponse `json:"permissions"`
+	Title       string             `json:"title"`
+	Applicant   applicantResponse  `json:"applicant"`
+	Type        string             `json:"type"` // topic, group, user
+	Reviewers   []reviewerResponse `json:"reviewers"`
+	Fields      []fieldResponse    `json:"fields"`
+	Permissions []acl.Permission   `json:"permissions"`
 }
 
 type applicantResponse struct {
@@ -39,11 +40,6 @@ type fieldResponse struct {
 	Editable     bool   `json:"editable"`
 }
 
-type permissionResponse struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
 type NewApplicationUsecase struct {
 	topicActionUsecase TopicActionUsecase
 }
@@ -54,15 +50,11 @@ func NewNewApplicationUsecase(db *buntdb.DB) NewApplicationUsecase {
 	}
 }
 
-const (
-	TopicFormType = "topic"
-)
-
 func (uc NewApplicationUsecase) Handle(ctx context.Context, req map[string]string) (NewApplicationResponse, error) {
 	entityID := req["entity_id"]
 	typeApplication := req["type"]
 
-	if typeApplication == TopicFormType {
+	if typeApplication == acl.ApplicationType_TopicForm {
 		return uc.topicActionUsecase.getTopicForm(ctx, entityID)
 	}
 

@@ -11,7 +11,7 @@ import (
 type ICheckUserActionPermission interface {
 	GetEntityByID(id string) (*entity.Entity, error)
 	GetGroupsByUserID(userID string) ([]acl.GroupRole, error)
-	GetPermissionByActionEntity(userID, entityID, action string) (acl.Permission, error)
+	GetPermissionByActionEntity(userID, entityID, action string) (acl.PermissionMap, error)
 }
 
 // CheckUserEntityActionPermission checks if a user can perform an action on an entity.
