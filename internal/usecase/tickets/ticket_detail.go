@@ -65,7 +65,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	ticketID := req["id"]
 	app, err := uc.repo.GetApplicationByID(ticketID)
 	if err != nil {
-		return TicketDetailResponse{}, fmt.Errorf("ticket %s not found", ticketID)
+		return TicketDetailResponse{}, fmt.Errorf("[TICKET DETAIL] ticket %s not found", ticketID)
 	}
 
 	// if the permission is not signup (check the first permissionIDs, then get user by id)
@@ -73,20 +73,20 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	if app.Type == acl.ApplicationType_Signup {
 		userPending, err := uc.repo.GetUserPendingByID(app.UserID)
 		if err != nil {
-			return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
+			return TicketDetailResponse{}, fmt.Errorf("[TICKET DETAIL] user %s not found", app.UserID)
 		}
 		applicant = userPending.User
 	} else {
 		user, err := uc.repo.GetUserByID(app.UserID)
 		if err != nil {
-			return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
+			return TicketDetailResponse{}, fmt.Errorf("[TICKET DETAIL] user %s not found", app.UserID)
 		}
 		applicant = user
 	}
 
 	assignments, err := uc.repo.ListAssignmentsByApplicationID(ticketID)
 	if err != nil {
-		return TicketDetailResponse{}, fmt.Errorf("assignments not found: %w", err)
+		return TicketDetailResponse{}, fmt.Errorf("[TICKET DETAIL] assignments not found: %w", err)
 	}
 
 	eligible := false
@@ -94,7 +94,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 	for _, assignment := range assignments {
 		user, err := uc.repo.GetUserByID(assignment.ReviewerID)
 		if err != nil {
-			log.Println("error getting username by user id", err)
+			log.Println("[TICKET DETAIL] error getting username by user id", err)
 		}
 		if user.ID == iam.ID {
 			eligible = true
@@ -119,18 +119,17 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 
 	histories, err := uc.repo.ListHistoriesByApplicationID(ticketID)
 	if err != nil {
-		return TicketDetailResponse{}, fmt.Errorf("histories not found: %w", err)
+		return TicketDetailResponse{}, fmt.Errorf("[TICKET DETAIL] histories not found: %w", err)
 	}
 
 	historiesResponse := []historyResponse{}
 	for _, history := range histories {
 		actor, err := uc.repo.GetUserByID(history.ActorID)
 		if err != nil {
-			log.Println("error getting username by user id", err)
 			// fallback to pending user
-			pendingActor, err := uc.repo.GetUserPendingByID(history.ActorID)
-			if err != nil {
-				log.Println("error getting username by user id", err)
+			pendingActor, err2 := uc.repo.GetUserPendingByID(history.ActorID)
+			if err2 != nil {
+				log.Println("[TICKET DETAIL] error getting username by user id", err, err2)
 			} else {
 				actor = pendingActor.User
 			}

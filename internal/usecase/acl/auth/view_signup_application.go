@@ -109,7 +109,7 @@ func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req map[strin
 	for _, assignment := range assignments {
 		user, err := uc.repo.GetUserByID(assignment.ReviewerID)
 		if err != nil {
-			log.Println("error getting username by user id", err)
+			log.Println("[SIGNUP APPLICATION] error getting username by user id", err)
 		}
 		assignees = append(assignees, Assignee{
 			UserID:   user.ID,
