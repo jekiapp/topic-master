@@ -20,24 +20,24 @@ import (
 // Only needs ApplicationID
 
 type ViewSignupApplicationRequest struct {
-	ApplicationID string
+	ApplicationID string `json:"application_id"`
 }
 
 type ViewSignupApplicationResponse struct {
 	Application acl.Application          `json:"application"`
 	User        acl.User                 `json:"user"`
-	Assignee    []assignee               `json:"assignee"`
+	Assignee    []Assignee               `json:"assignee"`
 	Histories   []acl.ApplicationHistory `json:"histories"`
 }
 
-type assignee struct {
+type Assignee struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	Name     string `json:"name"`
 	Status   string `json:"status"`
 }
 
-type iViewSignupApplicationRepo interface {
+type IViewSignupApplicationRepo interface {
 	GetApplicationByID(id string) (acl.Application, error)
 	GetUserByID(id string) (acl.User, error)
 	GetUserPendingByID(id string) (acl.UserPending, error)
@@ -81,7 +81,7 @@ func (r *viewSignupApplicationRepo) ListHistoriesByApplicationID(appID string) (
 }
 
 type ViewSignupApplicationUsecase struct {
-	repo iViewSignupApplicationRepo
+	repo IViewSignupApplicationRepo
 }
 
 func NewViewSignupApplicationUsecase(db *buntdb.DB) ViewSignupApplicationUsecase {
@@ -105,13 +105,13 @@ func (uc ViewSignupApplicationUsecase) Handle(ctx context.Context, req map[strin
 	if err != nil {
 		return ViewSignupApplicationResponse{}, fmt.Errorf("assignments not found: %w", err)
 	}
-	assignees := []assignee{}
+	assignees := []Assignee{}
 	for _, assignment := range assignments {
 		user, err := uc.repo.GetUserByID(assignment.ReviewerID)
 		if err != nil {
 			log.Println("error getting username by user id", err)
 		}
-		assignees = append(assignees, assignee{
+		assignees = append(assignees, Assignee{
 			UserID:   user.ID,
 			Username: user.Username,
 			Name:     user.Name,

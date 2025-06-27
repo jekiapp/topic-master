@@ -34,13 +34,13 @@ type ResetPasswordResponse struct {
 	Redirect string `json:"redirect,omitempty"`
 }
 
-type iResetPasswordRepo interface {
+type IResetPasswordRepo interface {
 	GetResetPasswordByToken(token string) (acl.ResetPassword, error)
 	GetResetPasswordByUsername(username string) (acl.ResetPassword, error)
 	DeleteResetPasswordByToken(token string) error
 }
 
-type iUserRepo interface {
+type IUserRepo interface {
 	GetUserByUsername(username string) (acl.User, error)
 	UpdateUser(user acl.User) error
 }
@@ -81,8 +81,8 @@ func (r *userRepo) UpdateUser(user acl.User) error {
 }
 
 type ResetPasswordUsecase struct {
-	rpRepo   iResetPasswordRepo
-	userRepo iUserRepo
+	rpRepo   IResetPasswordRepo
+	userRepo IUserRepo
 }
 
 func NewResetPasswordUsecase(db *buntdb.DB) ResetPasswordUsecase {

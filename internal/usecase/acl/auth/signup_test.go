@@ -6,11 +6,11 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/internal/usecase/acl/auth/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/buntdb"
-	"go.uber.org/mock/gomock"
 )
 
 func TestSignupUsecase_Handle(t *testing.T) {
