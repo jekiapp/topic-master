@@ -1,9 +1,3 @@
-// I want this usecase to receive json parameter {action: "approve", application_id: "123"}
-// then in the logic it will check each permission of the application
-// if the permission name contains "signup" then it will be handled by the signup usecase in signup_handler.go
-// generate placeholder structure for signup_handler.go
-// the signup_handler.go is in the same directory as this file
-
 package action
 
 import (
@@ -20,6 +14,7 @@ type ActionCoordinator struct {
 	repo               iActionCoordinatorRepo
 	signupHandler      *SignupHandler // placeholder, defined in signup_handler.go
 	claimEntityHandler *ClaimEntityHandler
+	topicActionHandler *TopicActionHandler
 }
 
 type ActionRequest struct {
@@ -37,6 +32,7 @@ func NewActionCoordinator(db *buntdb.DB) *ActionCoordinator {
 		repo:               &actionCoordinatorRepo{db: db},
 		signupHandler:      NewSignupHandler(db),
 		claimEntityHandler: NewClaimEntityHandler(db),
+		topicActionHandler: NewTopicActionHandler(db),
 	}
 }
 
@@ -85,10 +81,11 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 			Assignments: assignments,
 		})
 	case acl.ApplicationType_TopicForm:
-		err = ac.topicActionHandler.HandleTopicAction(ctx, req)
-		if err != nil {
-			return ActionResponse{}, err
-		}
+		return ac.topicActionHandler.HandleTopicAction(ctx, TopicActionInput{
+			Action:      req.Action,
+			AppID:       req.ApplicationID,
+			Assignments: assignments,
+		})
 	default:
 		return ActionResponse{}, errors.New("application type not supported")
 	}

@@ -91,9 +91,9 @@ func CreateApplication(ctx context.Context, req CreateApplicationInput, repo iCr
 	return CreateApplicationOutput{ApplicationID: app.ID}, nil
 }
 
-// iApproveApplicationRepo abstracts the repo methods needed for approval logic
+// IApplicationAction abstracts the repo methods needed for approval logic
 // (should be implemented by the repo used in usecase)
-type iApproveApplicationRepo interface {
+type IApplicationAction interface {
 	GetApplicationByID(id string) (acl.Application, error)
 	UpdateApplication(app acl.Application) error
 	UpdateApplicationAssignment(assignment acl.ApplicationAssignment) error
@@ -103,7 +103,7 @@ type iApproveApplicationRepo interface {
 // ApproveApplication marks the application as completed, updates assignments, and adds history
 func ApproveApplication(
 	ctx context.Context,
-	repo iApproveApplicationRepo,
+	repo IApplicationAction,
 	appID string,
 	assignments []acl.ApplicationAssignment,
 	comment string,
@@ -150,7 +150,7 @@ func ApproveApplication(
 // RejectApplication marks the application as completed, updates assignments as rejected, and adds history
 func RejectApplication(
 	ctx context.Context,
-	repo iApproveApplicationRepo,
+	repo IApplicationAction,
 	appID string,
 	assignments []acl.ApplicationAssignment,
 	comment string,
