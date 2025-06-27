@@ -29,61 +29,8 @@ type SignupRequest struct {
 type SignupResponse struct {
 	ApplicationID string `json:"application_id"`
 }
-
-type iSignupRepo interface {
-	CreateApplication(app acl.Application) error
-	GetGroupByName(name string) (acl.Group, error)
-	ListUserGroupsByGroupID(groupID string, limit int) ([]acl.UserGroup, error)
-	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
-	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
-	CreateApplicationHistory(history acl.ApplicationHistory) error
-	GetUserByID(userID string) (acl.User, error)
-	CreateUserPending(user acl.UserPending) error
-	CreateUserGroup(userGroup acl.UserGroup) error
-}
-
-type signupRepo struct {
-	db *buntdb.DB
-}
-
-func (r *signupRepo) CreateApplication(app acl.Application) error {
-	return db.Insert(r.db, &app)
-}
-
-func (r *signupRepo) GetGroupByName(name string) (acl.Group, error) {
-	return userrepo.GetGroupByName(r.db, name)
-}
-
-func (r *signupRepo) ListUserGroupsByGroupID(groupID string, limit int) ([]acl.UserGroup, error) {
-	return userrepo.ListUserGroupsByGroupID(r.db, groupID, limit)
-}
-
-func (r *signupRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, error) {
-	return userrepo.GetAdminUserIDsByGroupID(r.db, groupID)
-}
-
-func (r *signupRepo) CreateApplicationAssignment(assignment acl.ApplicationAssignment) error {
-	return db.Insert(r.db, &assignment)
-}
-
-func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) error {
-	return db.Insert(r.db, &history)
-}
-
-func (r *signupRepo) GetUserByID(userID string) (acl.User, error) {
-	return db.GetByID[acl.User](r.db, userID)
-}
-
-func (r *signupRepo) CreateUserPending(user acl.UserPending) error {
-	return db.Insert(r.db, &user)
-}
-
-func (r *signupRepo) CreateUserGroup(userGroup acl.UserGroup) error {
-	return db.Insert(r.db, &userGroup)
-}
-
 type SignupUsecase struct {
-	repo iSignupRepo
+	repo ISignupRepo
 }
 
 func NewSignupUsecase(db *buntdb.DB) SignupUsecase {
@@ -127,6 +74,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		ID:            uuid.NewString(),
 		Title:         fmt.Sprintf("Signup request by %s (%s)", req.Name, req.Username),
 		UserID:        userID,
+		Type:          acl.ApplicationType_Signup,
 		PermissionIDs: []string{"signup:" + req.Username},
 		Reason:        fmt.Sprintf("Request to become %s of group %s", req.GroupRole, req.GroupName),
 		Status:        acl.StatusWaitingForApproval,
@@ -158,6 +106,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		adminUserIDs = append(adminUserIDs, member.UserID)
 	}
 
+	hasActiveReviewer := false
 	for _, userID := range adminUserIDs {
 		// check if the user status is "active"
 		user, err := uc.repo.GetUserByID(userID)
@@ -168,6 +117,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			continue
 		}
 
+		hasActiveReviewer = true
 		assignment := &acl.ApplicationAssignment{
 			ID:            uuid.NewString(),
 			ApplicationID: app.ID,
@@ -181,6 +131,11 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 			return SignupResponse{}, err
 		}
 	}
+
+	if !hasActiveReviewer {
+		return SignupResponse{}, errors.New("no active reviewers found")
+	}
+
 	// 2. Create a new user with status "in approval"
 	// Hash the password (SHA256)
 	hash := sha256.Sum256([]byte(req.Password))
@@ -230,4 +185,56 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	}
 	_ = uc.repo.CreateApplicationHistory(*history)
 	return SignupResponse{ApplicationID: app.ID}, nil
+}
+
+type ISignupRepo interface {
+	CreateApplication(app acl.Application) error
+	GetGroupByName(name string) (acl.Group, error)
+	ListUserGroupsByGroupID(groupID string, limit int) ([]acl.UserGroup, error)
+	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
+	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
+	CreateApplicationHistory(history acl.ApplicationHistory) error
+	GetUserByID(userID string) (acl.User, error)
+	CreateUserPending(user acl.UserPending) error
+	CreateUserGroup(userGroup acl.UserGroup) error
+}
+
+type signupRepo struct {
+	db *buntdb.DB
+}
+
+func (r *signupRepo) CreateApplication(app acl.Application) error {
+	return db.Insert(r.db, &app)
+}
+
+func (r *signupRepo) GetGroupByName(name string) (acl.Group, error) {
+	return userrepo.GetGroupByName(r.db, name)
+}
+
+func (r *signupRepo) ListUserGroupsByGroupID(groupID string, limit int) ([]acl.UserGroup, error) {
+	return userrepo.ListUserGroupsByGroupID(r.db, groupID, limit)
+}
+
+func (r *signupRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, error) {
+	return userrepo.GetAdminUserIDsByGroupID(r.db, groupID)
+}
+
+func (r *signupRepo) CreateApplicationAssignment(assignment acl.ApplicationAssignment) error {
+	return db.Insert(r.db, &assignment)
+}
+
+func (r *signupRepo) CreateApplicationHistory(history acl.ApplicationHistory) error {
+	return db.Insert(r.db, &history)
+}
+
+func (r *signupRepo) GetUserByID(userID string) (acl.User, error) {
+	return db.GetByID[acl.User](r.db, userID)
+}
+
+func (r *signupRepo) CreateUserPending(user acl.UserPending) error {
+	return db.Insert(r.db, &user)
+}
+
+func (r *signupRepo) CreateUserGroup(userGroup acl.UserGroup) error {
+	return db.Insert(r.db, &userGroup)
 }
