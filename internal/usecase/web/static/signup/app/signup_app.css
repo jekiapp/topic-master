@@ -117,4 +117,11 @@ tbody tr:not(:last-child) td {
     font-size: 0.98rem;
     font-family: 'Segoe UI', Arial, sans-serif;
     font-weight: 500;
+}
+.copy-url-section > div {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
 } 
