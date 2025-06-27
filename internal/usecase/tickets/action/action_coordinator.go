@@ -9,7 +9,6 @@ package action
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/pkg/db"
@@ -76,35 +75,23 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 		return ActionResponse{}, err
 	}
 
-	for _, permID := range app.PermissionIDs {
-		if strings.HasPrefix(permID, "signup") {
-			return ac.signupHandler.HandleSignup(ctx, req)
+	switch app.Type {
+	case acl.ApplicationType_Signup:
+		return ac.signupHandler.HandleSignup(ctx, req)
+	case acl.ApplicationType_Claim:
+		return ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
+			Action:      req.Action,
+			AppID:       req.ApplicationID,
+			Assignments: assignments,
+		})
+	case acl.ApplicationType_TopicForm:
+		err = ac.topicActionHandler.HandleTopicAction(ctx, req)
+		if err != nil {
+			return ActionResponse{}, err
 		}
-
-		if strings.HasPrefix(permID, "claim") {
-			permIDsplit := strings.Split(permID, ":")
-			if len(permIDsplit) != 2 {
-				return ActionResponse{}, errors.New("invalid permission id")
-			}
-			entityID := permIDsplit[1]
-
-			groupName := app.MetaData[entityID+":group_name"]
-
-			err := ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
-				Action:      req.Action,
-				AppID:       req.ApplicationID,
-				EntityID:    entityID,
-				GroupName:   groupName,
-				Assignments: assignments,
-			})
-			if err != nil {
-				return ActionResponse{}, err
-			}
-			continue
-		}
-
+	default:
+		return ActionResponse{}, errors.New("application type not supported")
 	}
-	return ActionResponse{Status: "success", Message: "Action completed"}, nil
 }
 
 type iActionCoordinatorRepo interface {

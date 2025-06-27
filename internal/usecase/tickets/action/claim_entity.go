@@ -5,11 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/jekiapp/topic-master/internal/logic/auth"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	"github.com/jekiapp/topic-master/pkg/db"
-	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -34,6 +33,30 @@ func NewClaimEntityHandler(db *buntdb.DB) *ClaimEntityHandler {
 	return &ClaimEntityHandler{repo: &claimEntityRepo{db: db}}
 }
 
+// Existing claim handler (for direct claim)
+func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEntityInput) (ActionResponse, error) {
+	if req.Action == acl.ActionApprove {
+		err := h.HandleApprove(ctx, req)
+		if err != nil {
+			return ActionResponse{}, err
+		}
+		return ActionResponse{
+			Status:  "success",
+			Message: "Claim entity approved",
+		}, nil
+	} else if req.Action == acl.ActionReject {
+		err := h.HandleReject(ctx, req)
+		if err != nil {
+			return ActionResponse{}, err
+		}
+		return ActionResponse{
+			Status:  "success",
+			Message: "Claim entity rejected",
+		}, nil
+	}
+	return ActionResponse{}, errors.New("invalid action")
+}
+
 // Approve claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
 func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, input ClaimEntityInput) error {
@@ -47,41 +70,12 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, input ClaimEntit
 	if err := h.repo.UpdateEntity(ent); err != nil {
 		return err
 	}
-	// Mark application as completed
-	app, err := h.repo.GetApplicationByID(input.AppID)
-	if err == nil {
-		app.Status = acl.StatusCompleted
-		app.UpdatedAt = time.Now()
-		err = h.repo.UpdateApplication(app)
-		if err != nil {
-			return err
-		}
+	// Use reusable approval logic
+	comment := ent.TypeID + " claim approved"
+	err = auth.ApproveApplication(ctx, h.repo, input.AppID, input.Assignments, comment)
+	if err != nil {
+		return err
 	}
-	// Update assignments
-	user := util.GetUserInfo(ctx)
-	if user == nil {
-		return errors.New("unauthorized")
-	}
-	for _, assignment := range input.Assignments {
-		if assignment.ReviewerID == user.ID {
-			assignment.ReviewStatus = acl.ReviewStatusApproved
-			assignment.ReviewedAt = time.Now()
-		} else {
-			assignment.ReviewStatus = acl.ReviewStatusPassed
-		}
-		h.repo.UpdateApplicationAssignment(assignment)
-	}
-	// Add history
-	h.repo.CreateApplicationHistory(acl.ApplicationHistory{
-		ID:            uuid.NewString(),
-		ApplicationID: input.AppID,
-		Action:        acl.ActionApprove,
-		ActorID:       user.ID,
-		Comment:       ent.TypeID + " claim approved",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	})
-
 	return nil
 }
 
@@ -92,51 +86,11 @@ func (h *ClaimEntityHandler) HandleReject(ctx context.Context, input ClaimEntity
 	if err != nil {
 		return err
 	}
-
-	// Mark application as completed
-	app, err := h.repo.GetApplicationByID(input.AppID)
-	if err == nil {
-		app.Status = acl.StatusCompleted
-		app.UpdatedAt = time.Now()
-		err = h.repo.UpdateApplication(app)
-		if err != nil {
-			return err
-		}
-	}
-	// Update assignments
-	user := util.GetUserInfo(ctx)
-	if user == nil {
-		return errors.New("unauthorized")
-	}
-	for _, assignment := range input.Assignments {
-		if assignment.ReviewerID == user.ID {
-			assignment.ReviewStatus = acl.ReviewStatusRejected
-			assignment.ReviewedAt = time.Now()
-		} else {
-			assignment.ReviewStatus = acl.ReviewStatusPassed
-		}
-		h.repo.UpdateApplicationAssignment(assignment)
-	}
-	// Add history
-	h.repo.CreateApplicationHistory(acl.ApplicationHistory{
-		ID:            uuid.NewString(),
-		ApplicationID: input.AppID,
-		Action:        acl.ActionReject,
-		ActorID:       user.ID,
-		Comment:       ent.TypeID + " claim rejected",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	})
-
-	return nil
-}
-
-// Existing claim handler (for direct claim)
-func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEntityInput) error {
-	if req.Action == acl.ActionApprove {
-		return h.HandleApprove(ctx, req)
-	} else if req.Action == acl.ActionReject {
-		return h.HandleReject(ctx, req)
+	// Use reusable rejection logic
+	comment := ent.TypeID + " claim rejected"
+	err = auth.RejectApplication(ctx, h.repo, input.AppID, input.Assignments, comment)
+	if err != nil {
+		return err
 	}
 	return nil
 }
