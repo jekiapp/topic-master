@@ -30,7 +30,7 @@ type LoginResponse struct {
 	User  acl.User `json:"user"`
 }
 
-type iUserLoginRepo interface {
+type IUserLoginRepo interface {
 	GetUserByUsername(username string) (acl.User, error)
 	ListGroupsForUser(userID string) ([]acl.GroupRole, error)
 	InsertResetPassword(rp acl.ResetPassword) error
@@ -53,7 +53,7 @@ func (r *loginRepo) InsertResetPassword(rp acl.ResetPassword) error {
 }
 
 type LoginUsecase struct {
-	repo   iUserLoginRepo
+	repo   IUserLoginRepo
 	config *config.Config
 }
 
