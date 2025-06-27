@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
@@ -71,7 +70,7 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 
 	// if the permission is not signup (check the first permissionIDs, then get user by id)
 	var applicant acl.User
-	if len(app.PermissionIDs) > 0 && strings.HasPrefix(app.PermissionIDs[0], "signup:") {
+	if app.Type == acl.ApplicationType_Signup {
 		userPending, err := uc.repo.GetUserPendingByID(app.UserID)
 		if err != nil {
 			return TicketDetailResponse{}, fmt.Errorf("user %s not found", app.UserID)
