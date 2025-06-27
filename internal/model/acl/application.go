@@ -13,6 +13,11 @@ const (
 	IdxApplication_UserID           = TableApplication + ":user_id"
 	IdxApplication_Status           = TableApplication + ":status"
 	IdxApplication_UserID_CreatedAt = TableApplication + ":user_id_created_at"
+	IdxApplication_Type             = TableApplication + ":type"
+
+	ApplicationType_Signup    = "signup"
+	ApplicationType_Claim     = "claim"
+	ApplicationType_TopicForm = "topic_action"
 
 	// Status constants
 	StatusWaitingForApproval = "waiting for approval"
@@ -51,6 +56,7 @@ type Application struct {
 	PermissionIDs []string          `json:"permission_ids"` // Reference to Permission.ID (the requested permission)
 	Reason        string            `json:"reason"`         // Reason for the application
 	Status        string            `json:"status"`         // Overall status (e.g., pending, approved, rejected)
+	Type          string            `json:"type"`           // Type of the application (e.g., signup, claim,topic_action)
 	MetaData      map[string]string `json:"meta_data"`      // Meta data for the application
 	CreatedAt     time.Time         `json:"created_at"`     // When the application was created
 	UpdatedAt     time.Time         `json:"updated_at"`     // Last update timestamp
@@ -80,6 +86,11 @@ func (a Application) GetIndexes() []db.Index {
 			Pattern: fmt.Sprintf("%s:*:%s", TableApplication, "user_id_created_at"),
 			Type:    buntdb.IndexString,
 		},
+		{
+			Name:    IdxApplication_Type,
+			Pattern: fmt.Sprintf("%s:*:%s", TableApplication, "type"),
+			Type:    buntdb.IndexString,
+		},
 	}
 }
 
@@ -88,6 +99,7 @@ func (a Application) GetIndexValues() map[string]string {
 		"user_id":            a.UserID,
 		"status":             a.Status,
 		"user_id_created_at": fmt.Sprintf("%s:%d", a.UserID, a.CreatedAt.Unix()),
+		"type":               a.Type,
 	}
 }
 

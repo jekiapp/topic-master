@@ -35,6 +35,10 @@ func CreateApplicationAssignment(db *buntdb.DB, assignment acl.ApplicationAssign
 	return dbpkg.Insert(db, &assignment)
 }
 
+func CreateApplicationHistory(db *buntdb.DB, history acl.ApplicationHistory) error {
+	return dbpkg.Insert(db, &history)
+}
+
 // InitIndexApplication registers indexes for Application, ApplicationAssignment, and ApplicationHistory
 func InitIndexApplication(db *buntdb.DB) error {
 	appIndexes := acl.Application{}.GetIndexes()

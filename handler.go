@@ -12,6 +12,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/usecase/tickets"
 	"github.com/jekiapp/topic-master/internal/usecase/tickets/action"
 	ticketsform "github.com/jekiapp/topic-master/internal/usecase/tickets/form"
+	submit "github.com/jekiapp/topic-master/internal/usecase/tickets/submit"
 	topicUC "github.com/jekiapp/topic-master/internal/usecase/topic"
 	topicDetailUC "github.com/jekiapp/topic-master/internal/usecase/topic/detail"
 	webUC "github.com/jekiapp/topic-master/internal/usecase/web"
@@ -59,6 +60,7 @@ type Handler struct {
 	claimEntityUC            aclAuth.ClaimEntityUsecase
 	checkActionAuthUC        aclAuth.CheckActionAuthUsecase
 	newApplicationUC         ticketsform.NewApplicationUsecase
+	submitApplicationUC      submit.SubmitApplicationUsecase
 }
 
 func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
@@ -104,6 +106,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		claimEntityUC:            aclAuth.NewClaimEntityUsecase(db),
 		checkActionAuthUC:        aclAuth.NewCheckActionAuthUsecase(db),
 		newApplicationUC:         ticketsform.NewNewApplicationUsecase(db),
+		submitApplicationUC:      submit.NewSubmitApplicationUsecase(db),
 	}
 }
 
@@ -151,6 +154,7 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/tickets/detail", authMiddleware(handlerPkg.HandleGenericGet(h.ticketDetailUC.Handle)))
 	mux.HandleFunc("/api/tickets/action", authMiddleware(handlerPkg.HandleGenericPost(h.actionCoordinatorUC.Handle)))
 	mux.HandleFunc("/api/tickets/new-application-form", authMiddleware(handlerPkg.HandleGenericGet(h.newApplicationUC.Handle)))
+	mux.HandleFunc("/api/tickets/submit-application", authMiddleware(handlerPkg.HandleGenericPost(h.submitApplicationUC.Handle)))
 
 	mux.HandleFunc("/api/user/get-username", authMiddleware(handlerPkg.HandleGenericGet(h.getUsernameUC.Handle)))
 
