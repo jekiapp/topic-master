@@ -68,7 +68,7 @@ func TestSignupUsecase_Handle(t *testing.T) {
 					assert.Contains(t, app.Title, "Signup request by Test User (testuser)")
 					assert.Equal(t, acl.ApplicationType_Signup, app.Type)
 					assert.NotEmpty(t, app.UserID)
-					assert.Equal(t, []string{"signup:testuser"}, app.PermissionIDs)
+					assert.Equal(t, []string{acl.Permission_Signup_User.Name}, app.PermissionIDs)
 					assert.Equal(t, "Request to become member of group Group One", app.Reason)
 					assert.Equal(t, acl.StatusWaitingForApproval, app.Status)
 					assert.False(t, app.CreatedAt.IsZero())

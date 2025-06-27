@@ -75,7 +75,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		Title:         fmt.Sprintf("Signup request by %s (%s)", req.Name, req.Username),
 		UserID:        userID,
 		Type:          acl.ApplicationType_Signup,
-		PermissionIDs: []string{"signup:" + req.Username},
+		PermissionIDs: []string{acl.Permission_Signup_User.Name},
 		Reason:        fmt.Sprintf("Request to become %s of group %s", req.GroupRole, req.GroupName),
 		Status:        acl.StatusWaitingForApproval,
 		CreatedAt:     time.Now(),
