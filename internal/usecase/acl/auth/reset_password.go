@@ -1,13 +1,3 @@
-// learn from reset-password/script.js
-// create backend for that FE
-// create me a model acl.ResetPassword{Token, Username} struct
-// add indexes for the model
-//
-// for this usecase, the logic will be:
-// add basic validation for the password
-// check the token from database, based on the token, get the username
-// update the password for the user
-
 package acl
 
 import (

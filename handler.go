@@ -46,7 +46,7 @@ type Handler struct {
 	listMyApplicationsUC     tickets.ListMyApplicationsUsecase
 	ticketDetailUC           tickets.TicketDetailUsecase
 	actionCoordinatorUC      *action.ActionCoordinator
-	getUsernameUC            aclAuth.GetUsernameUsecase
+	getUsernameUC            aclUser.GetUsernameUsecase
 	getTopicDetailUC         topicDetailUC.NsqTopicDetailUsecase
 	getTopicStatsUC          topicDetailUC.NsqTopicStatsUsecase
 	tailMessageUC            *topicDetailUC.TailMessageUsecase
@@ -92,7 +92,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		listMyApplicationsUC:     tickets.NewListMyApplicationsUsecase(db),
 		ticketDetailUC:           tickets.NewTicketDetailUsecase(db),
 		actionCoordinatorUC:      action.NewActionCoordinator(db),
-		getUsernameUC:            aclAuth.NewGetUsernameUsecase(),
+		getUsernameUC:            aclUser.NewGetUsernameUsecase(),
 		getTopicDetailUC:         topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:          topicDetailUC.NewNsqTopicStatsUsecase(cfg),
 		tailMessageUC:            topicDetailUC.NewTailMessageUsecase(),
