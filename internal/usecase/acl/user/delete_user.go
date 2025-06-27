@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
@@ -18,6 +19,8 @@ type DeleteUserResponse struct {
 
 type iUserDeleteRepo interface {
 	DeleteUser(userID string) error
+	ListUserGroupsByUserID(userID string) ([]acl.UserGroup, error)
+	DeleteUserGroup(userGroupID string) error
 }
 
 type userDeleteRepo struct {
@@ -26,6 +29,14 @@ type userDeleteRepo struct {
 
 func (r *userDeleteRepo) DeleteUser(userID string) error {
 	return db.DeleteByID[acl.User](r.db, userID)
+}
+
+func (r *userDeleteRepo) ListUserGroupsByUserID(userID string) ([]acl.UserGroup, error) {
+	return userrepo.ListUserGroupsByUserID(r.db, userID)
+}
+
+func (r *userDeleteRepo) DeleteUserGroup(userGroupID string) error {
+	return db.DeleteByID[acl.UserGroup](r.db, userGroupID)
 }
 
 type DeleteUserUsecase struct {
@@ -43,5 +54,18 @@ func (uc DeleteUserUsecase) Handle(ctx context.Context, req DeleteUserRequest) (
 	if err != nil {
 		return DeleteUserResponse{Success: false}, err
 	}
+
+	// delete all user groups
+	userGroups, err := uc.repo.ListUserGroupsByUserID(req.UserID)
+	if err != nil {
+		return DeleteUserResponse{Success: false}, err
+	}
+	for _, userGroup := range userGroups {
+		err = uc.repo.DeleteUserGroup(userGroup.ID)
+		if err != nil {
+			return DeleteUserResponse{Success: false}, err
+		}
+	}
+
 	return DeleteUserResponse{Success: true}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -111,7 +112,8 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		// check if the user status is "active"
 		user, err := uc.repo.GetUserByID(userID)
 		if err != nil {
-			return SignupResponse{}, err
+			log.Printf("failed to get user by id %s: %v", userID, err)
+			continue
 		}
 		if user.Status != acl.StatusUserActive {
 			continue
@@ -128,7 +130,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		}
 
 		if err := uc.repo.CreateApplicationAssignment(*assignment); err != nil {
-			return SignupResponse{}, err
+			return SignupResponse{}, fmt.Errorf("failed to create application assignment: %w", err)
 		}
 	}
 
@@ -159,7 +161,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		},
 	}
 	if err := uc.repo.CreateUserPending(user); err != nil {
-		return SignupResponse{}, err
+		return SignupResponse{}, fmt.Errorf("failed to create user pending: %w", err)
 	}
 	// Assign user to the requested group
 	userGroup := acl.UserGroup{
@@ -171,7 +173,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		UpdatedAt: time.Now(),
 	}
 	if err := uc.repo.CreateUserGroup(userGroup); err != nil {
-		return SignupResponse{}, err
+		return SignupResponse{}, fmt.Errorf("failed to create user group: %w", err)
 	}
 	// 3. Create ApplicationHistory as "waiting for approval"
 	history := &acl.ApplicationHistory{
