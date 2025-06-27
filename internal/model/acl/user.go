@@ -64,15 +64,6 @@ func (u User) GetIndexValues() map[string]string {
 	}
 }
 
-// Authorization maps a user to a permission (for access control checks)
-type Authorization struct {
-	ID           string    `json:"id"`            // Unique identifier for the mapping
-	UserID       string    `json:"user_id"`       // Reference to User.ID
-	PermissionID string    `json:"permission_id"` // Reference to Permission.ID
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
 func (u *User) SetID(id string) {
 	u.ID = id
 }

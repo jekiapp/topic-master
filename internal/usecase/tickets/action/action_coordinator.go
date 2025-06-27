@@ -81,19 +81,22 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 			Assignments: assignments,
 		})
 	case acl.ApplicationType_TopicForm:
-		return ac.topicActionHandler.HandleTopicAction(ctx, TopicActionInput{
+		ac.topicActionHandler.HandleTopicAction(ctx, TopicActionInput{
 			Action:      req.Action,
 			AppID:       req.ApplicationID,
 			Assignments: assignments,
 		})
-	default:
-		return ActionResponse{}, errors.New("application type not supported")
+		if err != nil {
+			return ActionResponse{}, err
+		}
 	}
+
+	return ActionResponse{}, errors.New("application type not supported")
 }
 
 type iActionCoordinatorRepo interface {
 	GetApplicationByID(id string) (acl.Application, error)
-	GetPermissionByID(id string) (acl.Permission, error)
+	GetPermissionByID(id string) (acl.PermissionMap, error)
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
 }
 
@@ -105,8 +108,8 @@ func (r *actionCoordinatorRepo) GetApplicationByID(id string) (acl.Application, 
 	return db.GetByID[acl.Application](r.db, id)
 }
 
-func (r *actionCoordinatorRepo) GetPermissionByID(id string) (acl.Permission, error) {
-	return db.GetByID[acl.Permission](r.db, id)
+func (r *actionCoordinatorRepo) GetPermissionByID(id string) (acl.PermissionMap, error) {
+	return db.GetByID[acl.PermissionMap](r.db, id)
 }
 
 func (r *actionCoordinatorRepo) ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error) {

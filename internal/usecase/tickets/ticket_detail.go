@@ -197,7 +197,7 @@ type iTicketDetailRepo interface {
 	GetUserPendingByID(id string) (acl.UserPending, error)
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
 	ListHistoriesByApplicationID(appID string) ([]acl.ApplicationHistory, error)
-	GetPermissionByID(id string) (acl.Permission, error)
+	GetPermissionByID(id string) (acl.PermissionMap, error)
 	GetEntityByID(id string) (entitymodel.Entity, error)
 }
 
@@ -226,8 +226,8 @@ func (r *ticketDetailRepo) ListHistoriesByApplicationID(appID string) ([]acl.App
 	return dbpkg.SelectAll[acl.ApplicationHistory](r.db, "-<="+appID, acl.IdxAppHistory_ApplicationID)
 }
 
-func (r *ticketDetailRepo) GetPermissionByID(id string) (acl.Permission, error) {
-	return dbpkg.GetByID[acl.Permission](r.db, id)
+func (r *ticketDetailRepo) GetPermissionByID(id string) (acl.PermissionMap, error) {
+	return dbpkg.GetByID[acl.PermissionMap](r.db, id)
 }
 
 func (r *ticketDetailRepo) GetEntityByID(id string) (entitymodel.Entity, error) {

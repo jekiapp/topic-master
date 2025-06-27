@@ -45,12 +45,12 @@ func (r *checkActionAuthRepo) GetGroupsByUserID(userID string) ([]acl.GroupRole,
 	return userrepo.ListGroupsForUser(r.db, userID)
 }
 
-func (r *checkActionAuthRepo) GetPermissionByActionEntity(userID, entityID, action string) (acl.Permission, error) {
+func (r *checkActionAuthRepo) GetPermissionByActionEntity(userID, entityID, action string) (acl.PermissionMap, error) {
 	// Permission is indexed by action:entityID:userID
 	pivot := action + ":" + entityID + ":" + userID
-	perms, err := db.SelectOne[acl.Permission](r.db, "="+pivot, acl.IdxPermission_ActionEntityUser)
+	perms, err := db.SelectOne[acl.PermissionMap](r.db, "="+pivot, acl.IdxPermission_ActionEntityUser)
 	if err != nil {
-		return acl.Permission{}, errors.New("permission not found")
+		return acl.PermissionMap{}, errors.New("permission not found")
 	}
 	return perms, nil
 }

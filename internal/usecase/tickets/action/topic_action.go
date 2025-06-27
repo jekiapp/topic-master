@@ -53,7 +53,7 @@ func (h *TopicActionHandler) HandleTopicAction(ctx context.Context, req TopicAct
 
 func (h *TopicActionHandler) HandleApprove(ctx context.Context, input TopicActionInput) error {
 	for _, permID := range input.Permissions {
-		perm := acl.Permission{
+		perm := acl.PermissionMap{
 			ID:        uuid.NewString(),
 			EntityID:  input.TopicID,
 			Action:    permID,
@@ -74,14 +74,14 @@ func (h *TopicActionHandler) HandleReject(ctx context.Context, input TopicAction
 
 type iTopicActionRepo interface {
 	auth.IApplicationAction
-	InsertPermission(perm acl.Permission) error
+	InsertPermission(perm acl.PermissionMap) error
 }
 
 type topicActionRepo struct {
 	db *buntdb.DB
 }
 
-func (r *topicActionRepo) InsertPermission(perm acl.Permission) error {
+func (r *topicActionRepo) InsertPermission(perm acl.PermissionMap) error {
 	return db.Insert(r.db, &perm)
 }
 

@@ -144,8 +144,8 @@ $(function() {
             return this.value;
         }).get();
         // Basic validation
-        if (!entityId || !reason || permissions.length === 0) {
-            alert('Please provide a reason and select at least one permission.');
+        if (!entityId || permissions.length === 0) {
+            alert('Please select at least one permission.');
             return;
         }
         // Prepare payload
@@ -162,8 +162,9 @@ $(function() {
             contentType: 'application/json',
             data: JSON.stringify(payload),
             success: function(resp) {
-                if (resp && resp.app_url) {
-                    window.parent.location.hash = resp.app_url;
+                const data = resp.data;
+                if (data && data.app_url) {
+                    window.parent.location.hash = data.app_url;
                 } else {
                     alert('Submission succeeded but no redirect URL returned.');
                 }

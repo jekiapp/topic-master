@@ -46,7 +46,7 @@ func (uc TopicActionSubmitUsecase) Handle(ctx context.Context, req SubmitApplica
 	if err != nil {
 		return SubmitApplicationResponse{}, err
 	}
-	appURL := fmt.Sprintf("/tickets/detail/%s", out.ApplicationID)
+	appURL := fmt.Sprintf("#ticket-detail?id=%s", out.ApplicationID)
 	return SubmitApplicationResponse{
 		AppID:  out.ApplicationID,
 		AppURL: appURL,
