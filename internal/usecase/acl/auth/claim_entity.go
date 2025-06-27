@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	usergrouplogic "github.com/jekiapp/topic-master/internal/logic/user_group"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	entitymodel "github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
@@ -32,7 +33,7 @@ type iClaimEntityRepo interface {
 	GetGroupByName(name string) (acl.Group, error)
 	GetUserGroup(userID, groupID string) (acl.UserGroup, error)
 	ListUserGroupsByGroupID(groupID string, limit int) ([]acl.UserGroup, error)
-	GetAdminUserIDsByGroupID(groupID string) ([]string, error)
+	GetReviewerIDsByGroupID(groupID string) ([]string, error)
 	CreateApplicationAssignment(assignment acl.ApplicationAssignment) error
 	CreateApplicationHistory(history acl.ApplicationHistory) error
 	GetEntityByID(entityID string) (entitymodel.Entity, error)
@@ -58,8 +59,8 @@ func (r *claimEntityRepo) ListUserGroupsByGroupID(groupID string, limit int) ([]
 	return userrepo.ListUserGroupsByGroupID(r.db, groupID, limit)
 }
 
-func (r *claimEntityRepo) GetAdminUserIDsByGroupID(groupID string) ([]string, error) {
-	return userrepo.GetAdminUserIDsByGroupID(r.db, groupID)
+func (r *claimEntityRepo) GetReviewerIDsByGroupID(groupID string) ([]string, error) {
+	return usergrouplogic.GetReviewerIDsByGroupID(r.db, groupID)
 }
 
 func (r *claimEntityRepo) CreateApplicationAssignment(assignment acl.ApplicationAssignment) error {
@@ -136,22 +137,12 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 	if err := uc.repo.CreateApplication(*app); err != nil {
 		return ClaimEntityResponse{}, err
 	}
-	// Approvers: admins of group + root group members
-	rootGroup, err := uc.repo.GetGroupByName(acl.GroupRoot)
-	if err != nil {
-		return ClaimEntityResponse{}, errors.New("root group not found")
-	}
-	rootMembers, err := uc.repo.ListUserGroupsByGroupID(rootGroup.ID, 0)
-	if err != nil {
-		return ClaimEntityResponse{}, errors.New("failed to list root group members")
-	}
-	adminUserIDs, err := uc.repo.GetAdminUserIDsByGroupID(group.ID)
+
+	adminUserIDs, err := uc.repo.GetReviewerIDsByGroupID(group.ID)
 	if err != nil {
 		return ClaimEntityResponse{}, errors.New("failed to get admin user ids")
 	}
-	for _, member := range rootMembers {
-		adminUserIDs = append(adminUserIDs, member.UserID)
-	}
+
 	for _, userID := range adminUserIDs {
 		assignment := &acl.ApplicationAssignment{
 			ID:            uuid.NewString(),
