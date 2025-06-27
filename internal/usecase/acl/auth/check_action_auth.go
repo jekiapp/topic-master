@@ -48,7 +48,7 @@ func (r *checkActionAuthRepo) GetGroupsByUserID(userID string) ([]acl.GroupRole,
 func (r *checkActionAuthRepo) GetPermissionByActionEntity(userID, entityID, action string) (acl.PermissionMap, error) {
 	// Permission is indexed by action:entityID:userID
 	pivot := action + ":" + entityID + ":" + userID
-	perms, err := db.SelectOne[acl.PermissionMap](r.db, "="+pivot, acl.IdxPermission_ActionEntityUser)
+	perms, err := db.SelectOne[acl.PermissionMap](r.db, "="+pivot, acl.IdxPermissionMap_ActionEntityUser)
 	if err != nil {
 		return acl.PermissionMap{}, errors.New("permission not found")
 	}

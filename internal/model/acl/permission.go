@@ -28,7 +28,7 @@ var (
 	}
 
 	Permission_Claim_Entity = Permission{
-		Name:        "claim",
+		Name:        "claim_entity",
 		Description: "Claim an entity",
 	}
 	Permission_Signup_User = Permission{

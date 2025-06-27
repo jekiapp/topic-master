@@ -40,16 +40,11 @@ type historyResponse struct {
 }
 
 type ticketResponse struct {
-	ID          string               `json:"id"`
-	Title       string               `json:"title"`
-	Reason      string               `json:"reason"`
-	Status      string               `json:"status"`
-	Permissions []permissionResponse `json:"permissions"`
-}
-
-type permissionResponse struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string           `json:"id"`
+	Title       string           `json:"title"`
+	Reason      string           `json:"reason"`
+	Status      string           `json:"status"`
+	Permissions []acl.Permission `json:"permissions"`
 }
 
 type TicketAssignee struct {
@@ -163,29 +158,9 @@ func (uc TicketDetailUsecase) Handle(ctx context.Context, req map[string]string)
 		EligibleActions: eligibleActions,
 	}
 
-	permissions := []permissionResponse{}
+	permissions := []acl.Permission{}
 	for _, permissionID := range app.PermissionIDs {
-		if strings.HasPrefix(permissionID, "signup") {
-			permissions = append(permissions, permissionResponse{
-				Name:        permissionID,
-				Description: "Signup application",
-			})
-			continue
-		}
-
-		if strings.HasPrefix(permissionID, "claim") {
-			entityID := strings.TrimPrefix(permissionID, "claim:")
-			entity, err := uc.repo.GetEntityByID(entityID)
-			if err != nil {
-				return TicketDetailResponse{}, fmt.Errorf("entity not found: %w", err)
-			}
-			groupName := app.MetaData[entityID+":group_name"]
-			permissions = append(permissions, permissionResponse{
-				Name:        "claim:" + entity.Name,
-				Description: groupName,
-			})
-			continue
-		}
+		permissions = append(permissions, acl.PermissionList[permissionID])
 	}
 	response.Ticket.Permissions = permissions
 	return response, nil
