@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -34,6 +35,7 @@ func HandleGenericGet[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 
 		var response Response[R]
 		if err != nil {
+			log.Println("Handler execution failed", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			response = Response[R]{
 				Status:  StatusError,

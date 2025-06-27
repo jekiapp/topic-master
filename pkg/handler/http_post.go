@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -80,6 +81,7 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 		// Execute handler
 		result, err := handler(r.Context(), *data)
 		if err != nil {
+			log.Println("Handler execution failed", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response[O]{
 				Status:  StatusError,
