@@ -1,8 +1,3 @@
-// this usecase will be used to get the list of groups
-// follow the same pattern as create_user.go
-// the field will be: name, description, members (comma separated list of top 3 usernames)
-// create get all groups func in repository/user/group.go
-
 package group
 
 import (
