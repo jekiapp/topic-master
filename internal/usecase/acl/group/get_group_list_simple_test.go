@@ -39,6 +39,41 @@ func TestGetGroupListSimpleUsecase_Handle(t *testing.T) {
 			},
 			wantLen: 1,
 		},
+		{
+			name: "group with empty name",
+			mockRepo: &mockGroupListSimpleRepo{
+				GetAllGroupsFunc: func() ([]acl.Group, error) {
+					return []acl.Group{{ID: "g2", Name: ""}}, nil
+				},
+			},
+			wantLen: 1,
+		},
+		{
+			name: "repo returns empty slice",
+			mockRepo: &mockGroupListSimpleRepo{
+				GetAllGroupsFunc: func() ([]acl.Group, error) { return []acl.Group{}, nil },
+			},
+			wantLen: 0,
+		},
+		{
+			name: "repo returns error with non-empty slice",
+			mockRepo: &mockGroupListSimpleRepo{
+				GetAllGroupsFunc: func() ([]acl.Group, error) { return []acl.Group{{ID: "g3", Name: "n3"}}, errors.New("fail") },
+			},
+			wantErr: true,
+		},
+		{
+			name: "multiple groups",
+			mockRepo: &mockGroupListSimpleRepo{
+				GetAllGroupsFunc: func() ([]acl.Group, error) {
+					return []acl.Group{
+						{ID: "g1", Name: "n1"},
+						{ID: "g2", Name: "n2"},
+					}, nil
+				},
+			},
+			wantLen: 2,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

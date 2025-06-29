@@ -99,6 +99,36 @@ func TestDeleteGroupUsecase_Handle(t *testing.T) {
 			},
 			wantOK: true,
 		},
+		{
+			name:   "GetGroupByID returns group with empty name",
+			groups: rootGroup,
+			req:    DeleteGroupRequest{ID: "id6"},
+			mockRepo: &mockDeleteGroupRepo{
+				GetGroupByIDFunc:    func(id string) (acl.Group, error) { return acl.Group{}, nil },
+				DeleteGroupByIDFunc: func(id string) error { return nil },
+			},
+			wantOK: true,
+		},
+		{
+			name:   "DeleteGroupByID returns nil but GetGroupByID returns error",
+			groups: rootGroup,
+			req:    DeleteGroupRequest{ID: "id7"},
+			mockRepo: &mockDeleteGroupRepo{
+				GetGroupByIDFunc:    func(id string) (acl.Group, error) { return acl.Group{}, errors.New("fail") },
+				DeleteGroupByIDFunc: func(id string) error { return nil },
+			},
+			wantErr: true,
+		},
+		{
+			name:   "forbidden group name edge case",
+			groups: rootGroup,
+			req:    DeleteGroupRequest{ID: "id8"},
+			mockRepo: &mockDeleteGroupRepo{
+				GetGroupByIDFunc:    func(id string) (acl.Group, error) { return acl.Group{Name: "forbidden"}, nil },
+				DeleteGroupByIDFunc: func(id string) error { return errors.New("forbidden") },
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
