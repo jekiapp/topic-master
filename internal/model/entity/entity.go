@@ -11,7 +11,7 @@ import (
 type Entity struct {
 	ID          string
 	TypeID      string // e.g EntityType_NSQTopic
-	GroupOwner  string // Group.ID
+	GroupOwner  string // Group.Name
 	Name        string
 	Resource    string
 	Status      string

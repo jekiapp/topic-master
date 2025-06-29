@@ -13,10 +13,8 @@ import (
 )
 
 type ClaimEntityInput struct {
+	Application acl.Application
 	Action      string
-	AppID       string
-	EntityID    string
-	GroupName   string
 	Assignments []acl.ApplicationAssignment
 }
 
@@ -32,10 +30,27 @@ type ClaimEntityHandler struct {
 func NewClaimEntityHandler(db *buntdb.DB) *ClaimEntityHandler {
 	return &ClaimEntityHandler{repo: &claimEntityRepo{db: db}}
 }
+func (req ClaimEntityInput) Validate() error {
+	if req.Action == "" {
+		return errors.New("missing action")
+	}
+	if req.Application.ID == "" {
+		return errors.New("missing app_id")
+	}
+	if len(req.Assignments) == 0 {
+		return errors.New("missing assignments")
+	}
+	return nil
+}
 
 // Existing claim handler (for direct claim)
 func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEntityInput) (ActionResponse, error) {
-	if req.Action == acl.ActionApprove {
+	if err := req.Validate(); err != nil {
+		return ActionResponse{}, err
+	}
+
+	switch req.Action {
+	case acl.ActionApprove:
 		err := h.HandleApprove(ctx, req)
 		if err != nil {
 			return ActionResponse{}, err
@@ -44,7 +59,7 @@ func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEnt
 			Status:  "success",
 			Message: "Claim entity approved",
 		}, nil
-	} else if req.Action == acl.ActionReject {
+	case acl.ActionReject:
 		err := h.HandleReject(ctx, req)
 		if err != nil {
 			return ActionResponse{}, err
@@ -60,11 +75,19 @@ func (h *ClaimEntityHandler) HandleClaimEntity(ctx context.Context, req ClaimEnt
 // Approve claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
 func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, input ClaimEntityInput) error {
-	ent, err := h.repo.GetEntityByID(input.EntityID)
+
+	entityID := input.Application.MetaData["entity_id"]
+	ent, err := h.repo.GetEntityByID(entityID)
 	if err != nil {
 		return err
 	}
-	ent.GroupOwner = input.GroupName
+
+	groupID := input.Application.MetaData["group_id"]
+	group, err := h.repo.GetGroupByID(groupID)
+	if err != nil {
+		return err
+	}
+	ent.GroupOwner = group.Name
 	ent.Status = entity.EntityStatus_Active
 	ent.UpdatedAt = time.Now()
 	if err := h.repo.UpdateEntity(ent); err != nil {
@@ -72,7 +95,7 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, input ClaimEntit
 	}
 	// Use reusable approval logic
 	comment := ent.TypeID + " claim approved"
-	err = auth.ApproveApplication(ctx, h.repo, input.AppID, input.Assignments, comment)
+	err = auth.ApproveApplication(ctx, h.repo, input.Application.ID, input.Assignments, comment)
 	if err != nil {
 		return err
 	}
@@ -82,13 +105,14 @@ func (h *ClaimEntityHandler) HandleApprove(ctx context.Context, input ClaimEntit
 // Reject claim entity
 // Coordinator must pass all assigneeIDs; eligibility is already checked in coordinator
 func (h *ClaimEntityHandler) HandleReject(ctx context.Context, input ClaimEntityInput) error {
-	ent, err := h.repo.GetEntityByID(input.EntityID)
+	entityID := input.Application.MetaData["entity_id"]
+	ent, err := h.repo.GetEntityByID(entityID)
 	if err != nil {
 		return err
 	}
 	// Use reusable rejection logic
 	comment := ent.TypeID + " claim rejected"
-	err = auth.RejectApplication(ctx, h.repo, input.AppID, input.Assignments, comment)
+	err = auth.RejectApplication(ctx, h.repo, input.Application.ID, input.Assignments, comment)
 	if err != nil {
 		return err
 	}
@@ -102,6 +126,7 @@ type iClaimEntityRepo interface {
 	UpdateApplication(app acl.Application) error
 	GetApplicationByID(id string) (acl.Application, error)
 	UpdateApplicationAssignment(assignment acl.ApplicationAssignment) error
+	GetGroupByID(id string) (acl.Group, error)
 }
 
 // Concrete implementation of iClaimEntityRepo
@@ -140,4 +165,8 @@ func (r *claimEntityRepo) GetApplicationByID(id string) (acl.Application, error)
 
 func (r *claimEntityRepo) UpdateApplicationAssignment(assignment acl.ApplicationAssignment) error {
 	return db.Update(r.db, &assignment)
+}
+
+func (r *claimEntityRepo) GetGroupByID(id string) (acl.Group, error) {
+	return db.GetByID[acl.Group](r.db, id)
 }

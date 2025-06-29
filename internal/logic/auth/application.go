@@ -57,7 +57,7 @@ func CreateApplication(ctx context.Context, req CreateApplicationInput, repo iCr
 
 	adminUserIDs, err := repo.GetReviewerIDsByGroupID(req.ReviewerGroupID)
 	if err != nil {
-		return CreateApplicationOutput{}, errors.New("failed to get admin user ids")
+		return CreateApplicationOutput{}, errors.New("failed to get admin user ids: " + err.Error())
 	}
 
 	for _, userID := range adminUserIDs {

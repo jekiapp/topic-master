@@ -57,7 +57,7 @@ func Insert(db *buntdb.DB, record GetRecordByIndexes) error {
 		key := record.GetPrimaryKey("")
 		id := strings.Split(key, ":")[1]
 		if id == "" {
-			return fmt.Errorf("id is empty")
+			return fmt.Errorf("id is empty key: %s", key)
 		}
 		msgpackValue, err := msgpack.Marshal(record)
 		if err != nil {
@@ -348,7 +348,7 @@ func GetByID[Y any](db *buntdb.DB, id string) (Y, error) {
 
 	key := rec.GetPrimaryKey(id)
 	if id == "" {
-		return *result, fmt.Errorf("id is empty")
+		return *result, fmt.Errorf("id is empty key: %s", key)
 	}
 
 	err := db.View(func(tx *buntdb.Tx) error {

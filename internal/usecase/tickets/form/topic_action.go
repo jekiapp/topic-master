@@ -34,8 +34,13 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 		return NewApplicationResponse{}, err
 	}
 
+	group, err := userRepo.GetGroupByName(uc.db, topicEntity.GroupOwner)
+	if err != nil {
+		return NewApplicationResponse{}, err
+	}
+
 	// get admins for assignee list (reviewers)
-	adminIDs, err := usergrouplogic.GetReviewerIDsByGroupID(uc.db, topicEntity.GroupOwner)
+	adminIDs, err := usergrouplogic.GetReviewerIDsByGroupID(uc.db, group.ID)
 	if err != nil {
 		return NewApplicationResponse{}, err
 	}

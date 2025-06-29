@@ -77,7 +77,7 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 	case acl.ApplicationType_Claim:
 		return ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
 			Action:      req.Action,
-			AppID:       req.ApplicationID,
+			Application: app,
 			Assignments: assignments,
 		})
 	case acl.ApplicationType_TopicForm:
