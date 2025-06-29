@@ -11,6 +11,7 @@ import (
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	apprepo "github.com/jekiapp/topic-master/internal/repository/application"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
+	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
@@ -60,8 +61,13 @@ func (uc TopicActionSubmitUsecase) Handle(ctx context.Context, req SubmitApplica
 		return SubmitApplicationResponse{}, err
 	}
 
-	// Use group owner as reviewer group
-	reviewerGroupID := entity.GroupOwner
+	// get group by name
+	group, err := uc.repo.GetGroupByName(entity.GroupOwner)
+	if err != nil {
+		return SubmitApplicationResponse{}, errors.New("reviewer group not found: " + entity.GroupOwner)
+	}
+	// Use group ID as reviewer group
+	reviewerGroupID := group.ID
 	input := auth.CreateApplicationInput{
 		Title:              fmt.Sprintf("Application to action for topic %s", entity.Name),
 		ApplicationType:    req.ApplicationType,
@@ -101,4 +107,8 @@ func (r *topicActionRepo) CreateApplicationAssignment(assignment acl.Application
 
 func (r *topicActionRepo) CreateApplicationHistory(history acl.ApplicationHistory) error {
 	return apprepo.CreateApplicationHistory(r.db, history)
+}
+
+func (r *topicActionRepo) GetGroupByName(name string) (acl.Group, error) {
+	return userrepo.GetGroupByName(r.db, name)
 }
