@@ -1,3 +1,4 @@
+//go:generate mockgen -source=assign_user_to_group.go -destination=mock/mock_assign_user_to_group_repo.go -package=usergroup_mock
 package acl
 
 import (

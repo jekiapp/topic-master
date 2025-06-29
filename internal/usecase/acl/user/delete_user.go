@@ -1,3 +1,4 @@
+//go:generate mockgen -source=delete_user.go -destination=mock/mock_delete_user_repo.go -package=user_mock
 package user
 
 import (

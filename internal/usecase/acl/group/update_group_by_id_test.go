@@ -26,53 +26,76 @@ func TestUpdateGroupByIDUsecase_Handle(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name:      "unauthorized",
+			name:      "unauthorized user cannot update group",
 			groups:    nil,
 			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {},
-			req:       UpdateGroupByIDRequest{ID: "dev-group-id", Description: "updated-desc"},
+			req:       UpdateGroupByIDRequest{ID: "alice-group-id", Description: "Updated Description"},
 			wantErr:   true,
 		},
 		{
-			name:      "not root",
+			name:      "non-root user cannot update group",
 			groups:    nonRootGroup,
 			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {},
-			req:       UpdateGroupByIDRequest{ID: "dev-group-id", Description: "updated-desc"},
+			req:       UpdateGroupByIDRequest{ID: "bob-group-id", Description: "Updated Description"},
 			wantErr:   true,
 		},
 		{
-			name:      "missing id",
+			name:      "missing group id should fail",
 			groups:    rootGroup,
 			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {},
-			req:       UpdateGroupByIDRequest{ID: "", Description: "updated-desc"},
+			req:       UpdateGroupByIDRequest{ID: "", Description: "Updated Description"},
 			wantErr:   true,
 		},
 		{
-			name:   "get group error",
+			name:   "get group error for carol",
 			groups: rootGroup,
 			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {
-				m.EXPECT().GetGroupByID("qa-team-id").Return(acl.Group{}, context.DeadlineExceeded)
+				m.EXPECT().GetGroupByID(
+					"carol-group-id",
+				).Return(
+					acl.Group{},
+					context.DeadlineExceeded,
+				)
 			},
-			req:     UpdateGroupByIDRequest{ID: "qa-team-id", Description: "updated-desc"},
+			req:     UpdateGroupByIDRequest{ID: "carol-group-id", Description: "Updated Description"},
 			wantErr: true,
 		},
 		{
-			name:   "update error",
+			name:   "update error for dave",
 			groups: rootGroup,
 			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {
-				m.EXPECT().GetGroupByID("hr-team-id").Return(acl.Group{ID: "hr-team-id", Description: "previous-desc"}, nil)
-				m.EXPECT().UpdateGroup(gomock.Any()).Return(context.DeadlineExceeded)
+				m.EXPECT().GetGroupByID(
+					"dave-group-id",
+				).Return(
+					acl.Group{ID: "dave-group-id", Description: "Previous Description"},
+					nil,
+				)
+				m.EXPECT().UpdateGroup(
+					gomock.Any(),
+				).Return(
+					context.DeadlineExceeded,
+				)
 			},
-			req:     UpdateGroupByIDRequest{ID: "hr-team-id", Description: "updated-desc"},
+			req:     UpdateGroupByIDRequest{ID: "dave-group-id", Description: "Updated Description"},
 			wantErr: true,
 		},
 		{
-			name:   "success",
+			name:   "successfully update engineering group",
 			groups: rootGroup,
 			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {
-				m.EXPECT().GetGroupByID("ops-team-id").Return(acl.Group{ID: "ops-team-id", Description: "previous-desc", UpdatedAt: time.Now()}, nil)
-				m.EXPECT().UpdateGroup(gomock.Any()).Return(nil)
+				m.EXPECT().GetGroupByID(
+					"engineering-id",
+				).Return(
+					acl.Group{ID: "engineering-id", Description: "Previous Description", UpdatedAt: time.Now()},
+					nil,
+				)
+				m.EXPECT().UpdateGroup(
+					gomock.Any(),
+				).Return(
+					nil,
+				)
 			},
-			req:     UpdateGroupByIDRequest{ID: "ops-team-id", Description: "updated-desc"},
+			req:     UpdateGroupByIDRequest{ID: "engineering-id", Description: "Updated Description"},
 			wantErr: false,
 		},
 	}

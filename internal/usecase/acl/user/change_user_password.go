@@ -1,3 +1,4 @@
+//go:generate mockgen -source=change_user_password.go -destination=mock/mock_change_user_password_repo.go -package=user_mock
 package user
 
 import (

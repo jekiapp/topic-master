@@ -16,6 +16,8 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/signup_mock.go -package=mock github.com/jekiapp/topic-master/internal/usecase/acl/auth ISignupRepo
+
 type SignupRequest struct {
 	Username        string `json:"username"`
 	Name            string `json:"name"`

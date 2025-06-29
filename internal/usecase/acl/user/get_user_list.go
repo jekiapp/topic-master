@@ -1,3 +1,4 @@
+//go:generate mockgen -source=get_user_list.go -destination=mock/mock_get_user_list_repo.go -package=user_mock
 // learn from get_group_list.go
 // this is for listing users
 // the column response is username, name, email,  groups, status

@@ -21,44 +21,62 @@ func TestGetGroupListSimpleUsecase_Handle(t *testing.T) {
 		wantLen   int
 	}{
 		{
-			name: "repo error",
+			name: "repo returns error for alice's group",
 			setupMock: func(m *group_mock.MockiGroupListSimpleRepo) {
-				m.EXPECT().GetAllGroups().Return(nil, context.DeadlineExceeded)
+				m.EXPECT().GetAllGroups().Return(
+					nil,
+					context.DeadlineExceeded,
+				)
 			},
 			wantErr: true,
 		},
 		{
-			name: "success",
+			name: "success for bob's group",
 			setupMock: func(m *group_mock.MockiGroupListSimpleRepo) {
-				m.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "dev-group", Name: "Dev Group"}}, nil)
+				m.EXPECT().GetAllGroups().Return(
+					[]acl.Group{{ID: "bob-group", Name: "Bob Group"}},
+					nil,
+				)
 			},
 			wantLen: 1,
 		},
 		{
-			name: "group with empty name",
+			name: "group with empty name for carol",
 			setupMock: func(m *group_mock.MockiGroupListSimpleRepo) {
-				m.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "qa-team", Name: ""}}, nil)
+				m.EXPECT().GetAllGroups().Return(
+					[]acl.Group{{ID: "carol-group", Name: ""}},
+					nil,
+				)
 			},
 			wantLen: 1,
 		},
 		{
-			name: "repo returns empty slice",
+			name: "repo returns empty slice for dave",
 			setupMock: func(m *group_mock.MockiGroupListSimpleRepo) {
-				m.EXPECT().GetAllGroups().Return([]acl.Group{}, nil)
+				m.EXPECT().GetAllGroups().Return(
+					[]acl.Group{},
+					nil,
+				)
 			},
 			wantLen: 0,
 		},
 		{
-			name: "repo returns error with non-empty slice",
+			name: "repo returns error with non-empty slice for eve",
 			setupMock: func(m *group_mock.MockiGroupListSimpleRepo) {
-				m.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "ops-team", Name: "Ops Team"}}, context.DeadlineExceeded)
+				m.EXPECT().GetAllGroups().Return(
+					[]acl.Group{{ID: "eve-group", Name: "Eve Group"}},
+					context.DeadlineExceeded,
+				)
 			},
 			wantErr: true,
 		},
 		{
-			name: "multiple groups",
+			name: "multiple groups (alice, bob)",
 			setupMock: func(m *group_mock.MockiGroupListSimpleRepo) {
-				m.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "dev-group", Name: "Dev Group"}, {ID: "qa-team", Name: "QA Team"}}, nil)
+				m.EXPECT().GetAllGroups().Return(
+					[]acl.Group{{ID: "alice-group", Name: "Alice Group"}, {ID: "bob-group", Name: "Bob Group"}},
+					nil,
+				)
 			},
 			wantLen: 2,
 		},
