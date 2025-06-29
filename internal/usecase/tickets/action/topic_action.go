@@ -9,15 +9,14 @@ import (
 	"github.com/jekiapp/topic-master/internal/logic/auth"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/pkg/db"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
 type TopicActionInput struct {
 	Action      string
-	AppID       string
-	TopicID     string
+	Application acl.Application
 	Assignments []acl.ApplicationAssignment
-	Permissions []string
 }
 
 type TopicActionHandler struct {
@@ -52,10 +51,17 @@ func (h *TopicActionHandler) HandleTopicAction(ctx context.Context, req TopicAct
 }
 
 func (h *TopicActionHandler) HandleApprove(ctx context.Context, input TopicActionInput) error {
-	for _, permID := range input.Permissions {
+	user := util.GetUserInfo(ctx)
+	if user == nil {
+		return errors.New("user unathorized")
+	}
+	app := input.Application
+	userID := app.UserID
+	for _, permID := range app.PermissionIDs {
 		perm := acl.PermissionMap{
 			ID:        uuid.NewString(),
-			EntityID:  input.TopicID,
+			UserID:    userID,
+			EntityID:  app.MetaData["entity_id"],
 			Action:    permID,
 			CreatedAt: time.Now(),
 		}
@@ -63,12 +69,12 @@ func (h *TopicActionHandler) HandleApprove(ctx context.Context, input TopicActio
 			return err
 		}
 	}
-	auth.ApproveApplication(ctx, h.repo, input.AppID, input.Assignments, "topic action permissions approved")
+	auth.ApproveApplication(ctx, h.repo, input.Application.ID, input.Assignments, "topic action permissions approved")
 	return nil
 }
 
 func (h *TopicActionHandler) HandleReject(ctx context.Context, input TopicActionInput) error {
-	auth.RejectApplication(ctx, h.repo, input.AppID, input.Assignments, "topic action permissions rejected")
+	auth.RejectApplication(ctx, h.repo, input.Application.ID, input.Assignments, "topic action permissions rejected")
 	return nil
 }
 

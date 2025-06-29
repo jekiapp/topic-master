@@ -81,14 +81,11 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 			Assignments: assignments,
 		})
 	case acl.ApplicationType_TopicForm:
-		ac.topicActionHandler.HandleTopicAction(ctx, TopicActionInput{
+		return ac.topicActionHandler.HandleTopicAction(ctx, TopicActionInput{
 			Action:      req.Action,
-			AppID:       req.ApplicationID,
+			Application: app,
 			Assignments: assignments,
 		})
-		if err != nil {
-			return ActionResponse{}, err
-		}
 	}
 
 	return ActionResponse{}, errors.New("application type not supported")
