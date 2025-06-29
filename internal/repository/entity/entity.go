@@ -13,8 +13,11 @@ import (
 func InitIndexEntity(db *buntdb.DB) error {
 	indexes := entity.Entity{}.GetIndexes()
 	bookmarkIndexes := entity.Bookmark{}.GetIndexes()
+	permissionMapIndexes := acl.PermissionMap{}.GetIndexes()
 
 	indexes = append(indexes, bookmarkIndexes...)
+	indexes = append(indexes, permissionMapIndexes...)
+
 	for _, index := range indexes {
 		err := db.CreateIndex(index.Name, index.Pattern, index.Type)
 		if err != nil {
@@ -39,7 +42,7 @@ func GetEntityByID(dbConn *buntdb.DB, id string) (entity.Entity, error) {
 // GetPermissionMapByActionEntityUser fetches a PermissionMap by action, entityID, and userID
 func GetPermissionMapByActionEntityUser(dbConn *buntdb.DB, userID, entityID, action string) (acl.PermissionMap, error) {
 	pivot := action + ":" + entityID + ":" + userID
-	perm, err := db.SelectOne[acl.PermissionMap](dbConn, "="+pivot, acl.IdxPermissionMap_ActionEntityUser)
+	perm, err := db.SelectOne[acl.PermissionMap](dbConn, pivot, acl.IdxPermissionMap_ActionEntityUser)
 	if err != nil {
 		return acl.PermissionMap{}, errors.New("permission not found")
 	}

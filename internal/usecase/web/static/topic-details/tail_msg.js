@@ -17,7 +17,8 @@ function checkActionPermissionAsync(permissionFlag, groupOwner, actionName, enti
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ action: actionName, entity_id: entityId }),
-        success: function(resp) {
+        success: function(data) {
+            resp = data.data;
             if (resp && resp.allowed) {
                 cb(true);
             } else {
