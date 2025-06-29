@@ -6,19 +6,10 @@ import (
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	group_mock "github.com/jekiapp/topic-master/internal/usecase/acl/group/mock"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
-
-type ctxKeyUserInfo struct{}
-
-func jwtClaimsForGroups(groups []acl.GroupRole) *acl.JWTClaims {
-	return &acl.JWTClaims{
-		UserID:   "test-user",
-		Username: "testuser",
-		Groups:   groups,
-	}
-}
 
 func TestDeleteGroupUsecase_Handle(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -126,9 +117,14 @@ func TestDeleteGroupUsecase_Handle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			var ctx context.Context = context.Background()
 			if tt.groups != nil {
-				ctx = context.WithValue(ctx, ctxKeyUserInfo{}, jwtClaimsForGroups(tt.groups))
+				user := &acl.User{
+					ID:       "test-user",
+					Username: "testuser",
+					Groups:   tt.groups,
+				}
+				ctx = util.MockContextWithUser(ctx, user)
 			}
 			mockRepo := group_mock.NewMockiDeleteGroupRepo(ctrl)
 			tt.setupMock(mockRepo)

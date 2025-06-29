@@ -7,17 +7,10 @@ import (
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	group_mock "github.com/jekiapp/topic-master/internal/usecase/acl/group/mock"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
-
-func jwtClaimsForGroupsUpdate(groups []acl.GroupRole) *acl.JWTClaims {
-	return &acl.JWTClaims{
-		UserID:   "test-user",
-		Username: "testuser",
-		Groups:   groups,
-	}
-}
 
 func TestUpdateGroupByIDUsecase_Handle(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -85,9 +78,14 @@ func TestUpdateGroupByIDUsecase_Handle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			var ctx context.Context = context.Background()
 			if tt.groups != nil {
-				ctx = context.WithValue(ctx, ctxKeyUserInfo{}, jwtClaimsForGroupsUpdate(tt.groups))
+				user := &acl.User{
+					ID:       "test-user",
+					Username: "testuser",
+					Groups:   tt.groups,
+				}
+				ctx = util.MockContextWithUser(ctx, user)
 			}
 			mockRepo := group_mock.NewMockiUpdateGroupRepo(ctrl)
 			tt.setupMock(mockRepo)
