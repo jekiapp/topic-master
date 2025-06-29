@@ -11,6 +11,20 @@ $(document).ready(function() {
 
     // Fetch and display assignments
     function loadAssignments() {
+        var isLogin = (window.parent && window.parent.isLogin) ? window.parent.isLogin() : (window.isLogin && window.isLogin());
+        if (!isLogin) {
+            var tbody = $('#assignments-tbody');
+            tbody.empty();
+            var row = $('<tr>').append(
+                $('<td colspan="5" style="text-align:center;color: var(--error-red);">').text('Please login to see your assignments here')
+            );
+            tbody.append(row);
+            // Update pagination controls
+            $('#assignments-page').text('');
+            $('#assignments-prev').prop('disabled', true);
+            $('#assignments-next').prop('disabled', true);
+            return;
+        }
         $.ajax({
             url: '/api/tickets/list-my-assignment',
             method: 'GET',
@@ -53,6 +67,20 @@ $(document).ready(function() {
 
     // Fetch and display my applications
     function loadMyApplications() {
+        var isLogin = (window.parent && window.parent.isLogin) ? window.parent.isLogin() : (window.isLogin && window.isLogin());
+        if (!isLogin) {
+            var tbody = $('#applications-tbody');
+            tbody.empty();
+            var row = $('<tr>').append(
+                $('<td colspan="5" style="text-align:center;color: var(--error-red);">').text('Please login to see your applications here')
+            );
+            tbody.append(row);
+            // Update pagination controls
+            $('#applications-page').text('');
+            $('#applications-prev').prop('disabled', true);
+            $('#applications-next').prop('disabled', true);
+            return;
+        }
         $.ajax({
             url: '/api/tickets/list-my-applications',
             method: 'GET',

@@ -1,4 +1,2 @@
-default empty value on my topics
-default empty value for tickets, when not login
-dont show access control when not login
+
 on logout, remove local storage

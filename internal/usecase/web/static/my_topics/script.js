@@ -1,12 +1,10 @@
-function formatDate(ts) {
-  if (!ts) return '';
-  const d = new Date(ts * 1000);
-  return d.toLocaleString();
-}
-function renderBookmark(isBookmarked) {
-  return `<svg class="bookmark-icon${isBookmarked ? ' active' : ''}" viewBox="0 0 24 24"><path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-7-5-7 5V4z"/></svg>`;
-}
 $(function() {
+  // Check login status before making AJAX call
+  var isLogin = (window.parent && window.parent.isLogin) ? window.parent.isLogin() : (window.isLogin && window.isLogin());
+  if (!isLogin) {
+    $('#topics-table tbody').html('<tr><td colspan="7" style="color: var(--error-red);">Please login to see your bookmarked topics here</td></tr>');
+    return;
+  }
   $.ajax({
     url: '/api/topic/list-my-topics',
     dataType: 'json',
