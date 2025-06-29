@@ -21,11 +21,8 @@ function checkActionPermissionAsync(permissionFlag, groupOwner, actionName, enti
             if (resp && resp.allowed) {
                 cb(true);
             } else {
-                if (window.parent.showModalOverlay) {
-                    window.parent.showModalOverlay(`You do not have permission to perform this action.`);
-                } else {
-                    alert('You do not have permission to perform this action.');
-                }
+                urlApply = "#tickets-new?type=topic_action&entity_id=" + entityId + "&action=" + actionName;
+                window.parent.showModalOverlay(`You do not have permission to perform this action. <br/><br/><a href="${urlApply}" target="_blank">Apply for permission</a>`);
                 cb(false);
             }
         },

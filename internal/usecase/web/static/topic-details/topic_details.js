@@ -159,7 +159,8 @@ $(function() {
                     if (resp.allowed) {
                         cb(true);
                     } else {
-                        window.parent.showModalOverlay(`You do not have permission to perform this action.`);
+                        urlApply = "#tickets-new?type=topic_action&entity_id=" + entityId + "&action=" + actionName;
+                        window.parent.showModalOverlay(`You do not have permission to perform this action. <br/><br/><a href="${urlApply}" target="_blank">Apply for permission</a>`);
                         cb(false);
                     }
                 },
