@@ -46,3 +46,11 @@ var PermissionList = map[string]Permission{
 	Permission_Claim_Entity.Name:  Permission_Claim_Entity,
 	Permission_Signup_User.Name:   Permission_Signup_User,
 }
+
+var TopicActionPermissions = []Permission{
+	Permission_Topic_Publish,
+	Permission_Topic_Tail,
+	Permission_Topic_Drain,
+	Permission_Topic_Pause,
+	Permission_Topic_Delete,
+}

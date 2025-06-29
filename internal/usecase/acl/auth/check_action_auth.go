@@ -2,7 +2,6 @@ package acl
 
 import (
 	"context"
-	"errors"
 
 	"github.com/jekiapp/topic-master/internal/logic/auth"
 	authlogic "github.com/jekiapp/topic-master/internal/logic/auth"
@@ -10,7 +9,6 @@ import (
 	entitymodel "github.com/jekiapp/topic-master/internal/model/entity"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
 	userrepo "github.com/jekiapp/topic-master/internal/repository/user"
-	"github.com/jekiapp/topic-master/pkg/db"
 	util "github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
@@ -46,13 +44,7 @@ func (r *checkActionAuthRepo) GetGroupsByUserID(userID string) ([]acl.GroupRole,
 }
 
 func (r *checkActionAuthRepo) GetPermissionByActionEntity(userID, entityID, action string) (acl.PermissionMap, error) {
-	// Permission is indexed by action:entityID:userID
-	pivot := action + ":" + entityID + ":" + userID
-	perms, err := db.SelectOne[acl.PermissionMap](r.db, "="+pivot, acl.IdxPermissionMap_ActionEntityUser)
-	if err != nil {
-		return acl.PermissionMap{}, errors.New("permission not found")
-	}
-	return perms, nil
+	return entityrepo.GetPermissionMapByActionEntityUser(r.db, userID, entityID, action)
 }
 
 type CheckActionAuthUsecase struct {

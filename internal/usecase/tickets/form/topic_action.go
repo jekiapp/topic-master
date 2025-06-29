@@ -53,15 +53,8 @@ func (uc TopicActionUsecase) getTopicForm(ctx context.Context, entityID string) 
 	}
 
 	// hardcoded permissions
-	permissions := []acl.Permission{
-		acl.Permission_Topic_Publish,
-		acl.Permission_Topic_Tail,
-		acl.Permission_Topic_Drain,
-		acl.Permission_Topic_Pause,
-		acl.Permission_Topic_Delete,
-	}
+	permissions := acl.TopicActionPermissions
 
-	// hardcoded fields
 	fields := []fieldResponse{
 		{Label: "Topic Name", Type: "label", DefaultValue: topicEntity.Name, Editable: false},
 		{Label: "Topic Description", Type: "label-multiline", DefaultValue: topicEntity.Description, Editable: false},

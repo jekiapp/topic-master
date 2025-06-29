@@ -1,3 +1,4 @@
+//go:generate mockgen -source=update_user.go -destination=mock/mock_update_user_repo.go -package=user_mock
 package user
 
 import (
@@ -5,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -62,10 +64,10 @@ func validateUpdateUserRequest(req UpdateUserRequest) error {
 	rootCount := 0
 	for i, g := range req.Groups {
 		if g.GroupID == "" {
-			return errors.New("group_id is required for group index " + string(rune(i+'0')))
+			return errors.New("group_id is required for group index " + strconv.Itoa(i))
 		}
 		if g.Role == "" {
-			return errors.New("role is required for group index " + string(rune(i+'0')))
+			return errors.New("role is required for group index " + strconv.Itoa(i))
 		}
 		if g.Name == acl.GroupRoot {
 			rootCount++

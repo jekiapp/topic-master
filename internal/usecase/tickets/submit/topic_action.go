@@ -2,13 +2,16 @@ package submit
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	auth "github.com/jekiapp/topic-master/internal/logic/auth"
 	usergrouplogic "github.com/jekiapp/topic-master/internal/logic/user_group"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	apprepo "github.com/jekiapp/topic-master/internal/repository/application"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
+	"github.com/jekiapp/topic-master/pkg/util"
 	"github.com/tidwall/buntdb"
 )
 
@@ -24,12 +27,39 @@ func NewTopicActionSubmitUsecase(db *buntdb.DB) TopicActionSubmitUsecase {
 	}
 }
 
+func (uc TopicActionSubmitUsecase) validateRequestedPermissions(ctx context.Context, userID, entityID string, requestedPerms []string) error {
+	// For each requested permission, check if the user already has it for the entity
+	var alreadyOwned []string
+	for _, perm := range requestedPerms {
+		pm, err := entityrepo.GetPermissionMapByActionEntityUser(uc.repo.db, userID, entityID, perm)
+		if err == nil && pm.UserID == userID {
+			alreadyOwned = append(alreadyOwned, perm)
+		}
+	}
+	if len(alreadyOwned) > 0 {
+		return errors.New("user already has permissions: " + strings.Join(alreadyOwned, ", "))
+	}
+	return nil
+}
+
 func (uc TopicActionSubmitUsecase) Handle(ctx context.Context, req SubmitApplicationRequest) (SubmitApplicationResponse, error) {
+	// Extract userID from context (JWTClaims)
+	user := util.GetUserInfo(ctx)
+	if user == nil {
+		return SubmitApplicationResponse{}, errors.New("user unathorized")
+	}
+
 	// Load entity to get group owner
 	entity, err := entityrepo.GetEntityByID(uc.repo.db, req.EntityID)
 	if err != nil {
 		return SubmitApplicationResponse{}, err
 	}
+
+	// Validate requested permissions
+	if err := uc.validateRequestedPermissions(ctx, user.ID, req.EntityID, req.Permission); err != nil {
+		return SubmitApplicationResponse{}, err
+	}
+
 	// Use group owner as reviewer group
 	reviewerGroupID := entity.GroupOwner
 	input := auth.CreateApplicationInput{

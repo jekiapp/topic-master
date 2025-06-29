@@ -1,3 +1,4 @@
+//go:generate mockgen -source=create_user.go -destination=mock/mock_create_user_repo.go -package=user_mock
 package user
 
 import (
@@ -7,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -70,10 +72,10 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 	rootCount := 0
 	for i, g := range req.Groups {
 		if g.GroupID == "" {
-			return errors.New("group_id is required for group index " + string(i))
+			return errors.New("group_id is required for group index " + strconv.Itoa(i))
 		}
 		if g.Role == "" {
-			return errors.New("role is required for group index " + string(i))
+			return errors.New("role is required for group index " + strconv.Itoa(i))
 		}
 		if g.Name == acl.GroupRoot {
 			rootCount++

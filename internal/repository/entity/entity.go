@@ -1,8 +1,10 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
@@ -32,4 +34,14 @@ func GetEntityByID(dbConn *buntdb.DB, id string) (entity.Entity, error) {
 		return entity.Entity{}, fmt.Errorf("entity not found")
 	}
 	return entityObj, nil
+}
+
+// GetPermissionMapByActionEntityUser fetches a PermissionMap by action, entityID, and userID
+func GetPermissionMapByActionEntityUser(dbConn *buntdb.DB, userID, entityID, action string) (acl.PermissionMap, error) {
+	pivot := action + ":" + entityID + ":" + userID
+	perm, err := db.SelectOne[acl.PermissionMap](dbConn, "="+pivot, acl.IdxPermissionMap_ActionEntityUser)
+	if err != nil {
+		return acl.PermissionMap{}, errors.New("permission not found")
+	}
+	return perm, nil
 }
