@@ -17,11 +17,9 @@ $(function() {
         $('#user-dropdown').hide();
         $('#login-signup-link').show();
       }
-      // Hide Access Control if not root
-      if (!userData || userData.root === false) {
-        $(".menu li a").filter(function() {
-          return $(this).text().trim() === 'Access Control';
-        }).closest('li').hide();
+      // Show Access Control only if root
+      if (userData && userData.root === true) {
+        $(".menu li a.hidden").removeClass('hidden');
       }
     }).fail(function(jqxhr) {
       localStorage.removeItem('user');
