@@ -191,6 +191,8 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	return SignupResponse{ApplicationID: app.ID}, nil
 }
 
+//go:generate go run github.com/golang/mock/mockgen -destination=mock/signup_mock.go -package=mock github.com/jekiapp/topic-master/internal/usecase/acl/auth ISignupRepo
+
 type ISignupRepo interface {
 	CreateApplication(app acl.Application) error
 	GetGroupByName(name string) (acl.Group, error)
