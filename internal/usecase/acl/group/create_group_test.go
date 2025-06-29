@@ -2,107 +2,100 @@ package group
 
 import (
 	"context"
-	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	group_mock "github.com/jekiapp/topic-master/internal/usecase/acl/group/mock"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
-type mockCreateGroupRepo struct {
-	CreateGroupFunc    func(group acl.Group) error
-	GetGroupByNameFunc func(name string) (acl.Group, error)
-}
-
-func (m *mockCreateGroupRepo) CreateGroup(group acl.Group) error {
-	return m.CreateGroupFunc(group)
-}
-func (m *mockCreateGroupRepo) GetGroupByName(name string) (acl.Group, error) {
-	return m.GetGroupByNameFunc(name)
-}
-
 func TestCreateGroupUsecase_Handle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	tests := []struct {
 		name      string
 		req       CreateGroupRequest
-		mockRepo  *mockCreateGroupRepo
+		setupMock func(m *group_mock.MockiCreateGroupRepo)
 		wantErr   bool
 		wantGroup bool
 	}{
 		{
-			name:     "missing name",
-			req:      CreateGroupRequest{},
-			mockRepo: &mockCreateGroupRepo{},
-			wantErr:  true,
+			name:      "missing name",
+			req:       CreateGroupRequest{},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {},
+			wantErr:   true,
 		},
 		{
 			name: "group already exists",
-			req:  CreateGroupRequest{Name: "group1"},
-			mockRepo: &mockCreateGroupRepo{
-				GetGroupByNameFunc: func(name string) (acl.Group, error) { return acl.Group{}, nil },
+			req:  CreateGroupRequest{Name: "dev-group"},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {
+				m.EXPECT().GetGroupByName("dev-group").Return(acl.Group{}, nil)
 			},
 			wantErr: true,
 		},
 		{
 			name: "repo create error",
-			req:  CreateGroupRequest{Name: "group2"},
-			mockRepo: &mockCreateGroupRepo{
-				GetGroupByNameFunc: func(name string) (acl.Group, error) { return acl.Group{}, errors.New("not found") },
-				CreateGroupFunc:    func(group acl.Group) error { return errors.New("fail") },
+			req:  CreateGroupRequest{Name: "qa-team"},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {
+				m.EXPECT().GetGroupByName("qa-team").Return(acl.Group{}, context.DeadlineExceeded)
+				m.EXPECT().CreateGroup(gomock.Any()).Return(context.DeadlineExceeded)
 			},
 			wantErr: true,
 		},
 		{
 			name: "success",
-			req:  CreateGroupRequest{Name: "group3", Description: "desc"},
-			mockRepo: &mockCreateGroupRepo{
-				GetGroupByNameFunc: func(name string) (acl.Group, error) { return acl.Group{}, errors.New("not found") },
-				CreateGroupFunc:    func(group acl.Group) error { return nil },
+			req:  CreateGroupRequest{Name: "hr-team", Description: "engineering"},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {
+				m.EXPECT().GetGroupByName("hr-team").Return(acl.Group{}, context.DeadlineExceeded)
+				m.EXPECT().CreateGroup(gomock.Any()).Return(nil)
 			},
 			wantErr:   false,
 			wantGroup: true,
 		},
 		{
 			name: "special characters in name",
-			req:  CreateGroupRequest{Name: "!@#$$%", Description: "desc"},
-			mockRepo: &mockCreateGroupRepo{
-				GetGroupByNameFunc: func(name string) (acl.Group, error) { return acl.Group{}, errors.New("not found") },
-				CreateGroupFunc:    func(group acl.Group) error { return nil },
+			req:  CreateGroupRequest{Name: "!@#$$%", Description: "engineering"},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {
+				m.EXPECT().GetGroupByName("!@#$$%").Return(acl.Group{}, context.DeadlineExceeded)
+				m.EXPECT().CreateGroup(gomock.Any()).Return(nil)
 			},
 			wantErr:   false,
 			wantGroup: true,
 		},
 		{
 			name: "repo GetGroupByName returns error other than not found",
-			req:  CreateGroupRequest{Name: "group4"},
-			mockRepo: &mockCreateGroupRepo{
-				GetGroupByNameFunc: func(name string) (acl.Group, error) { return acl.Group{}, errors.New("db error") },
+			req:  CreateGroupRequest{Name: "ops-team"},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {
+				m.EXPECT().GetGroupByName("ops-team").Return(acl.Group{}, context.Canceled)
 			},
 			wantErr: true,
 		},
 		{
 			name: "duplicate group with different description",
-			req:  CreateGroupRequest{Name: "group1", Description: "newdesc"},
-			mockRepo: &mockCreateGroupRepo{
-				GetGroupByNameFunc: func(name string) (acl.Group, error) { return acl.Group{Name: name, Description: "olddesc"}, nil },
+			req:  CreateGroupRequest{Name: "dev-group", Description: "updated-desc"},
+			setupMock: func(m *group_mock.MockiCreateGroupRepo) {
+				m.EXPECT().GetGroupByName("dev-group").Return(acl.Group{Name: "dev-group", Description: "previous-desc"}, nil)
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uc := CreateGroupUsecase{repo: tt.mockRepo}
+			mockRepo := group_mock.NewMockiCreateGroupRepo(ctrl)
+			tt.setupMock(mockRepo)
+			uc := CreateGroupUsecase{repo: mockRepo}
 			resp, err := uc.Handle(context.Background(), tt.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Handle() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
-			if tt.wantGroup && reflect.DeepEqual(resp.Group, acl.Group{}) {
-				t.Errorf("expected group in response")
-			}
-			if !tt.wantErr && tt.wantGroup {
-				if resp.Group.CreatedAt.IsZero() || resp.Group.UpdatedAt.IsZero() {
-					t.Errorf("expected timestamps to be set")
-				}
+			if tt.wantGroup {
+				assert.NotEmpty(t, resp.Group)
+				assert.NotEmpty(t, resp.Group.CreatedAt)
+				assert.NotEmpty(t, resp.Group.UpdatedAt)
 			}
 		})
 	}

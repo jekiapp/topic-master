@@ -2,25 +2,14 @@ package group
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
-	"github.com/jekiapp/topic-master/internal/model"
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	group_mock "github.com/jekiapp/topic-master/internal/usecase/acl/group/mock"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
-
-type mockUpdateGroupRepo struct {
-	GetGroupByIDFunc func(id string) (acl.Group, error)
-	UpdateGroupFunc  func(group acl.Group) error
-}
-
-func (m *mockUpdateGroupRepo) GetGroupByID(id string) (acl.Group, error) {
-	return m.GetGroupByIDFunc(id)
-}
-func (m *mockUpdateGroupRepo) UpdateGroup(group acl.Group) error {
-	return m.UpdateGroupFunc(group)
-}
 
 func jwtClaimsForGroupsUpdate(groups []acl.GroupRole) *acl.JWTClaims {
 	return &acl.JWTClaims{
@@ -31,65 +20,66 @@ func jwtClaimsForGroupsUpdate(groups []acl.GroupRole) *acl.JWTClaims {
 }
 
 func TestUpdateGroupByIDUsecase_Handle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	rootGroup := []acl.GroupRole{{GroupName: acl.GroupRoot}}
 	nonRootGroup := []acl.GroupRole{{GroupName: "notroot"}}
 	tests := []struct {
-		name     string
-		groups   []acl.GroupRole
-		req      UpdateGroupByIDRequest
-		mockRepo *mockUpdateGroupRepo
-		wantErr  bool
+		name      string
+		groups    []acl.GroupRole
+		setupMock func(m *group_mock.MockiUpdateGroupRepo)
+		req       UpdateGroupByIDRequest
+		wantErr   bool
 	}{
 		{
-			name:     "unauthorized",
-			groups:   nil,
-			req:      UpdateGroupByIDRequest{ID: "id1", Description: "desc"},
-			mockRepo: &mockUpdateGroupRepo{},
-			wantErr:  true,
+			name:      "unauthorized",
+			groups:    nil,
+			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {},
+			req:       UpdateGroupByIDRequest{ID: "dev-group-id", Description: "updated-desc"},
+			wantErr:   true,
 		},
 		{
-			name:     "not root",
-			groups:   nonRootGroup,
-			req:      UpdateGroupByIDRequest{ID: "id1", Description: "desc"},
-			mockRepo: &mockUpdateGroupRepo{},
-			wantErr:  true,
+			name:      "not root",
+			groups:    nonRootGroup,
+			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {},
+			req:       UpdateGroupByIDRequest{ID: "dev-group-id", Description: "updated-desc"},
+			wantErr:   true,
 		},
 		{
-			name:     "missing id",
-			groups:   rootGroup,
-			req:      UpdateGroupByIDRequest{ID: "", Description: "desc"},
-			mockRepo: &mockUpdateGroupRepo{},
-			wantErr:  true,
+			name:      "missing id",
+			groups:    rootGroup,
+			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {},
+			req:       UpdateGroupByIDRequest{ID: "", Description: "updated-desc"},
+			wantErr:   true,
 		},
 		{
 			name:   "get group error",
 			groups: rootGroup,
-			req:    UpdateGroupByIDRequest{ID: "id2", Description: "desc"},
-			mockRepo: &mockUpdateGroupRepo{
-				GetGroupByIDFunc: func(id string) (acl.Group, error) { return acl.Group{}, errors.New("fail") },
+			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {
+				m.EXPECT().GetGroupByID("qa-team-id").Return(acl.Group{}, context.DeadlineExceeded)
 			},
+			req:     UpdateGroupByIDRequest{ID: "qa-team-id", Description: "updated-desc"},
 			wantErr: true,
 		},
 		{
 			name:   "update error",
 			groups: rootGroup,
-			req:    UpdateGroupByIDRequest{ID: "id3", Description: "desc"},
-			mockRepo: &mockUpdateGroupRepo{
-				GetGroupByIDFunc: func(id string) (acl.Group, error) { return acl.Group{ID: "id3", Description: "old"}, nil },
-				UpdateGroupFunc:  func(group acl.Group) error { return errors.New("fail") },
+			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {
+				m.EXPECT().GetGroupByID("hr-team-id").Return(acl.Group{ID: "hr-team-id", Description: "previous-desc"}, nil)
+				m.EXPECT().UpdateGroup(gomock.Any()).Return(context.DeadlineExceeded)
 			},
+			req:     UpdateGroupByIDRequest{ID: "hr-team-id", Description: "updated-desc"},
 			wantErr: true,
 		},
 		{
 			name:   "success",
 			groups: rootGroup,
-			req:    UpdateGroupByIDRequest{ID: "id4", Description: "desc"},
-			mockRepo: &mockUpdateGroupRepo{
-				GetGroupByIDFunc: func(id string) (acl.Group, error) {
-					return acl.Group{ID: "id4", Description: "old", UpdatedAt: time.Now()}, nil
-				},
-				UpdateGroupFunc: func(group acl.Group) error { return nil },
+			setupMock: func(m *group_mock.MockiUpdateGroupRepo) {
+				m.EXPECT().GetGroupByID("ops-team-id").Return(acl.Group{ID: "ops-team-id", Description: "previous-desc", UpdatedAt: time.Now()}, nil)
+				m.EXPECT().UpdateGroup(gomock.Any()).Return(nil)
 			},
+			req:     UpdateGroupByIDRequest{ID: "ops-team-id", Description: "updated-desc"},
 			wantErr: false,
 		},
 	}
@@ -97,12 +87,16 @@ func TestUpdateGroupByIDUsecase_Handle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
 			if tt.groups != nil {
-				ctx = context.WithValue(ctx, model.UserInfoKey, jwtClaimsForGroupsUpdate(tt.groups))
+				ctx = context.WithValue(ctx, ctxKeyUserInfo{}, jwtClaimsForGroupsUpdate(tt.groups))
 			}
-			uc := UpdateGroupByIDUsecase{repo: tt.mockRepo}
+			mockRepo := group_mock.NewMockiUpdateGroupRepo(ctrl)
+			tt.setupMock(mockRepo)
+			uc := UpdateGroupByIDUsecase{repo: mockRepo}
 			_, err := uc.Handle(ctx, tt.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Handle() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

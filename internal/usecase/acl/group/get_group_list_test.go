@@ -2,157 +2,104 @@ package group
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
+	group_mock "github.com/jekiapp/topic-master/internal/usecase/acl/group/mock"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
-type mockGroupListRepo struct {
-	GetAllGroupsFunc func() ([]acl.Group, error)
-}
-
-func (m *mockGroupListRepo) GetAllGroups() ([]acl.Group, error) {
-	return m.GetAllGroupsFunc()
-}
-
-type mockUserGroupRepo struct {
-	ListUserGroupsByGroupIDFunc func(groupID string, limit int) ([]acl.UserGroup, error)
-	GetUserByIDFunc             func(userID string) (acl.User, error)
-}
-
-func (m *mockUserGroupRepo) ListUserGroupsByGroupID(groupID string, limit int) ([]acl.UserGroup, error) {
-	return m.ListUserGroupsByGroupIDFunc(groupID, limit)
-}
-func (m *mockUserGroupRepo) GetUserByID(userID string) (acl.User, error) {
-	return m.GetUserByIDFunc(userID)
-}
-
 func TestGetGroupListUsecase_Handle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	tests := []struct {
-		name         string
-		mockGroup    *mockGroupListRepo
-		mockUserRepo *mockUserGroupRepo
-		wantErr      bool
-		wantLen      int
+		name      string
+		setupMock func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo)
+		wantErr   bool
+		wantLen   int
+		wantUser  string
 	}{
 		{
 			name: "repo error",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) { return nil, errors.New("fail") },
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return(nil, context.DeadlineExceeded)
 			},
-			mockUserRepo: &mockUserGroupRepo{},
-			wantErr:      true,
+			wantErr: true,
 		},
 		{
 			name: "success with members",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) {
-					return []acl.Group{{ID: "g1", Name: "n1", Description: "d1"}}, nil
-				},
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "dev-group", Name: "Dev Group", Description: "Development group"}}, nil)
+				mu.EXPECT().ListUserGroupsByGroupID("dev-group", 3).Return([]acl.UserGroup{{UserID: "john"}}, nil)
+				mu.EXPECT().GetUserByID("john").Return(acl.User{Username: "john", Status: acl.StatusUserActive}, nil)
 			},
-			mockUserRepo: &mockUserGroupRepo{
-				ListUserGroupsByGroupIDFunc: func(groupID string, limit int) ([]acl.UserGroup, error) {
-					return []acl.UserGroup{{UserID: "u1"}}, nil
-				},
-				GetUserByIDFunc: func(userID string) (acl.User, error) {
-					return acl.User{Username: "user1", Status: acl.StatusUserActive}, nil
-				},
-			},
-			wantLen: 1,
+			wantLen:  1,
+			wantUser: "john",
 		},
 		{
 			name: "empty group list",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) { return nil, nil },
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return(nil, nil)
 			},
-			mockUserRepo: &mockUserGroupRepo{},
-			wantLen:      0,
+			wantLen: 0,
 		},
 		{
 			name: "user repo returns error",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) {
-					return []acl.Group{{ID: "g2", Name: "n2", Description: "d2"}}, nil
-				},
-			},
-			mockUserRepo: &mockUserGroupRepo{
-				ListUserGroupsByGroupIDFunc: func(groupID string, limit int) ([]acl.UserGroup, error) {
-					return nil, errors.New("fail")
-				},
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "qa-team", Name: "QA Team", Description: "QA group"}}, nil)
+				mu.EXPECT().ListUserGroupsByGroupID("qa-team", 3).Return(nil, context.DeadlineExceeded)
 			},
 			wantLen: 1,
 		},
 		{
 			name: "group with no active users",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) {
-					return []acl.Group{{ID: "g3", Name: "n3", Description: "d3"}}, nil
-				},
-			},
-			mockUserRepo: &mockUserGroupRepo{
-				ListUserGroupsByGroupIDFunc: func(groupID string, limit int) ([]acl.UserGroup, error) {
-					return []acl.UserGroup{{UserID: "u2"}}, nil
-				},
-				GetUserByIDFunc: func(userID string) (acl.User, error) {
-					return acl.User{Username: "user2", Status: "inactive"}, nil
-				},
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "ops-team", Name: "Ops Team", Description: "Operations group"}}, nil)
+				mu.EXPECT().ListUserGroupsByGroupID("ops-team", 3).Return([]acl.UserGroup{{UserID: "alice"}}, nil)
+				mu.EXPECT().GetUserByID("alice").Return(acl.User{Username: "alice", Status: acl.StatusUserInactive}, nil)
 			},
 			wantLen: 1,
 		},
 		{
 			name: "group with multiple users, some inactive",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) {
-					return []acl.Group{{ID: "g4", Name: "n4", Description: "d4"}}, nil
-				},
-			},
-			mockUserRepo: &mockUserGroupRepo{
-				ListUserGroupsByGroupIDFunc: func(groupID string, limit int) ([]acl.UserGroup, error) {
-					return []acl.UserGroup{{UserID: "u3"}, {UserID: "u4"}}, nil
-				},
-				GetUserByIDFunc: func(userID string) (acl.User, error) {
-					if userID == "u3" {
-						return acl.User{Username: "user3", Status: acl.StatusUserActive}, nil
-					}
-					return acl.User{Username: "user4", Status: "inactive"}, nil
-				},
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "hr-team", Name: "HR Team", Description: "HR group"}}, nil)
+				mu.EXPECT().ListUserGroupsByGroupID("hr-team", 3).Return([]acl.UserGroup{{UserID: "bob"}, {UserID: "carol"}}, nil)
+				mu.EXPECT().GetUserByID("bob").Return(acl.User{Username: "bob", Status: acl.StatusUserActive}, nil)
+				mu.EXPECT().GetUserByID("carol").Return(acl.User{Username: "carol", Status: acl.StatusUserInactive}, nil)
 			},
 			wantLen: 1,
 		},
 		{
 			name: "multiple groups",
-			mockGroup: &mockGroupListRepo{
-				GetAllGroupsFunc: func() ([]acl.Group, error) {
-					return []acl.Group{
-						{ID: "g1", Name: "n1", Description: "d1"},
-						{ID: "g2", Name: "n2", Description: "d2"},
-					}, nil
-				},
+			setupMock: func(mg *group_mock.MockiGroupListRepo, mu *group_mock.MockiUserGroupRepo) {
+				mg.EXPECT().GetAllGroups().Return([]acl.Group{{ID: "dev-group", Name: "Dev Group", Description: "Development group"}, {ID: "qa-team", Name: "QA Team", Description: "QA group"}}, nil)
+				mu.EXPECT().ListUserGroupsByGroupID("dev-group", 3).Return([]acl.UserGroup{{UserID: "john"}}, nil)
+				mu.EXPECT().GetUserByID("john").Return(acl.User{Username: "john", Status: acl.StatusUserActive}, nil)
+				mu.EXPECT().ListUserGroupsByGroupID("qa-team", 3).Return([]acl.UserGroup{{UserID: "john"}}, nil)
+				mu.EXPECT().GetUserByID("john").Return(acl.User{Username: "john", Status: acl.StatusUserActive}, nil)
 			},
-			mockUserRepo: &mockUserGroupRepo{
-				ListUserGroupsByGroupIDFunc: func(groupID string, limit int) ([]acl.UserGroup, error) {
-					return []acl.UserGroup{{UserID: "u1"}}, nil
-				},
-				GetUserByIDFunc: func(userID string) (acl.User, error) {
-					return acl.User{Username: "user1", Status: acl.StatusUserActive}, nil
-				},
-			},
-			wantLen: 2,
+			wantLen:  2,
+			wantUser: "john",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uc := GetGroupListUsecase{groupRepo: tt.mockGroup, userGroupRepo: tt.mockUserRepo}
+			mockGroup := group_mock.NewMockiGroupListRepo(ctrl)
+			mockUser := group_mock.NewMockiUserGroupRepo(ctrl)
+			tt.setupMock(mockGroup, mockUser)
+			uc := GetGroupListUsecase{groupRepo: mockGroup, userGroupRepo: mockUser}
 			resp, err := uc.Handle(context.Background(), GetGroupListRequest{})
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Handle() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
-			if len(resp.Groups) != tt.wantLen {
-				t.Errorf("expected %d groups, got %d", tt.wantLen, len(resp.Groups))
-			}
-			if tt.wantLen > 0 && resp.Groups[0].Members != "user1" {
-				t.Errorf("expected members 'user1', got '%s'", resp.Groups[0].Members)
+			assert.Equal(t, tt.wantLen, len(resp.Groups))
+			if tt.wantLen > 0 && tt.wantUser != "" {
+				assert.Equal(t, tt.wantUser, resp.Groups[0].Members)
 			}
 		})
 	}
