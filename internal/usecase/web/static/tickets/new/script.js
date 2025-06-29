@@ -71,13 +71,20 @@ $(function() {
 
         // Permissions section
         if (data.permissions && data.permissions.length > 0) {
+            // Get 'action' param from URL hash/query params, split by comma
+            const params = getQueryParamsFromParentHash();
+            let checkedActions = [];
+            if (params.action) {
+                checkedActions = params.action.split(',').map(s => s.trim()).filter(Boolean);
+            }
             let permHtml = `<div class="section">
                 <div class="section-title">Permissions</div>`;
             data.permissions.forEach(function(p, idx) {
                 const id = 'perm-' + idx;
+                const isChecked = checkedActions.includes(p.name) ? 'checked' : '';
                 permHtml +=
                     `<div class="form-permission">
-                        <input type="checkbox" id="${id}" name="permissions" value="${escapeHtml(p.name)}">
+                        <input type="checkbox" id="${id}" name="permissions" value="${escapeHtml(p.name)}" ${isChecked}>
                         <label for="${id}">${escapeHtml(p.name)} <span style="color:#888">(${escapeHtml(p.description)})</span></label>
                     </div>`;
             });
