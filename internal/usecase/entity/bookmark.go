@@ -1,12 +1,3 @@
-// this is usecase for toggle bookmark true/false for particular user on particular entity
-// it will receive entity id and bookmark:bool
-
-// please create a new model in model/entity/bookmark.go for mapping entity:user bookmark
-// learn from other model to see on how to implement model, also the indexing stuff
-
-// create new bookmark repository in repository/entity/bookmark.go
-// crete a new func for toggle true/false of user bookmark by deleting/creating the mapping record
-
 package entity
 
 import (

@@ -1,8 +1,3 @@
-// this usecase is to save description for entity field
-// it will receive entity id and description string
-// the userid should be get from the context
-//
-
 package entity
 
 import (
