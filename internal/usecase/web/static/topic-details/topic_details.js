@@ -31,7 +31,7 @@ $(function() {
         $('.group-owner').text(detail.group_owner);
         var $eventTrigger = $('.event-trigger-input');
         $eventTrigger.val(detail.event_trigger);
-        $eventTrigger.prop('readonly', !detail.permission.can_update_event_trigger);
+        $eventTrigger.prop('readonly', !detail.is_free_action);
         $eventTrigger.data('original', detail.event_trigger);
         var $check = $('.event-trigger-check');
         var $reset = $('.event-trigger-reset');
