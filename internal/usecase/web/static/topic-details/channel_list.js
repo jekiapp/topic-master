@@ -301,112 +301,145 @@ function handleChannelAction(action, channelName) {
     // Find the row and get the channel id
     const row = document.querySelector(`tr[data-channel-name="${channelName}"]`);
     const channelId = row ? row.getAttribute('data-channel-id') : null;
+    function showModal(msg, onConfirm, confirmText = 'OK', cancelText = null) {
+        let modalHtml = `<div style="text-align:center;">
+            <div style="font-size:1.1em;margin-bottom:18px;">${msg}</div>`;
+        if (onConfirm) {
+            modalHtml += `<button id="modal-confirm-btn" style="margin-right:18px;padding:8px 18px;background:#ff2d2d;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;">${confirmText}</button>`;
+            if (cancelText) {
+                modalHtml += `<button id="modal-cancel-btn" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">${cancelText}</button>`;
+            }
+        } else {
+            modalHtml += `<button id="modal-ok-btn" style="padding:8px 18px;background:#eee;color:#333;border:none;border-radius:6px;font-weight:600;cursor:pointer;">OK</button>`;
+        }
+        modalHtml += '</div>';
+        if (window.parent && window.parent.showModalOverlay) {
+            window.parent.showModalOverlay(modalHtml);
+            setTimeout(function() {
+                if (onConfirm) {
+                    const doc = window.parent.document;
+                    doc.getElementById('modal-confirm-btn')?.addEventListener('click', function() {
+                        window.parent.hideModalOverlay();
+                        onConfirm();
+                    });
+                    if (cancelText) {
+                        doc.getElementById('modal-cancel-btn')?.addEventListener('click', function() {
+                            window.parent.hideModalOverlay();
+                        });
+                    }
+                } else {
+                    window.parent.document.getElementById('modal-ok-btn')?.addEventListener('click', function() {
+                        window.parent.hideModalOverlay();
+                    });
+                }
+            }, 0);
+        } else {
+            if (onConfirm) {
+                if (confirm(`Fallback: ${msg}`)) onConfirm();
+            } else {
+                alert(msg);
+            }
+        }
+    }
     switch(action) {
         case 'bookmark':
-            alert(`Bookmark channel: ${channelName}`);
+            showModal('Bookmark channel: ' + channelName);
             break;
         case 'pause':
             if (!channelId) {
-                alert('Channel ID not found.');
+                showModal('Channel ID not found.');
                 return;
             }
-            if (confirm(`Are you sure you want to pause channel: ${channelName}?`)) {
+            showModal(`Are you sure you want to pause channel: ${channelName}?`, function() {
                 const btn = row.querySelector('.btn-pause');
                 if (btn) btn.disabled = true;
                 fetch(`/api/channel/nsq/pause?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        // Refresh channel list
                         refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
                     })
                     .catch(err => {
-                        console.error('Failed to pause channel:', err);
-                        alert('Failed to pause channel');
+                        showModal('Failed to pause channel');
                     })
                     .finally(() => {
                         if (btn) btn.disabled = false;
                     });
-            }
+            }, 'Yes, Pause', 'Cancel');
             break;
         case 'resume':
             if (!channelId) {
-                alert('Channel ID not found.');
+                showModal('Channel ID not found.');
                 return;
             }
-            if (confirm(`Are you sure you want to resume channel: ${channelName}?`)) {
+            showModal(`Are you sure you want to resume channel: ${channelName}?`, function() {
                 const btn = row.querySelector('.btn-resume');
                 if (btn) btn.disabled = true;
                 fetch(`/api/channel/nsq/resume?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        // Refresh channel list
                         refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
                     })
                     .catch(err => {
-                        alert('Failed to resume channel');
+                        showModal('Failed to resume channel');
                     })
                     .finally(() => {
                         if (btn) btn.disabled = false;
                     });
-            }
+            }, 'Yes, Resume', 'Cancel');
             break;
-        // ... existing code ...
         case 'delete':
             if (!channelId) {
-                alert('Channel ID not found.');
+                showModal('Channel ID not found.');
                 return;
             }
-            if (confirm(`Are you sure you want to delete channel: ${channelName}?`)) {
+            showModal(`Are you sure you want to delete channel: ${channelName}? This cannot be undone.`, function() {
                 const btn = row.querySelector('.btn-delete');
                 if (btn) btn.disabled = true;
                 fetch(`/api/channel/nsq/delete?id=${encodeURIComponent(channelId)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        // Refresh channel list
                         refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
                     })
                     .catch(err => {
-                        alert('Failed to delete channel');
+                        showModal('Failed to delete channel');
                     })
                     .finally(() => {
                         if (btn) btn.disabled = false;
                     });
-            }
+            }, 'Yes, Delete', 'Cancel');
             break;
         case 'empty':
             if (!channelId) {
-                alert('Channel ID not found.');
+                showModal('Channel ID not found.');
                 return;
             }
-            if (confirm(`Are you sure you want to empty channel: ${channelName}?`)) {
-                // Disable the button to prevent double click
+            showModal(`Are you sure you want to empty channel: ${channelName}? This cannot be undone.`, function() {
                 const btn = row.querySelector('.btn-empty');
                 if (btn) btn.disabled = true;
                 fetch(`/api/channel/nsq/empty?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
-                        // Refresh channel list
                         refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
                     })
                     .catch(err => {
-                        alert('Failed to empty channel');
+                        showModal('Failed to empty channel');
                     })
                     .finally(() => {
                         if (btn) btn.disabled = false;
                     });
-            }
+            }, 'Yes, Empty', 'Cancel');
             break;
         default:
             console.log(`Unknown action: ${action}`);
