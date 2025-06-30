@@ -1,7 +1,6 @@
 package config
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -14,6 +13,7 @@ import (
 	aclmodel "github.com/jekiapp/topic-master/internal/model/acl"
 	usergroup "github.com/jekiapp/topic-master/internal/repository/user"
 	"github.com/tidwall/buntdb"
+	"golang.org/x/term"
 )
 
 // CheckAndSetupRoot ensures the root group and root user exist in the DB, and sets them up if missing.
@@ -28,13 +28,24 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 	}
 
 	fmt.Println("Root group or root user not found. Setting up...")
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Set password for root user: ")
-	password, _ := reader.ReadString('\n')
-	password = strings.TrimSpace(password)
-	if password == "" {
-		return errors.New("password cannot be empty")
+	var password string
+	for {
+		fmt.Print("Set password for root user: ")
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Println("") // for newline after password input
+		if err != nil {
+			return errors.New("failed to read password: " + err.Error())
+		}
+		password = strings.TrimSpace(string(bytePassword))
+		if len(password) < 4 {
+			fmt.Println("Password must be at least 4 characters. Please try again.")
+			continue
+		}
+		break
 	}
+
+	fmt.Println("Password set successfully.")
+	fmt.Println("Now you can login using username: root")
 
 	now := time.Now()
 
