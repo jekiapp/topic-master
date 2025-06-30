@@ -121,7 +121,7 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         var params = `topic=${topic}&limit_msg=${limitMsgStr}`;
         hosts.forEach(function(h) { params += `&nsqd_hosts=${h}`; });
         var wsProto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        var wsUrl = wsProto + window.location.host + '/api/topic/tail?' + params;
+        var wsUrl = wsProto + window.location.host + '/api/topic/tail?' + params + '&entity_id=' + encodeURIComponent(currentTopicDetail.id);
         tailSocket = new WebSocket(wsUrl);
         tailSocket.onopen = function() {
             $tailStatus.text('Connected. Waiting for messages...').css('color', '#888');

@@ -261,7 +261,7 @@ function handleChannelAction(action, channelName) {
             if (confirm(`Are you sure you want to pause channel: ${channelName}?`)) {
                 const btn = row.querySelector('.btn-pause');
                 if (btn) btn.disabled = true;
-                fetch(`/api/channel/nsq/pause?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
+                fetch(`/api/channel/nsq/pause?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
@@ -287,7 +287,7 @@ function handleChannelAction(action, channelName) {
             if (confirm(`Are you sure you want to resume channel: ${channelName}?`)) {
                 const btn = row.querySelector('.btn-resume');
                 if (btn) btn.disabled = true;
-                fetch(`/api/channel/nsq/resume?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
+                fetch(`/api/channel/nsq/resume?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
@@ -313,7 +313,7 @@ function handleChannelAction(action, channelName) {
             if (confirm(`Are you sure you want to delete channel: ${channelName}?`)) {
                 const btn = row.querySelector('.btn-delete');
                 if (btn) btn.disabled = true;
-                fetch(`/api/channel/nsq/delete?id=${encodeURIComponent(channelId)}`)
+                fetch(`/api/channel/nsq/delete?id=${encodeURIComponent(channelId)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
@@ -339,7 +339,7 @@ function handleChannelAction(action, channelName) {
                 // Disable the button to prevent double click
                 const btn = row.querySelector('.btn-empty');
                 if (btn) btn.disabled = true;
-                fetch(`/api/channel/nsq/empty?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}`)
+                fetch(`/api/channel/nsq/empty?id=${encodeURIComponent(channelId)}&channel=${encodeURIComponent(channelName)}&entity_id=${encodeURIComponent(channelId)}`)
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list

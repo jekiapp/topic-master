@@ -12,6 +12,8 @@ import (
 	"github.com/jekiapp/topic-master/internal/model"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/pkg/util"
+
+	aclusecase "github.com/jekiapp/topic-master/internal/usecase/acl/auth"
 )
 
 func InitSessionMiddleware(secret string) func(next http.HandlerFunc) http.HandlerFunc {
@@ -147,5 +149,39 @@ func JWTMiddleware(next http.HandlerFunc, secret string) http.HandlerFunc {
 
 		ctx := context.WithValue(r.Context(), model.UserInfoKey, claims)
 		next(w, r.WithContext(ctx))
+	}
+}
+
+func InitActionAuthMiddleware(secret string, usecase aclusecase.CheckActionAuthUsecase) func(next http.HandlerFunc, action string) http.HandlerFunc {
+	return func(next http.HandlerFunc, action string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			user := util.GetUserInfo(r.Context())
+			if user == nil {
+				http.Error(w, "Unauthorized: user not found", http.StatusUnauthorized)
+				return
+			}
+
+			entityID := r.URL.Query().Get("entity_id")
+			if entityID == "" {
+				http.Error(w, "Unauthorized: missing entity_id", http.StatusUnauthorized)
+				return
+			}
+
+			resp, err := usecase.Handle(r.Context(), aclusecase.CheckActionAuthRequest{
+				EntityID: entityID,
+				Action:   action,
+			})
+			if err != nil || !resp.Allowed {
+				errMsg := "Unauthorized"
+				if resp.Error != "" {
+					errMsg += ": " + resp.Error
+				} else if err != nil {
+					errMsg += ": " + err.Error()
+				}
+				http.Error(w, errMsg, http.StatusUnauthorized)
+				return
+			}
+			next(w, r)
+		}
 	}
 }

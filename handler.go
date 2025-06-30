@@ -160,21 +160,24 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/topic/detail", sessionMiddleware(handlerPkg.HandleGenericGet(h.getTopicDetailUC.HandleQuery)))
 	mux.HandleFunc("/api/topic/stats", sessionMiddleware(handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery)))
-	mux.HandleFunc("/api/topic/publish", sessionMiddleware(handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish)))
-	mux.HandleFunc("/api/topic/tail", sessionMiddleware(h.tailMessageUC.HandleTailMessage))
-
 	mux.HandleFunc("/api/entity/update-description", sessionMiddleware(handlerPkg.HandleGenericPost(h.updateDescriptionUC.Save)))
 	mux.HandleFunc("/api/entity/toggle-bookmark", authMiddleware(handlerPkg.HandleGenericPost(h.toggleBookmarkUC.Toggle)))
 
-	mux.HandleFunc("/api/topic/delete", sessionMiddleware(handlerPkg.HandleGenericGet(h.deleteTopicUC.Handle)))
-	mux.HandleFunc("/api/topic/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandlePause)))
-	mux.HandleFunc("/api/topic/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleEmpty)))
-	mux.HandleFunc("/api/topic/nsq/resume", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleResume)))
+	// this middleware is action auth required
+	actionAuthMiddleware := handlerPkg.InitActionAuthMiddleware(string(h.config.SecretKey), h.checkActionAuthUC)
+
+	mux.HandleFunc("/api/topic/publish", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish), "publish")))
+	mux.HandleFunc("/api/topic/tail", sessionMiddleware(actionAuthMiddleware(h.tailMessageUC.HandleTailMessage, "tail")))
+	mux.HandleFunc("/api/topic/delete", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.deleteTopicUC.Handle), "delete")))
+	mux.HandleFunc("/api/topic/nsq/pause", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandlePause), "pause")))
+	mux.HandleFunc("/api/topic/nsq/empty", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleEmpty), "empty")))
+	mux.HandleFunc("/api/topic/nsq/resume", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.nsqOpsPauseEmptyUC.HandleResume), "pause")))
+
 	mux.HandleFunc("/api/topic/nsq/list-channels", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelListUC.HandleQuery)))
-	mux.HandleFunc("/api/channel/nsq/pause", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandlePause)))
-	mux.HandleFunc("/api/channel/nsq/empty", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleEmpty)))
-	mux.HandleFunc("/api/channel/nsq/resume", sessionMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleResume)))
-	mux.HandleFunc("/api/channel/nsq/delete", sessionMiddleware(handlerPkg.HandleGenericGet(h.deleteChannelUC.Handle)))
+	mux.HandleFunc("/api/channel/nsq/pause", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandlePause), "pause")))
+	mux.HandleFunc("/api/channel/nsq/empty", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleEmpty), "empty")))
+	mux.HandleFunc("/api/channel/nsq/resume", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.nsqChannelOpsUC.HandleResume), "pause")))
+	mux.HandleFunc("/api/channel/nsq/delete", sessionMiddleware(actionAuthMiddleware(handlerPkg.HandleGenericGet(h.deleteChannelUC.Handle), "delete")))
 
 	mux.HandleFunc("/api/entity/claim", authMiddleware(handlerPkg.HandleGenericPost(h.claimEntityUC.Handle)))
 

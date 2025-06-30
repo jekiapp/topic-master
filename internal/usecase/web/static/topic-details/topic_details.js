@@ -216,7 +216,7 @@ $(function() {
                             var $btn = $('.btn-pause');
                             $btn.prop('disabled', true);
                             $.ajax({
-                                url: '/api/topic/nsq/pause?id=' + currentTopicDetail.id,
+                                url: '/api/topic/nsq/pause?id=' + currentTopicDetail.id + '&entity_id=' + encodeURIComponent(currentTopicDetail.id),
                                 method: 'GET',
                                 success: function(resp) {
                                     showStatus('Topic paused successfully', 'green');
@@ -266,7 +266,7 @@ $(function() {
                             var $btn = $('.btn-resume');
                             $btn.prop('disabled', true);
                             $.ajax({
-                                url: '/api/topic/nsq/resume?id=' + currentTopicDetail.id,
+                                url: '/api/topic/nsq/resume?id=' + currentTopicDetail.id + '&entity_id=' + encodeURIComponent(currentTopicDetail.id),
                                 method: 'GET',
                                 success: function(resp) {
                                     showStatus('Topic resumed successfully', 'green');
@@ -316,7 +316,7 @@ $(function() {
                             $btn.prop('disabled', true);
                             window.parent.hideModalOverlay();
                             $.ajax({
-                                url: '/api/topic/delete?id=' + currentTopicDetail.id,
+                                url: '/api/topic/delete?id=' + currentTopicDetail.id + '&entity_id=' + encodeURIComponent(currentTopicDetail.id),
                                 method: 'GET',
                                 success: function(resp) {
                                     showStatus('Topic deleted successfully', 'green');
@@ -366,7 +366,7 @@ $(function() {
                             $btn.prop('disabled', true);
                             window.parent.hideModalOverlay();
                             $.ajax({
-                                url: '/api/topic/nsq/empty?id=' + currentTopicDetail.id,
+                                url: '/api/topic/nsq/empty?id=' + currentTopicDetail.id + '&entity_id=' + encodeURIComponent(currentTopicDetail.id),
                                 method: 'GET',
                                 success: function(resp) {
                                     showStatus('Queue emptied successfully', 'green');
