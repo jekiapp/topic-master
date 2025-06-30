@@ -121,9 +121,6 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 		if err != nil {
 			return NsqChannelListResponse{}, err
 		}
-		for _, c := range channelsDB {
-			channelsMap[c.Name] = c
-		}
 	}
 
 	user := util.GetUserInfo(ctx)
@@ -136,9 +133,9 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 		}
 	}
 
-	channelResponses := make([]NsqChannelResponse, 0, len(channelStats))
-	for name, cstats := range channelStats {
-		c, ok := channelsMap[name]
+	channelResponses := make([]NsqChannelResponse, 0, len(channelsDB))
+	for _, c := range channelsDB {
+		cstats, ok := channelStats[c.Name]
 		if !ok {
 			continue
 		}
