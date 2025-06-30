@@ -132,4 +132,32 @@ $(function() {
       doLocalSearch();
     }
   });
+
+  $('#refresh-btn').on('click', function() {
+    var $btn = $(this);
+    $btn.prop('disabled', true).text('Refreshing...');
+    $.ajax({
+      url: '/api/sync-topics',
+      method: 'GET',
+      xhrFields: { withCredentials: true },
+      success: function(resp) {
+        if (resp && resp.success) {
+          // re-fetch topics
+          location.reload();
+        } else {
+          alert(resp && resp.error ? resp.error : 'Failed to sync topics');
+        }
+      },
+      error: function(xhr) {
+        var msg = 'Failed to sync topics';
+        if (xhr.responseJSON && xhr.responseJSON.error) {
+          msg = xhr.responseJSON.error;
+        }
+        alert(msg);
+      },
+      complete: function() {
+        $btn.prop('disabled', false).text('🔄');
+      }
+    });
+  });
 }); 
