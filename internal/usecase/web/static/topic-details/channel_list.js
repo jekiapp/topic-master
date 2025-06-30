@@ -1,5 +1,6 @@
 let currentTopic = '';
 let nsqdHosts = [];
+let currentTopicDetail = null;
 
 function updateChannelsTable(topic, hosts) {
     if (!topic || !hosts || hosts.length === 0) return;
@@ -239,6 +240,7 @@ function updateChannelsTable(topic, hosts) {
 function refreshChannels(detail) {
     currentTopic = detail.name;
     nsqdHosts = detail.nsqd_hosts;
+    currentTopicDetail = detail;
     updateChannelsTable(detail.name, detail.nsqd_hosts);
 }
 
@@ -263,12 +265,13 @@ function handleChannelAction(action, channelName) {
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
-                        refreshChannels(currentTopic, nsqdHosts);
+                        refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
                     })
                     .catch(err => {
+                        console.error('Failed to pause channel:', err);
                         alert('Failed to pause channel');
                     })
                     .finally(() => {
@@ -288,7 +291,7 @@ function handleChannelAction(action, channelName) {
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
-                        refreshChannels(currentTopic, nsqdHosts);
+                        refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
@@ -314,7 +317,7 @@ function handleChannelAction(action, channelName) {
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
-                        refreshChannels(currentTopic, nsqdHosts);
+                        refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
@@ -340,7 +343,7 @@ function handleChannelAction(action, channelName) {
                     .then(resp => resp.json())
                     .then(data => {
                         // Refresh channel list
-                        refreshChannels(currentTopic, nsqdHosts);
+                        refreshChannels(currentTopicDetail);
                         if (window.fetchAndUpdateStats && window.currentTopicDetail) {
                             window.fetchAndUpdateStats(window.currentTopicDetail);
                         }
