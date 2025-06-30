@@ -396,7 +396,7 @@ $(function() {
         $('.btn-publish').off('click').on('click', function() {
             if (!currentTopicDetail) return;
             checkActionPermissionAsync(
-                currentTopicDetail.permission.can_publish,
+                currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
                 'publish',
                 currentTopicDetail.id,

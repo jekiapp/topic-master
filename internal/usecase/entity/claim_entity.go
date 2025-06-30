@@ -121,12 +121,17 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 		return ClaimEntityResponse{}, errors.New("entity not found")
 	}
 
+	entityOwner, err := uc.repo.GetGroupByName(entityObj.GroupOwner)
+	if err != nil {
+		return ClaimEntityResponse{}, errors.New("entity owner group not found")
+	}
+
 	input := auth.CreateApplicationInput{
 		Title:              fmt.Sprintf("Claim %s:%s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
 		ApplicationType:    acl.ApplicationType_Claim,
 		PermissionIDs:      []string{acl.Permission_Claim_Entity.Name},
 		Reason:             req.Reason,
-		ReviewerGroupID:    group.ID,
+		ReviewerGroupID:    entityOwner.ID,
 		MetaData:           map[string]string{"group_id": group.ID, "entity_id": req.EntityID},
 		HistoryInitAction:  "Create claim ticket",
 		HistoryInitComment: fmt.Sprintf("Initial claim %s %s for group %s", entityObj.TypeID, entityObj.Name, req.GroupName),
