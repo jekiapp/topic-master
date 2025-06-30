@@ -198,13 +198,13 @@ function updateChannelsTable(topic, hosts) {
                 if (channel.is_paused) {
                     const resumeBtn = document.createElement('button');
                     resumeBtn.className = 'action-icon-btn btn-resume';
-                    resumeBtn.title = channel.can_pause ? 'Resume Channel' : 'You do not have permission.';
+                    resumeBtn.title = channel.is_free_action ? 'Resume Channel' : 'You do not have permission.';
                     resumeBtn.textContent = '▶️';
                     resumeBtn.disabled = false;
                     resumeBtn.onclick = (e) => {
                         e.stopPropagation();
                         checkChannelActionPermissionAsync(
-                            channel.can_pause,
+                            channel.is_free_action,
                             channel.group_owner,
                             'resume',
                             channel.id,
@@ -218,13 +218,13 @@ function updateChannelsTable(topic, hosts) {
                 } else {
                     const pauseBtn = document.createElement('button');
                     pauseBtn.className = 'action-icon-btn btn-pause';
-                    pauseBtn.title = channel.can_pause ? 'Pause Channel' : 'You do not have permission.';
+                    pauseBtn.title = channel.is_free_action ? 'Pause Channel' : 'You do not have permission.';
                     pauseBtn.textContent = '⏸️';
                     pauseBtn.disabled = false;
                     pauseBtn.onclick = (e) => {
                         e.stopPropagation();
                         checkChannelActionPermissionAsync(
-                            channel.can_pause,
+                            channel.is_free_action,
                             channel.group_owner,
                             'pause',
                             channel.id,
@@ -239,13 +239,13 @@ function updateChannelsTable(topic, hosts) {
                 // Delete and empty buttons
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'action-icon-btn btn-delete';
-                deleteBtn.title = channel.can_delete ? 'Delete Channel' : 'You do not have permission.';
+                deleteBtn.title = channel.is_free_action ? 'Delete Channel' : 'You do not have permission.';
                 deleteBtn.textContent = '🗑️';
                 deleteBtn.disabled = false;
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
                     checkChannelActionPermissionAsync(
-                        channel.can_delete,
+                        channel.is_free_action,
                         channel.group_owner,
                         'delete',
                         channel.id,
@@ -258,13 +258,13 @@ function updateChannelsTable(topic, hosts) {
                 actionsWrapper.appendChild(deleteBtn);
                 const emptyBtn = document.createElement('button');
                 emptyBtn.className = 'action-icon-btn btn-empty';
-                emptyBtn.title = channel.can_empty ? 'Empty Channel' : 'You do not have permission.';
+                emptyBtn.title = channel.is_free_action ? 'Empty Channel' : 'You do not have permission.';
                 emptyBtn.textContent = '🧹';
                 emptyBtn.disabled = false;
                 emptyBtn.onclick = (e) => {
                     e.stopPropagation();
                     checkChannelActionPermissionAsync(
-                        channel.can_empty,
+                        channel.is_free_action,
                         channel.group_owner,
                         'empty',
                         channel.id,

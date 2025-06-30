@@ -1,8 +1,8 @@
 // Tail panel logic for topic details
 
 // Helper for permission and login check (async)
-function checkActionPermissionAsync(permissionFlag, groupOwner, actionName, entityId, cb) {
-    if (permissionFlag) { cb(true); return; }
+function checkActionPermissionAsync(isFreeAction, groupOwner, actionName, entityId, cb) {
+    if (isFreeAction) { cb(true); return; }
     if (!(window.parent.isLogin && window.parent.isLogin())) {
         if (window.parent.showModalOverlay) {
             window.parent.showModalOverlay(`This topic is owned by ${escapeHtml(groupOwner)}. You must login to perform this action`);
@@ -66,7 +66,7 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         var currentTopicDetail = getCurrentTopicDetail && getCurrentTopicDetail();
         if (!currentTopicDetail) return;
         checkActionPermissionAsync(
-            currentTopicDetail.permission.can_tail,
+            currentTopicDetail.is_free_action,
             currentTopicDetail.group_owner,
             'tail',
             currentTopicDetail.id,

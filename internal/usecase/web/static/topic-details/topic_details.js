@@ -142,8 +142,8 @@ $(function() {
         });
 
         // Helper for permission and login check (async)
-        function checkActionPermissionAsync(permissionFlag, groupOwner, actionName, entityId, cb) {
-            if (permissionFlag) { cb(true); return; }
+        function checkActionPermissionAsync(isFreeAction, groupOwner, actionName, entityId, cb) {
+            if (isFreeAction) { cb(true); return; }
             if (!(window.parent.isLogin && window.parent.isLogin())) {
                 window.parent.showModalOverlay(`This topic is owned by ${escapeHtml(groupOwner)}. You must login to perform this action`);
                 cb(false); return;
@@ -196,7 +196,7 @@ $(function() {
         $('.btn-pause').off('click').on('click', function() {
             if (!currentTopicDetail) return;
             checkActionPermissionAsync(
-                currentTopicDetail.permission.can_pause,
+                currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
                 'pause',
                 currentTopicDetail.id,
@@ -246,7 +246,7 @@ $(function() {
         $('.btn-resume').off('click').on('click', function() {
             if (!currentTopicDetail) return;
             checkActionPermissionAsync(
-                currentTopicDetail.permission.can_pause,
+                currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
                 'resume',
                 currentTopicDetail.id,
@@ -296,7 +296,7 @@ $(function() {
         $('.btn-delete').off('click').on('click', function() {
             if (!currentTopicDetail) return;
             checkActionPermissionAsync(
-                currentTopicDetail.permission.can_delete,
+                currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
                 'delete',
                 currentTopicDetail.id,
@@ -346,7 +346,7 @@ $(function() {
         $('.btn-drain, .btn-empty').off('click').on('click', function() {
             if (!currentTopicDetail) return;
             checkActionPermissionAsync(
-                currentTopicDetail.permission.can_empty_queue,
+                currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
                 'empty',
                 currentTopicDetail.id,
