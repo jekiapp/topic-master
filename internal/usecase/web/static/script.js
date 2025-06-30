@@ -177,4 +177,41 @@ $(function() {
     var user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   };
+
+  // --- Profile Modal Logic ---
+  $('#profile-link').on('click', function(e) {
+    e.preventDefault();
+    var user = window.getUserInfo();
+    if (!user) {
+      window.showModalOverlay('<div style="padding:2em;">User info not found.</div>');
+      return;
+    }
+    var html = '';
+    html += '<div style="min-width:340px;max-width:440px;background:var(--primary-white);border-radius:14px;box-shadow:0 2px 12px var(--shadow-purple);padding:32px 28px 24px 28px;">';
+    html += '<h2 style="margin-top:0;color:var(--primary-purple);font-size:1.5em;">Profile</h2>';
+    html += '<div style="margin-bottom:10px;"><b style="color:var(--primary-purple);">Username:</b> <span style="color:#222;">' + user.username + '</span></div>';
+    html += '<div style="margin-bottom:18px;"><b style="color:var(--primary-purple);">Name:</b> <span style="color:#222;">' + user.name + '</span></div>';
+    if (user.group_details && user.group_details.length > 0) {
+      html += '<h3 style="margin-bottom:0.5em;margin-top:1.5em;color:var(--primary-purple);font-size:1.1em;">Groups</h3>';
+      html += '<table style="width:100%;border-collapse:collapse;background:var(--primary-white);margin-bottom:10px;">';
+      html += '<thead><tr>';
+      html += '<th style="background:var(--accent-purple);color:var(--primary-white);font-weight:600;padding:10px 8px;text-align:left;border-radius:8px 0 0 0;">Group Name</th>';
+      html += '<th style="background:var(--accent-purple);color:var(--primary-white);font-weight:600;padding:10px 8px;text-align:left;border-radius:0 8px 0 0;">Role</th>';
+      html += '</tr></thead>';
+      html += '<tbody>';
+      user.group_details.forEach(function(g, idx) {
+        html += '<tr style="border-bottom:1px solid var(--border-purple);' + (idx === user.group_details.length-1 ? 'border-bottom:none;' : '') + '">';
+        html += '<td style="padding:10px 8px;color:#222;">' + g.group_name + '</td>';
+        html += '<td style="padding:10px 8px;color:#222;">' + g.role + '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '<div style="text-align:right;margin-top:1.5em;"><button id="close-profile-modal" style="padding:7px 22px;background:var(--accent-purple);color:var(--primary-white);border:none;border-radius:8px;font-size:1em;cursor:pointer;">Close</button></div>';
+    html += '</div>';
+    window.showModalOverlay(html);
+    $(document).off('click', '#close-profile-modal').on('click', '#close-profile-modal', function() {
+      window.hideModalOverlay();
+    });
+  });
 });

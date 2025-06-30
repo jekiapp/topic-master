@@ -90,7 +90,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		listMyApplicationsUC:    tickets.NewListMyApplicationsUsecase(db),
 		ticketDetailUC:          tickets.NewTicketDetailUsecase(db),
 		actionCoordinatorUC:     action.NewActionCoordinator(db),
-		getUsernameUC:           aclUser.NewGetUsernameUsecase(),
+		getUsernameUC:           aclUser.NewGetUsernameUsecase(db),
 		getTopicDetailUC:        topicDetailUC.NewNsqTopicDetailUsecase(cfg, db),
 		getTopicStatsUC:         topicDetailUC.NewNsqTopicStatsUsecase(cfg),
 		tailMessageUC:           topicDetailUC.NewTailMessageUsecase(),
