@@ -22,6 +22,20 @@ $(function() {
     $("h2").text("All Topics");
   }
 
+  let originalTopics = [];
+
+  function renderTopics(topics) {
+    const rows = topics.map(function(t) {
+      return `<tr class="topic-row" data-id="${t.id}" data-bookmarked="${t.bookmarked}">
+        <td>${t.name || ''}</td>
+        <td>${t.group_owner || ''}</td>
+        <td>${t.event_trigger || ''}</td>
+        <td style="text-align:center;vertical-align:middle;">${renderBookmark(t.bookmarked)}</td>
+      </tr>`;
+    }).join('');
+    $('#topics-table tbody').html(rows || '<tr><td colspan="7">No topics found.</td></tr>');
+  }
+
   $.ajax({
     url: apiUrl,
     dataType: 'json',
@@ -33,15 +47,8 @@ $(function() {
         return;
       }
       const topics = resp.data && resp.data.topics ? resp.data.topics : [];
-      const rows = topics.map(function(t) {
-        return `<tr class="topic-row" data-id="${t.id}" data-bookmarked="${t.bookmarked}">
-          <td>${t.name || ''}</td>
-          <td>${t.group_owner || ''}</td>
-          <td>${t.event_trigger || ''}</td>
-          <td style="text-align:center;vertical-align:middle;">${renderBookmark(t.bookmarked)}</td>
-        </tr>`;
-      }).join('');
-      $('#topics-table tbody').html(rows || '<tr><td colspan="7">No topics found.</td></tr>');
+      originalTopics = topics;
+      renderTopics(topics);
       // Add click handler for rows
       $('#topics-table').off('click', '.topic-row').on('click', '.topic-row', function(e) {
         // Prevent row click if bookmark icon was clicked
@@ -89,6 +96,40 @@ $(function() {
       } else {
         $('#topics-table tbody').html('<tr><td colspan="7" style="color: var(--error-red);">Failed to load topics.</td></tr>');
       }
+    }
+  });
+
+  // Local search functionality
+  function doLocalSearch() {
+    const query = $('#search-bar').val();
+    if (!query) {
+      renderTopics(originalTopics);
+      return;
+    }
+    let regex;
+    try {
+      regex = new RegExp(query, 'i');
+    } catch (e) {
+      renderTopics([]);
+      return;
+    }
+    const filtered = originalTopics.filter(t => regex.test(t.name || ''));
+    renderTopics(filtered);
+  }
+
+  $('#find-btn').on('click', function() {
+    doLocalSearch();
+  });
+
+  $('#search-bar').on('input', function() {
+    if (!$(this).val()) {
+      renderTopics(originalTopics);
+    }
+  });
+
+  $('#search-bar').on('keydown', function(e) {
+    if (e.key === 'Enter') {
+      doLocalSearch();
     }
   });
 }); 

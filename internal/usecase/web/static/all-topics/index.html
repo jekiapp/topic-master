@@ -9,7 +9,14 @@
 </head>
 <body>
   <div class="topics-container">
-    <h2>All Topics</h2>
+    <div class="topics-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h2 style="margin: 0;">All Topics</h2>
+      <div class="topics-actions" style="display: flex; gap: 8px; align-items: center;">
+        <input type="text" id="search-bar" placeholder="Find topics..." style="padding: 4px 8px;" />
+        <button id="find-btn" style="padding: 4px 12px;" title="Find Topic">🔍</button>
+        <button id="refresh-btn" style="padding: 4px 12px;" title="Refresh Topic">🔄</button>
+      </div>
+    </div>
     <table id="topics-table">
       <thead>
         <tr>
