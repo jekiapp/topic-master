@@ -10,6 +10,8 @@ package topic
 
 import (
 	"context"
+	"errors"
+	"sync"
 
 	topicLogic "github.com/jekiapp/topic-master/internal/logic/topic"
 	"github.com/jekiapp/topic-master/internal/model/entity"
@@ -17,6 +19,8 @@ import (
 	nsq "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/tidwall/buntdb"
 )
+
+var ErrSyncTopicsRunning = errors.New("sync is already running")
 
 type SyncTopicsResponse struct {
 	Success bool   `json:"success"`
@@ -71,6 +75,9 @@ func (r *syncTopicsRepo) DeleteNsqChannelEntity(topic, channel string) error {
 type SyncTopicsUsecase struct {
 	db   *buntdb.DB
 	repo iSyncTopicsRepo
+
+	lock    sync.Mutex
+	running bool
 }
 
 func NewSyncTopicsUsecase(db *buntdb.DB) SyncTopicsUsecase {
@@ -80,18 +87,25 @@ func NewSyncTopicsUsecase(db *buntdb.DB) SyncTopicsUsecase {
 	}
 }
 
-func (uc SyncTopicsUsecase) HandleQuery(ctx context.Context, _ map[string]string) (SyncTopicsResponse, error) {
+func (uc *SyncTopicsUsecase) HandleQuery(ctx context.Context, _ map[string]string) (SyncTopicsResponse, error) {
+	uc.lock.Lock()
+	if uc.running {
+		uc.lock.Unlock()
+		return SyncTopicsResponse{Success: false, Error: ErrSyncTopicsRunning.Error()}, ErrSyncTopicsRunning
+	}
+	uc.running = true
+	uc.lock.Unlock()
+
+	defer func() {
+		uc.lock.Lock()
+		uc.running = false
+		uc.lock.Unlock()
+	}()
+
 	_, err := topicLogic.SyncTopics(uc.db, uc.repo)
 	if err != nil {
 		return SyncTopicsResponse{Success: false, Error: err.Error()}, err
 	}
-
-	// no need to sync channels on init
-	// the channel will be sync'ed when opening topic details
-	// // sync channels
-	// for _, topic := range topics {
-	// 	topicLogic.SyncChannels(uc.db, topic, uc.repo)
-	// }
 
 	return SyncTopicsResponse{Success: true}, nil
 }
