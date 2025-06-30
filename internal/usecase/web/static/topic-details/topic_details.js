@@ -248,7 +248,7 @@ $(function() {
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'resume',
+                'pause',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;

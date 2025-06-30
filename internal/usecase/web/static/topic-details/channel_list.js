@@ -206,7 +206,7 @@ function updateChannelsTable(topic, hosts) {
                         checkChannelActionPermissionAsync(
                             channel.is_free_action,
                             channel.group_owner,
-                            'resume',
+                            'pause',
                             channel.id,
                             function(allowed) {
                                 if (!allowed) return;
