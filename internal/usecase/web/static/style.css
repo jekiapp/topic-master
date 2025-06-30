@@ -4,6 +4,12 @@ body {
     background: var(--primary-bg);
     color: var(--primary-purple);
 }
+.navbar-icon {
+    height: 32px;
+    width: 38px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
 .dashboard-container {
     display: flex;
     height: calc(100vh - 56px); /* 56px is navbar height */
@@ -72,9 +78,12 @@ body {
     box-sizing: border-box;
 }
 .navbar-title {
+    display: flex;
+    align-items: center;
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--primary-black);
+    height: 56px;
 }
 .navbar-user {
     position: relative;

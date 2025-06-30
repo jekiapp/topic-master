@@ -59,6 +59,7 @@ function updateChannelsTable(topic, hosts) {
                 claimLink.href = 'javascript:void(0)';
                 claimLink.className = 'claim-link';
                 claimLink.style.marginLeft = '10px';
+                claimLink.style.fontSize = '12px';
                 claimLink.textContent = 'Claim';
                 claimLink.onclick = function(e) {
                     e.preventDefault();
