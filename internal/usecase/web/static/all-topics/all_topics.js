@@ -11,13 +11,24 @@ function renderBookmark(isBookmarked) {
   }
 }
 $(function() {
+  // Get current URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const isBookmarked = urlParams.get('is_bookmarked');
+  let apiUrl = '/api/topic/list-all-topics';
+  if (isBookmarked !== null) {
+    apiUrl += '?is_bookmarked=' + encodeURIComponent(isBookmarked);
+    $("h2").text("My Topics");
+  } else {
+    $("h2").text("All Topics");
+  }
+
   $.ajax({
-    url: '/api/topic/list-all-topics',
+    url: apiUrl,
     dataType: 'json',
     xhrFields: { withCredentials: true },
     success: function(resp) {
       if (resp.error) {
-        let msg = resp.error === "record not found" ? "You have no eligible topics" : resp.error;
+        let msg = resp.error === "record not found" ? "No topics found" : resp.error;
         $('#topics-table tbody').html(`<tr><td colspan="7" style="color: var(--error-red);">${msg}</td></tr>`);
         return;
       }

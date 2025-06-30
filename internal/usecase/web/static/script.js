@@ -45,7 +45,7 @@ $(function() {
   const mainIframe = $('#main-iframe');
 
   function showMyTopics() {
-    mainIframe.attr('src', 'my_topics/index.html');
+    mainIframe.attr('src', 'all-topics/index.html?is_bookmarked=true');
   }
 
   function showAccessControl() {
@@ -71,10 +71,10 @@ $(function() {
     } else if (hash === '#tickets' || hash.startsWith('#ticket-detail')) {
     $('.menu li a').removeClass('active');
       ticketsMenu.addClass('active');
-    } else if (hash === '#all-topics') {
+    } else if (hash === '#all-topics'|| hash === '') {
       $('.menu li a').removeClass('active');
       allTopicsMenu.addClass('active');
-    } else if (hash === '#my-topics' || hash === '') {
+    } else if (hash === '#my-topics') {
       $('.menu li a').removeClass('active');
       myTopicsMenu.addClass('active');
     } 
@@ -119,12 +119,12 @@ $(function() {
       showTicketsNew();
     } else if (hash.startsWith('#ticket-detail')) {
       showTicketDetail();
-    } else if (hash === '#all-topics') {
-      showAllTopics();
+    } else if (hash === '#my-topics') {
+      showMyTopics();
     } else if (hash.startsWith('#topic-detail')) {
       showTopicDetail(hash.split('=')[1]);
     } else {
-      showMyTopics();
+      showAllTopics();
     }
   }
 
