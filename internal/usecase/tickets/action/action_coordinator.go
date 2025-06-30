@@ -11,10 +11,11 @@ import (
 )
 
 type ActionCoordinator struct {
-	repo               iActionCoordinatorRepo
-	signupHandler      *SignupHandler // placeholder, defined in signup_handler.go
-	claimEntityHandler *ClaimEntityHandler
-	topicActionHandler *TopicActionHandler
+	repo                 iActionCoordinatorRepo
+	signupHandler        *SignupHandler // placeholder, defined in signup_handler.go
+	claimEntityHandler   *ClaimEntityHandler
+	topicActionHandler   *TopicActionHandler
+	channelActionHandler *ChannelActionHandler
 }
 
 type ActionRequest struct {
@@ -29,10 +30,11 @@ type ActionResponse struct {
 
 func NewActionCoordinator(db *buntdb.DB) *ActionCoordinator {
 	return &ActionCoordinator{
-		repo:               &actionCoordinatorRepo{db: db},
-		signupHandler:      NewSignupHandler(db),
-		claimEntityHandler: NewClaimEntityHandler(db),
-		topicActionHandler: NewTopicActionHandler(db),
+		repo:                 &actionCoordinatorRepo{db: db},
+		signupHandler:        NewSignupHandler(db),
+		claimEntityHandler:   NewClaimEntityHandler(db),
+		topicActionHandler:   NewTopicActionHandler(db),
+		channelActionHandler: NewChannelActionHandler(db),
 	}
 }
 
@@ -82,6 +84,12 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 		})
 	case acl.ApplicationType_TopicForm:
 		return ac.topicActionHandler.HandleTopicAction(ctx, TopicActionInput{
+			Action:      req.Action,
+			Application: app,
+			Assignments: assignments,
+		})
+	case acl.ApplicationType_ChannelForm:
+		return ac.channelActionHandler.HandleChannelAction(ctx, ChannelActionInput{
 			Action:      req.Action,
 			Application: app,
 			Assignments: assignments,

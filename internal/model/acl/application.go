@@ -15,9 +15,10 @@ const (
 	IdxApplication_UserID_CreatedAt = TableApplication + ":user_id_created_at"
 	IdxApplication_Type             = TableApplication + ":type"
 
-	ApplicationType_Signup    = "signup"
-	ApplicationType_Claim     = "claim"
-	ApplicationType_TopicForm = "topic_action"
+	ApplicationType_Signup      = "signup"
+	ApplicationType_Claim       = "claim"
+	ApplicationType_TopicForm   = "topic_action"
+	ApplicationType_ChannelForm = "channel_action"
 
 	// Status constants
 	StatusWaitingForApproval = "waiting for approval"

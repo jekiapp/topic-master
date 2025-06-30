@@ -38,13 +38,21 @@ var (
 )
 
 var PermissionList = map[string]Permission{
+	// common permissions
+	Permission_Claim_Entity.Name: Permission_Claim_Entity,
+	Permission_Signup_User.Name:  Permission_Signup_User,
+
+	// topic permissions
 	Permission_Topic_Publish.Name: Permission_Topic_Publish,
 	Permission_Topic_Tail.Name:    Permission_Topic_Tail,
 	Permission_Topic_Delete.Name:  Permission_Topic_Delete,
 	Permission_Topic_Drain.Name:   Permission_Topic_Drain,
 	Permission_Topic_Pause.Name:   Permission_Topic_Pause,
-	Permission_Claim_Entity.Name:  Permission_Claim_Entity,
-	Permission_Signup_User.Name:   Permission_Signup_User,
+
+	// channel permissions
+	Permission_Channel_Pause.Name:  Permission_Channel_Pause,
+	Permission_Channel_Empty.Name:  Permission_Channel_Empty,
+	Permission_Channel_Delete.Name: Permission_Channel_Delete,
 }
 
 var TopicActionPermissions = []Permission{
@@ -53,4 +61,25 @@ var TopicActionPermissions = []Permission{
 	Permission_Topic_Drain,
 	Permission_Topic_Pause,
 	Permission_Topic_Delete,
+}
+
+var (
+	Permission_Channel_Pause = Permission{
+		Name:        "pause",
+		Description: "Pause a channel",
+	}
+	Permission_Channel_Empty = Permission{
+		Name:        "empty",
+		Description: "Empty a channel",
+	}
+	Permission_Channel_Delete = Permission{
+		Name:        "delete",
+		Description: "Delete a channel",
+	}
+)
+
+var ChannelActionPermissions = []Permission{
+	Permission_Channel_Pause,
+	Permission_Channel_Empty,
+	Permission_Channel_Delete,
 }

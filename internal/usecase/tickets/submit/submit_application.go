@@ -23,12 +23,14 @@ type SubmitApplicationResponse struct {
 }
 
 type SubmitApplicationUsecase struct {
-	TopicActionUsecase TopicActionSubmitUsecase
+	TopicActionUsecase   TopicActionSubmitUsecase
+	ChannelActionUsecase ChannelActionSubmitUsecase
 }
 
 func NewSubmitApplicationUsecase(db *buntdb.DB) SubmitApplicationUsecase {
 	return SubmitApplicationUsecase{
-		TopicActionUsecase: NewTopicActionSubmitUsecase(db),
+		TopicActionUsecase:   NewTopicActionSubmitUsecase(db),
+		ChannelActionUsecase: NewChannelActionSubmitUsecase(db),
 	}
 }
 
@@ -39,6 +41,9 @@ func (uc SubmitApplicationUsecase) Handle(ctx context.Context, req SubmitApplica
 
 	if req.ApplicationType == acl.ApplicationType_TopicForm {
 		return uc.TopicActionUsecase.Handle(ctx, req)
+	}
+	if req.ApplicationType == acl.ApplicationType_ChannelForm {
+		return uc.ChannelActionUsecase.Handle(ctx, req)
 	}
 	return SubmitApplicationResponse{}, fmt.Errorf("application type not supported")
 }

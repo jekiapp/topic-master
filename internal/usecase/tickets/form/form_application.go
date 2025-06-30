@@ -41,12 +41,14 @@ type fieldResponse struct {
 }
 
 type NewApplicationUsecase struct {
-	topicActionUsecase TopicActionUsecase
+	topicActionUsecase   TopicActionUsecase
+	channelActionUsecase ChannelActionUsecase
 }
 
 func NewNewApplicationUsecase(db *buntdb.DB) NewApplicationUsecase {
 	return NewApplicationUsecase{
-		topicActionUsecase: NewFormTopicActionUsecase(db),
+		topicActionUsecase:   NewFormTopicActionUsecase(db),
+		channelActionUsecase: NewFormChannelActionUsecase(db),
 	}
 }
 
@@ -56,6 +58,10 @@ func (uc NewApplicationUsecase) Handle(ctx context.Context, req map[string]strin
 
 	if typeApplication == acl.ApplicationType_TopicForm {
 		return uc.topicActionUsecase.getTopicForm(ctx, entityID)
+	}
+
+	if typeApplication == acl.ApplicationType_ChannelForm {
+		return uc.channelActionUsecase.getChannelForm(ctx, entityID)
 	}
 
 	return NewApplicationResponse{}, errors.New("type not supported")
