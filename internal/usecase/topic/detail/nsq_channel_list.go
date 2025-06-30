@@ -29,6 +29,10 @@ type NsqChannelResponse struct {
 	Description  string `json:"description"`
 	Topic        string `json:"topic"`
 	IsPaused     bool   `json:"is_paused"`
+
+	CanPause  bool `json:"can_pause"`
+	CanEmpty  bool `json:"can_empty"`
+	CanDelete bool `json:"can_delete"`
 }
 
 func NewNsqChannelListUsecase(db *buntdb.DB) NsqChannelListUsecase {
@@ -126,8 +130,12 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 
 	user := util.GetUserInfo(ctx)
 	userID := ""
+	userGroups := map[string]struct{}{}
 	if user != nil {
 		userID = user.ID
+		for _, g := range user.Groups {
+			userGroups[g.GroupName] = struct{}{}
+		}
 	}
 
 	channelResponses := make([]NsqChannelResponse, 0, len(channelStats))
@@ -144,6 +152,12 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 			}
 		}
 
+		// Permission logic (simplified like topic_detail)
+		canPause, canEmpty, canDelete := false, false, false
+		if c.GroupOwner == entity.GroupNone || (user != nil && userGroups[c.GroupOwner] == struct{}{}) {
+			canPause, canEmpty, canDelete = true, true, true
+		}
+
 		channelResponses = append(channelResponses, NsqChannelResponse{
 			ID:           c.ID,
 			Name:         c.Name,
@@ -152,6 +166,9 @@ func (uc NsqChannelListUsecase) HandleQuery(ctx context.Context, params map[stri
 			Topic:        c.Metadata["topic"],
 			IsBookmarked: isBookmarked,
 			IsPaused:     cstats.Paused,
+			CanPause:     canPause,
+			CanEmpty:     canEmpty,
+			CanDelete:    canDelete,
 		})
 	}
 

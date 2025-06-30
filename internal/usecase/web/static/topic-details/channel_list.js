@@ -198,30 +198,82 @@ function updateChannelsTable(topic, hosts) {
                 if (channel.is_paused) {
                     const resumeBtn = document.createElement('button');
                     resumeBtn.className = 'action-icon-btn btn-resume';
-                    resumeBtn.title = 'Resume Channel';
+                    resumeBtn.title = channel.can_pause ? 'Resume Channel' : 'You do not have permission.';
                     resumeBtn.textContent = '▶️';
-                    resumeBtn.onclick = () => handleChannelAction('resume', channel.name);
+                    resumeBtn.disabled = false;
+                    resumeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        checkChannelActionPermissionAsync(
+                            channel.can_pause,
+                            channel.group_owner,
+                            'resume',
+                            channel.id,
+                            function(allowed) {
+                                if (!allowed) return;
+                                handleChannelAction('resume', channel.name);
+                            }
+                        );
+                    };
                     actionsWrapper.appendChild(resumeBtn);
                 } else {
                     const pauseBtn = document.createElement('button');
                     pauseBtn.className = 'action-icon-btn btn-pause';
-                    pauseBtn.title = 'Pause Channel';
+                    pauseBtn.title = channel.can_pause ? 'Pause Channel' : 'You do not have permission.';
                     pauseBtn.textContent = '⏸️';
-                    pauseBtn.onclick = () => handleChannelAction('pause', channel.name);
+                    pauseBtn.disabled = false;
+                    pauseBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        checkChannelActionPermissionAsync(
+                            channel.can_pause,
+                            channel.group_owner,
+                            'pause',
+                            channel.id,
+                            function(allowed) {
+                                if (!allowed) return;
+                                handleChannelAction('pause', channel.name);
+                            }
+                        );
+                    };
                     actionsWrapper.appendChild(pauseBtn);
                 }
                 // Delete and empty buttons
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'action-icon-btn btn-delete';
-                deleteBtn.title = 'Delete Channel';
+                deleteBtn.title = channel.can_delete ? 'Delete Channel' : 'You do not have permission.';
                 deleteBtn.textContent = '🗑️';
-                deleteBtn.onclick = () => handleChannelAction('delete', channel.name);
+                deleteBtn.disabled = false;
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    checkChannelActionPermissionAsync(
+                        channel.can_delete,
+                        channel.group_owner,
+                        'delete',
+                        channel.id,
+                        function(allowed) {
+                            if (!allowed) return;
+                            handleChannelAction('delete', channel.name);
+                        }
+                    );
+                };
                 actionsWrapper.appendChild(deleteBtn);
                 const emptyBtn = document.createElement('button');
                 emptyBtn.className = 'action-icon-btn btn-empty';
-                emptyBtn.title = 'Empty Channel';
+                emptyBtn.title = channel.can_empty ? 'Empty Channel' : 'You do not have permission.';
                 emptyBtn.textContent = '🧹';
-                emptyBtn.onclick = () => handleChannelAction('empty', channel.name);
+                emptyBtn.disabled = false;
+                emptyBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    checkChannelActionPermissionAsync(
+                        channel.can_empty,
+                        channel.group_owner,
+                        'empty',
+                        channel.id,
+                        function(allowed) {
+                            if (!allowed) return;
+                            handleChannelAction('empty', channel.name);
+                        }
+                    );
+                };
                 actionsWrapper.appendChild(emptyBtn);
                 
                 actionsCell.appendChild(actionsWrapper);
@@ -358,5 +410,49 @@ function handleChannelAction(action, channelName) {
             break;
         default:
             console.log(`Unknown action: ${action}`);
+    }
+}
+
+// Helper to check channel action permission (async, like topic_details.js)
+function checkChannelActionPermissionAsync(canFlag, groupOwner, actionName, entityId, cb) {
+    if (canFlag) { cb(true); return; }
+    if (!(window.parent.isLogin && window.parent.isLogin())) {
+        showChannelPermissionModal({id: entityId}, actionName, groupOwner);
+        cb(false); return;
+    }
+    // User is logged in, check with backend
+    fetch('/api/auth/check-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName, entity_id: entityId })
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if (data && data.data && data.data.allowed) {
+            cb(true);
+        } else {
+            showChannelPermissionModal({id: entityId}, actionName, groupOwner);
+            cb(false);
+        }
+    })
+    .catch(() => {
+        showChannelPermissionModal({id: entityId}, actionName, groupOwner);
+        cb(false);
+    });
+}
+
+// Update showChannelPermissionModal to accept groupOwner for login message
+function showChannelPermissionModal(channel, action, groupOwner) {
+    const applyUrl = `#tickets-new?type=channel_action&entity_id=${channel.id}&action=${action}`;
+    let msg = '';
+    if (!(window.parent.isLogin && window.parent.isLogin())) {
+        msg = `This channel is owned by ${groupOwner || '-'}.<br/>You must login to perform this action.`;
+    } else {
+        msg = `You do not have permission to perform this action.<br/><br/><a href="${applyUrl}" target="_blank">Apply for permission</a>`;
+    }
+    if (window.parent && window.parent.showModalOverlay) {
+        window.parent.showModalOverlay(msg);
+    } else {
+        alert('You do not have permission. Apply at: ' + applyUrl);
     }
 } 
