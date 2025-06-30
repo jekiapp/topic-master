@@ -23,22 +23,13 @@ type NsqTopicDetailResponse struct {
 	EventTrigger   string                `json:"event_trigger"`
 	GroupOwner     string                `json:"group_owner"`
 	Bookmarked     bool                  `json:"bookmarked"`
-	Permission     Permission            `json:"permission"`
+	IsFreeAction   bool                  `json:"is_free_action"`
 	NsqdHosts      []nsqmodel.SimpleNsqd `json:"nsqd_hosts"`
 	PlatformStatus PlatformStatus        `json:"platform_status"`
 }
 
 type PlatformStatus struct {
 	IsPaused bool `json:"is_paused"`
-}
-
-type Permission struct {
-	CanPause              bool `json:"can_pause"`
-	CanPublish            bool `json:"can_publish"`
-	CanTail               bool `json:"can_tail"`
-	CanDelete             bool `json:"can_delete"`
-	CanEmpty              bool `json:"can_empty"`
-	CanUpdateEventTrigger bool `json:"can_update_event_trigger"`
 }
 
 type NsqTopicDetailUsecase struct {
@@ -87,16 +78,9 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		}
 	}
 
-	permission := Permission{}
-	if ent.GroupOwner == entity.GroupNone || topicOwned {
-		permission = Permission{
-			CanPause:              true,
-			CanPublish:            true,
-			CanTail:               true,
-			CanDelete:             true,
-			CanEmpty:              true,
-			CanUpdateEventTrigger: true,
-		}
+	isFreeAction := true
+	if ent.GroupOwner != entity.GroupNone && !topicOwned {
+		isFreeAction = false
 	}
 
 	// --- Fill Bookmarked ---
@@ -130,7 +114,7 @@ func (uc NsqTopicDetailUsecase) HandleQuery(ctx context.Context, params map[stri
 		EventTrigger:   ent.Description,
 		GroupOwner:     ent.GroupOwner,
 		Bookmarked:     bookmarked,
-		Permission:     permission,
+		IsFreeAction:   isFreeAction,
 		NsqdHosts:      nsqdHosts,
 		PlatformStatus: platformStatus,
 	}
