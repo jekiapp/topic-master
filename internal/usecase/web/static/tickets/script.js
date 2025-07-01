@@ -60,7 +60,7 @@ $(document).ready(function() {
                 $('#assignments-next').prop('disabled', !assignmentsHasNext);
             },
             error: function() {
-                alert('Failed to load assignments.');
+                window.parent.showModalOverlay('Failed to load assignments.');
             }
         });
     }
@@ -124,7 +124,7 @@ $(document).ready(function() {
                 $('#applications-next').prop('disabled', !applicationsHasNext);
             },
             error: function() {
-                alert('Failed to load applications.');
+                window.parent.showModalOverlay('Failed to load applications.');
             }
         });
     }

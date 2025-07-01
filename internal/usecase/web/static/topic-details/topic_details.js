@@ -10,7 +10,7 @@ function getUserInfo() {
 $(function() {
     var topicID = getTopicIDFromURL();
     if (!topicID) {
-        alert('Topic name is required');
+        window.showModalOverlay('Topic name is required');
         return;
     }
 
@@ -21,7 +21,7 @@ $(function() {
     // Fetch topic detail ONCE
     $.get('/api/topic/detail', { topic: topicID }, function(response) {
         if (!response || !response.data) {
-            alert('Failed to load topic detail');
+            window.showModalOverlay('Failed to load topic detail');
             return;
         }
         var detail = response.data;
@@ -61,7 +61,7 @@ $(function() {
                     updateEventTriggerButtons();
                 },
                 error: function() {
-                    alert('Failed to update event trigger');
+                    window.showModalOverlay('Failed to update event trigger');
                 }
             });
         });
@@ -91,7 +91,7 @@ $(function() {
                     if (window.parent && window.parent.showModalOverlay) {
                         window.parent.showModalOverlay('You need to login to bookmark topic');
                     } else {
-                        alert('You need to login to bookmark topic');
+                        window.showModalOverlay('You need to login to bookmark topic');
                     }
                     return;
                 }
@@ -111,7 +111,7 @@ $(function() {
                         if (xhr.responseJSON && xhr.responseJSON.error) {
                             msg += ': ' + xhr.responseJSON.error;
                         }
-                        alert(msg);
+                        window.showModalOverlay(msg);
                     }
                 });
             });
@@ -123,7 +123,7 @@ $(function() {
                 if (window.parent && window.parent.showModalOverlay) {
                     window.parent.showModalOverlay('You need to login to bookmark topic');
                 } else {
-                    alert('You need to login to bookmark topic');
+                    window.showModalOverlay('You need to login to bookmark topic');
                 }
             });
         }
@@ -428,7 +428,7 @@ $(function() {
             );
         });
     }).fail(function() {
-        alert('Failed to load topic detail');
+        window.showModalOverlay('Failed to load topic detail');
     });
 
     // Back button (optional: history.back or custom logic)

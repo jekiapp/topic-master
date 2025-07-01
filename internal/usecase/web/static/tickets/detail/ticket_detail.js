@@ -14,7 +14,7 @@ $(function() {
 
     const ticketId = getQueryParam('id');
     if (!ticketId) {
-        alert('No ticket id specified');
+        window.parent.showModalOverlay('No ticket id specified');
         return;
     }
 
@@ -109,7 +109,7 @@ $(function() {
                                     location.reload();
                                 },
                                 error: function(xhr) {
-                                    alert('Action failed: ' + (xhr.responseText || xhr.status));
+                                    window.parent.showModalOverlay('Action failed: ' + (xhr.responseText || xhr.status));
                                 }
                             });
                         });
@@ -118,7 +118,7 @@ $(function() {
             }
         },
         error: function(xhr) {
-            alert('Failed to load ticket detail: ' + (xhr.responseText || xhr.status));
+            window.parent.showModalOverlay('Failed to load ticket detail: ' + (xhr.responseText || xhr.status));
         }
     });
 

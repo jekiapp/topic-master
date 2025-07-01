@@ -185,7 +185,7 @@ function updateChannelsTable(topic, hosts) {
                             bookmarkImg.title = !newState ? 'Remove Bookmark' : 'Add Bookmark';
                             channel.is_bookmarked = !newState;
                             resp.json().then(data => {
-                                alert(data.error || 'Failed to toggle bookmark');
+                                window.parent.showModalOverlay(data.error || 'Failed to toggle bookmark');
                             });
                         }
                     }).catch(() => {
@@ -193,7 +193,7 @@ function updateChannelsTable(topic, hosts) {
                         bookmarkImg.src = !newState ? '/icons/bookmark-true.png' : '/icons/bookmark-false.png';
                         bookmarkImg.title = !newState ? 'Remove Bookmark' : 'Add Bookmark';
                         channel.is_bookmarked = !newState;
-                        alert('Failed to toggle bookmark');
+                        window.parent.showModalOverlay('Failed to toggle bookmark');
                     });
                 };
                 actionsWrapper.appendChild(bookmarkImg);

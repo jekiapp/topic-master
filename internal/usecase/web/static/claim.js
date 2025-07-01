@@ -85,7 +85,7 @@ window.handleClaimEntity = function({ entityId, entityName, group, reason }) {
             if (xhr.responseJSON && xhr.responseJSON.error) {
                 msg += ': ' + xhr.responseJSON.error;
             }
-            alert(msg);
+            window.showModalOverlay(msg);
         }
     });
 };

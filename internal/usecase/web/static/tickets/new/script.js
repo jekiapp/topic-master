@@ -152,7 +152,7 @@ $(function() {
         }).get();
         // Basic validation
         if (!entityId || permissions.length === 0) {
-            alert('Please select at least one permission.');
+            window.parent.showModalOverlay('Please select at least one permission.');
             return;
         }
         // Prepare payload
@@ -173,7 +173,7 @@ $(function() {
                 if (data && data.app_url) {
                     window.parent.location.hash = data.app_url;
                 } else {
-                    alert('Submission succeeded but no redirect URL returned.');
+                    window.parent.showModalOverlay('Submission succeeded but no redirect URL returned.');
                 }
             },
             error: function(xhr) {
@@ -181,7 +181,7 @@ $(function() {
                 if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
                     msg += '\n' + xhr.responseJSON.error;
                 }
-                alert(msg);
+                window.parent.showModalOverlay(msg);
             }
         });
     });

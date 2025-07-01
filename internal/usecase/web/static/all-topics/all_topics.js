@@ -14,12 +14,20 @@ $(function() {
   // Get current URL params
   const urlParams = new URLSearchParams(window.location.search);
   const isBookmarked = urlParams.get('is_bookmarked');
-  let apiUrl = '/api/topic/list-all-topics';
+  // Set heading once based on isBookmarked
   if (isBookmarked !== null) {
-    apiUrl += '?is_bookmarked=' + encodeURIComponent(isBookmarked);
     $("h2").text("My Topics");
   } else {
     $("h2").text("All Topics");
+  }
+  // If is_bookmarked is set and user is not logged in, show message and exit
+  if (isBookmarked !== null && (!window.parent.isLogin || !window.parent.isLogin())) {
+    $('#topics-table tbody').html('<tr><td colspan="7" style="color: var(--error-red);">Please login to see bookmarked topics</td></tr>');
+    return;
+  }
+  let apiUrl = '/api/topic/list-all-topics';
+  if (isBookmarked !== null) {
+    apiUrl += '?is_bookmarked=' + encodeURIComponent(isBookmarked);
   }
 
   let originalTopics = [];
@@ -67,7 +75,7 @@ $(function() {
         const id = $row.data('id');
         let bookmarked = $row.data('bookmarked');
         if (!window.parent.isLogin || !window.parent.isLogin()) {
-          alert('Please log in to bookmark topics.');
+          window.parent.showModalOverlay('Please log in to bookmark topics.');
           return;
         }
         $.ajax({
@@ -86,7 +94,7 @@ $(function() {
             if (xhr.responseJSON && xhr.responseJSON.error) {
               msg += ': ' + xhr.responseJSON.error;
             }
-            alert(msg);
+            window.showModalOverlay(msg);
           }
         });
       });
@@ -146,7 +154,7 @@ $(function() {
           // re-fetch topics
           location.reload();
         } else {
-          alert(resp && resp.error ? resp.error : 'Failed to sync topics');
+          window.showModalOverlay(resp && resp.error ? resp.error : 'Failed to sync topics');
         }
       },
       error: function(xhr) {
@@ -154,7 +162,7 @@ $(function() {
         if (xhr.responseJSON && xhr.responseJSON.error) {
           msg = xhr.responseJSON.error;
         }
-        alert(msg);
+        window.showModalOverlay(msg);
       },
       complete: function() {
         $btn.prop('disabled', false).text('🔄');

@@ -242,7 +242,7 @@ function bindGroupEvents() {
             if (data.error) msg = data.error;
           } catch {}
         }
-        alert(msg);
+        window.showModalOverlay(msg);
       }
     });
   });
@@ -415,7 +415,7 @@ function bindUserEvents() {
     const pwd = $('#created-password').text();
     if (pwd) {
       navigator.clipboard.writeText(pwd);
-      alert('Password copied to clipboard');
+      window.showModalOverlay('Password copied to clipboard');
     }
   });
   // Bind edit-user button
@@ -459,7 +459,7 @@ function bindUserEvents() {
             if (data.error) msg = data.error;
           } catch {}
         }
-        alert(msg);
+        window.showModalOverlay(msg);
       }
     });
   });
@@ -482,7 +482,7 @@ function showUpdateUserPopup(userId) {
   // Use offline user data
   const u = window._userListById[userId];
   if (!u) {
-    alert('User data not found');
+    window.showModalOverlay('User data not found');
     return;
   }
   $('#update-user-username').val(u.username);

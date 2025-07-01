@@ -14,7 +14,7 @@ function checkActionPermissionAsync(isFreeAction, groupOwner, actionName, entity
         if (window.parent.showModalOverlay) {
             window.parent.showModalOverlay(`This topic is owned by ${escapeHtml(groupOwner)}. You must login to perform this action`);
         } else {
-            alert(`This topic is owned by ${groupOwner}. You must login to perform this action`);
+            window.showModalOverlay(`This topic is owned by ${groupOwner}. You must login to perform this action`);
         }
         cb(false); return;
     }
@@ -40,7 +40,7 @@ function checkActionPermissionAsync(isFreeAction, groupOwner, actionName, entity
             if (window.parent.showModalOverlay) {
                 window.parent.showModalOverlay(msg);
             } else {
-                alert(msg);
+                window.showModalOverlay(msg);
             }
             cb(false);
         }
