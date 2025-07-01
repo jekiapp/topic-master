@@ -16,7 +16,7 @@ should show alert please login to claim [v]
 
 Topic detail owner None:
 -  can change event trigger [v]
-- can do all topic action  [x]
+- can do all topic action  [v]
    - pause [v]
    - publish [v]
    - empty [v]
@@ -26,22 +26,22 @@ Topic detail owner None:
 
 
 Topic detail owner present:
-- cannot change event trigger 
-- cannot do action, 
-- the link should say please login to apply for permission
+- cannot change event trigger [v]
+- cannot do action, [v]
+- the link should say please login to apply for permission [v]
 
 Channel owner None:
-- can do all channel action
+- can do all channel action [v]
    - pause 
    - resume
    - empty
    - delete
 
 Channel owner present:
-- the link should say please login to apply for permission
+- the link should say please login to apply for permission [v]
 
 My Topics 
-- should say, please login to bookmark topics 
+- should say, please login to bookmark topics [v]
 
 Tickets
-- should say, please login to see assignment/application
+- should say, please login to see assignment/application [v]
