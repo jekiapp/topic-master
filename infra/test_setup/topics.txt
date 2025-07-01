@@ -17,4 +17,4 @@ product_viewed
 product_reviewed
 promotion_created
 promotion_applied
-refund_requested 
+refund_requested

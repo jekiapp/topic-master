@@ -46,6 +46,7 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) (topics []string, err er
 		// If a topic exists in DB but not in the source, delete it from DB
 		// another option is to mark it as deleted
 		if _, ok := topicSet[entity.Name]; !ok {
+			log.Println("[INFO] Deleting topic from DB: ", entity.Name)
 			if delErr := iSyncTopics.DeleteNsqTopicEntity(entity.Name); delErr != nil {
 				// Collect deletion errors
 				errSet = errors.Join(errSet, errors.New("DeleteNsqTopicEntity("+entity.Name+"): "+delErr.Error()))
@@ -56,6 +57,7 @@ func SyncTopics(db *buntdb.DB, iSyncTopics ISyncTopics) (topics []string, err er
 	// For each topic in the source, if not found in DB, create it in DB
 	for t := range topicSet {
 		if _, ok := dbTopicSet[t]; !ok {
+			log.Println("[INFO] Creating topic in DB: ", t)
 			if _, createErr := iSyncTopics.CreateNsqTopicEntity(t); createErr != nil {
 				// Collect creation errors
 				errSet = errors.Join(errSet, errors.New("CreateNsqTopicEntity("+t+"): "+createErr.Error()))
