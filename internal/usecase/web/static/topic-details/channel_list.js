@@ -158,11 +158,15 @@ function updateChannelsTable(topic, hosts) {
                 bookmarkImg.style.marginRight = '8px';
                 bookmarkImg.src = channel.is_bookmarked ? '/icons/bookmark-true.png' : '/icons/bookmark-false.png';
                 bookmarkImg.title = channel.is_bookmarked ? 'Remove Bookmark' : 'Add Bookmark';
-                bookmarkImg.style.cursor = (window.parent.isLogin && window.parent.isLogin()) ? 'pointer' : 'not-allowed';
+                // bookmarkImg.style.cursor = (window.parent.isLogin && window.parent.isLogin()) ? 'pointer' : 'not-allowed';
                 bookmarkImg.onclick = function(e) {
                     e.stopPropagation();
                     if (!(window.parent.isLogin && window.parent.isLogin())) {
-                        alert('Please log in to bookmark channels.');
+                        if (window.parent && window.parent.showModalOverlay) {
+                            window.parent.showModalOverlay('You need to login to bookmark channel');
+                        } else {
+                            alert('You need to login to bookmark channel');
+                        }
                         return;
                     }
                     const newState = !channel.is_bookmarked;

@@ -1,5 +1,12 @@
 // Tail panel logic for topic details
 
+// Helper to escape HTML
+function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, function(m) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
+    });
+}
+
 // Helper for permission and login check (async)
 function checkActionPermissionAsync(isFreeAction, groupOwner, actionName, entityId, cb) {
     if (isFreeAction) { cb(true); return; }
@@ -199,13 +206,6 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         }
         setTailingActive(false);
     });
-
-    // Helper to escape HTML
-    function escapeHtml(text) {
-        return text.replace(/[&<>"']/g, function(m) {
-            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
-        });
-    }
 }
 
 window.initTailPanel = initTailPanel;

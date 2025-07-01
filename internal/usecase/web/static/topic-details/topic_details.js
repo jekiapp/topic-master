@@ -88,7 +88,11 @@ $(function() {
             bookmarkImg.off('click').on('click', function(e) {
                 e.preventDefault();
                 if (!window.parent.isLogin || !window.parent.isLogin()) {
-                    alert('Please log in to bookmark topics.');
+                    if (window.parent && window.parent.showModalOverlay) {
+                        window.parent.showModalOverlay('You need to login to bookmark topic');
+                    } else {
+                        alert('You need to login to bookmark topic');
+                    }
                     return;
                 }
                 $.ajax({
@@ -116,7 +120,11 @@ $(function() {
             bookmarkImg.attr('title', 'Log in to bookmark');
             bookmarkImg.off('click').on('click', function(e) {
                 e.preventDefault();
-                alert('Please log in to bookmark topics.');
+                if (window.parent && window.parent.showModalOverlay) {
+                    window.parent.showModalOverlay('You need to login to bookmark topic');
+                } else {
+                    alert('You need to login to bookmark topic');
+                }
             });
         }
 
