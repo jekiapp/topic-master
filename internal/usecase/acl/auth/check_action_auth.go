@@ -59,10 +59,7 @@ func NewCheckActionAuthUsecase(db *buntdb.DB) CheckActionAuthUsecase {
 
 func (uc CheckActionAuthUsecase) Handle(ctx context.Context, req CheckActionAuthRequest) (CheckActionAuthResponse, error) {
 	user := util.GetUserInfo(ctx)
-	if user == nil {
-		return CheckActionAuthResponse{Allowed: false, Error: "user not found"}, nil
-	}
-	err := auth.CheckUserActionPermission(*user, req.EntityID, req.Action, uc.repo)
+	err := auth.CheckUserActionPermission(user, req.EntityID, req.Action, uc.repo)
 	if err != nil {
 		return CheckActionAuthResponse{Allowed: false, Error: err.Error()}, nil
 	}

@@ -155,11 +155,6 @@ func JWTMiddleware(next http.HandlerFunc, secret string) http.HandlerFunc {
 func InitActionAuthMiddleware(secret string, usecase aclusecase.CheckActionAuthUsecase) func(next http.HandlerFunc, action string) http.HandlerFunc {
 	return func(next http.HandlerFunc, action string) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			user := util.GetUserInfo(r.Context())
-			if user == nil {
-				http.Error(w, "Unauthorized: user not found", http.StatusUnauthorized)
-				return
-			}
 
 			entityID := r.URL.Query().Get("entity_id")
 			if entityID == "" {

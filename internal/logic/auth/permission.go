@@ -15,7 +15,7 @@ type ICheckUserActionPermission interface {
 }
 
 // CheckUserEntityActionPermission checks if a user can perform an action on an entity.
-func CheckUserActionPermission(user acl.User, entityID string, action string, deps ICheckUserActionPermission) error {
+func CheckUserActionPermission(user *acl.User, entityID string, action string, deps ICheckUserActionPermission) error {
 	// 1. Fetch entity by ID
 	ent, err := deps.GetEntityByID(entityID)
 	if err != nil {
@@ -25,6 +25,10 @@ func CheckUserActionPermission(user acl.User, entityID string, action string, de
 	// 2. If entity GroupOwner is empty or None, allow
 	if ent.GroupOwner == "" || ent.GroupOwner == entity.GroupNone {
 		return nil
+	}
+
+	if user == nil {
+		return errors.New("This entity is owned by a group, please login to perform this action")
 	}
 
 	// 3. If owner is not nil, check group membership

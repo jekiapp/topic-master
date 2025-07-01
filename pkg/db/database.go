@@ -380,7 +380,7 @@ func DeleteByID[Y any](db *buntdb.DB, id string) error {
 			idxKey := key + ":" + field
 			_, err := tx.Delete(idxKey)
 			if err != nil {
-				return fmt.Errorf("error deleting index key: %s, %w", idxKey, err)
+				log.Printf("[ERROR] deleting index key: %s, %s", idxKey, err)
 			}
 		}
 		return nil

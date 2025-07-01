@@ -84,7 +84,6 @@ $(function() {
 
         // --- Bookmark toggle logic ---
         function enableBookmarkToggle() {
-            bookmarkImg.css('cursor', 'pointer');
             bookmarkImg.attr('title', detail.bookmarked ? 'Remove Bookmark' : 'Add Bookmark');
             bookmarkImg.off('click').on('click', function(e) {
                 e.preventDefault();
@@ -114,10 +113,13 @@ $(function() {
             });
         }
         function disableBookmarkToggle() {
-            bookmarkImg.css('cursor', 'not-allowed');
             bookmarkImg.attr('title', 'Log in to bookmark');
-            bookmarkImg.off('click');
+            bookmarkImg.off('click').on('click', function(e) {
+                e.preventDefault();
+                alert('Please log in to bookmark topics.');
+            });
         }
+
         if (window.parent.isLogin && window.parent.isLogin()) {
             enableBookmarkToggle();
         } else {
@@ -320,7 +322,16 @@ $(function() {
                                 method: 'GET',
                                 success: function(resp) {
                                     showStatus('Topic deleted successfully', 'green');
-                                    setTimeout(function() { window.location.href = '/'; }, 1200);
+                                    setTimeout(function() {
+                                        var hash = window.parent.location.hash || '';
+                                        var backMatch = hash.match(/back=([^&]+)/);
+                                        var back = backMatch ? decodeURIComponent(backMatch[1]) : null;
+                                        if (back) {
+                                            window.parent.location.hash = `#${back}`;
+                                        } else {
+                                            window.history.back();
+                                        }
+                                    }, 1200);
                                 },
                                 error: function(xhr) {
                                     var msg = 'Failed to delete topic';
@@ -563,7 +574,7 @@ $(function() {
             })
         };
         $.ajax({
-            url: '/api/topic/publish',
+            url: '/api/topic/publish?entity_id=' + currentTopicDetail.id,
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(payload),
