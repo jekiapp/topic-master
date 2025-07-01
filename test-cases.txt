@@ -1,0 +1,47 @@
+Non login:
+
+All Topics
+- can see All topics list [v]
+- cannot bookmark topic in the list [v]
+- should be able to refresh topic [v]
+
+Topic detail
+- cannot bookmark topic [v]
+- cannot bookmark channel [v]
+- the tooltip should say, please login to bookmark topic [v]
+- the tooltip should say, please login to bookmark channel [v]
+
+Claim
+should show alert please login to claim [v]
+
+Topic detail owner None:
+-  can change event trigger [v]
+- can do all topic action  [x]
+   - pause [v]
+   - publish [v]
+   - empty [v]
+   - tail [v]
+   - resume [v]
+   - delete [v]
+
+
+Topic detail owner present:
+- cannot change event trigger 
+- cannot do action, 
+- the link should say please login to apply for permission
+
+Channel owner None:
+- can do all channel action
+   - pause 
+   - resume
+   - empty
+   - delete
+
+Channel owner present:
+- the link should say please login to apply for permission
+
+My Topics 
+- should say, please login to bookmark topics 
+
+Tickets
+- should say, please login to see assignment/application
