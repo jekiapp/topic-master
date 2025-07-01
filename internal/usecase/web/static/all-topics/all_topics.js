@@ -142,7 +142,7 @@ $(function() {
       method: 'GET',
       xhrFields: { withCredentials: true },
       success: function(resp) {
-        if (resp && resp.success) {
+        if (resp.data && resp.data.success) {
           // re-fetch topics
           location.reload();
         } else {
