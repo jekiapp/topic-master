@@ -99,6 +99,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		PermissionIDs: []string{acl.Permission_Signup_User.Name},
 		Reason:        fmt.Sprintf("Request to become %s of group %s", req.GroupRole, req.GroupName),
 		Status:        acl.StatusWaitingForApproval,
+		MetaData:      map[string]string{"group_id": req.GroupID, "group_name": req.GroupName, "group_role": req.GroupRole},
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
@@ -185,17 +186,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	if err := uc.repo.CreateUserPending(user); err != nil {
 		return SignupResponse{}, fmt.Errorf("failed to create user pending: %w", err)
 	}
-	userGroup := acl.UserGroup{
-		ID:        uuid.NewString(),
-		UserID:    userID,
-		GroupID:   req.GroupID,
-		Role:      req.GroupRole,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	if err := uc.repo.CreateUserGroup(userGroup); err != nil {
-		return SignupResponse{}, fmt.Errorf("failed to create user group: %w", err)
-	}
+
 	history := &acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,

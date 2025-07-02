@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,8 +38,8 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 			return errors.New("failed to read password: " + err.Error())
 		}
 		password = strings.TrimSpace(string(bytePassword))
-		if len(password) < 4 {
-			fmt.Println("Password must be at least 4 characters. Please try again.")
+		if len(password) < aclmodel.MinPasswordLength {
+			fmt.Println("Password must be at least " + strconv.Itoa(aclmodel.MinPasswordLength) + " characters. Please try again.")
 			continue
 		}
 		break
@@ -84,7 +85,7 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 		ID:        uuid.NewString(),
 		UserID:    rootUser.ID,
 		GroupID:   rootGroup.ID,
-		Role:      aclmodel.RoleGroupAdmin,
+		Role:      aclmodel.RoleGroupMember,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

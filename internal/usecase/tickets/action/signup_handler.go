@@ -22,6 +22,7 @@ type iSignupRepo interface {
 	GetUserPendingByID(userID string) (acl.UserPending, error)
 	CreateUser(user acl.User) error
 	UpdateUserPending(user acl.UserPending) error
+	CreateUserGroup(userGroup acl.UserGroup) error
 }
 
 type SignupHandler struct {
@@ -54,13 +55,6 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest, as
 	app, err := h.repo.GetApplicationByID(req.ApplicationID)
 	if err != nil {
 		return ActionResponse{Status: "error", Message: "Application not found"}, err
-	}
-
-	// 2. Mark application as completed
-	app.Status = acl.StatusCompleted
-	app.UpdatedAt = time.Now()
-	if err := h.repo.UpdateApplication(app); err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
 	}
 
 	// 3. Update assignments using provided assigneeIDs
@@ -97,13 +91,37 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest, as
 
 	// 6. Create user from pending user
 	applicant, err := h.repo.GetUserPendingByID(app.UserID)
-	if err == nil {
-		applicant.Status = acl.UserStatusActive
-		applicant.CreatedAt = time.Now()
-		applicant.UpdatedAt = time.Now()
-		if err = h.repo.CreateUser(applicant.User); err != nil {
-			return ActionResponse{Status: "error", Message: "Failed to create user"}, err
-		}
+	if err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to get user pending"}, err
+	}
+
+	applicant.Status = acl.UserStatusActive
+	applicant.CreatedAt = time.Now()
+	applicant.UpdatedAt = time.Now()
+	if err = h.repo.CreateUser(applicant.User); err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to create user"}, err
+	}
+
+	groupID := app.MetaData["group_id"]
+	groupRole := app.MetaData["group_role"]
+
+	userGroup := acl.UserGroup{
+		ID:        uuid.NewString(),
+		UserID:    applicant.User.ID,
+		GroupID:   groupID,
+		Role:      groupRole,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	if err := h.repo.CreateUserGroup(userGroup); err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to create user group"}, err
+	}
+
+	// Mark application as completed
+	app.Status = acl.StatusCompleted
+	app.UpdatedAt = time.Now()
+	if err := h.repo.UpdateApplication(app); err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
 	}
 
 	return ActionResponse{Status: "success", Message: "Signup completed"}, nil
@@ -122,14 +140,17 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest, ass
 		return ActionResponse{Status: "error", Message: "Application not found"}, err
 	}
 
-	// 2. Mark application as completed
-	app.Status = acl.StatusCompleted
-	app.UpdatedAt = time.Now()
-	if err := h.repo.UpdateApplication(app); err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
+	// Delete user pending by id
+	applicant, err := h.repo.GetUserPendingByID(app.UserID)
+	if err == nil {
+		applicant.Status = acl.UserStatusInactive
+		applicant.UpdatedAt = time.Now()
+		if err = h.repo.UpdateUserPending(applicant); err != nil {
+			return ActionResponse{Status: "error", Message: "Failed to update user"}, err
+		}
 	}
 
-	// 3. Update assignments using provided assigneeIDs
+	// Update assignments using provided assigneeIDs
 	for _, reviewerID := range assigneeIDs {
 		assignment := acl.ApplicationAssignment{
 			ApplicationID: app.ID,
@@ -147,7 +168,7 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest, ass
 		}
 	}
 
-	// 5. Add application history
+	// Add application history
 	history := acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
@@ -161,14 +182,11 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest, ass
 		log.Println("Failed to create application history", err)
 	}
 
-	// 6. Delete user pending by id
-	applicant, err := h.repo.GetUserPendingByID(app.UserID)
-	if err == nil {
-		applicant.Status = acl.UserStatusInactive
-		applicant.UpdatedAt = time.Now()
-		if err = h.repo.UpdateUserPending(applicant); err != nil {
-			return ActionResponse{Status: "error", Message: "Failed to update user"}, err
-		}
+	// Mark application as completed
+	app.Status = acl.StatusCompleted
+	app.UpdatedAt = time.Now()
+	if err := h.repo.UpdateApplication(app); err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
 	}
 
 	return ActionResponse{Status: "success", Message: "Signup rejected and user deleted"}, nil
@@ -208,4 +226,8 @@ func (r *signupRepo) CreateUser(user acl.User) error {
 
 func (r *signupRepo) UpdateUserPending(user acl.UserPending) error {
 	return db.Update(r.db, &user)
+}
+
+func (r *signupRepo) CreateUserGroup(userGroup acl.UserGroup) error {
+	return db.Insert(r.db, &userGroup)
 }

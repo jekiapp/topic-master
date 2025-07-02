@@ -51,8 +51,8 @@ Signup
 - password enforcement, minimum 4 character [v]
 - confirm password should same [v]
 - validate group [v]
-- assignee should be root and group admin if any 
-- assignee should be root users if no admins
+- assignee should be root and group admin if any [v]
+- assignee should be root users if no admins [v]
 - cannot apply to become admin of root group [v]
 
 
