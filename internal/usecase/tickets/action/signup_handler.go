@@ -3,10 +3,10 @@ package action
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jekiapp/topic-master/internal/logic/auth"
 	"github.com/jekiapp/topic-master/internal/model/acl"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/jekiapp/topic-master/pkg/util"
@@ -14,11 +14,8 @@ import (
 )
 
 type iSignupRepo interface {
-	GetApplicationByID(id string) (acl.Application, error)
-	UpdateApplication(app acl.Application) error
+	auth.IApplicationAction
 	ListAssignmentsByApplicationID(appID string) ([]acl.ApplicationAssignment, error)
-	UpdateApplicationAssignment(assignment acl.ApplicationAssignment) error
-	CreateApplicationHistory(history acl.ApplicationHistory) error
 	GetUserPendingByID(userID string) (acl.UserPending, error)
 	CreateUser(user acl.User) error
 	UpdateUserPending(user acl.UserPending) error
@@ -52,46 +49,13 @@ func (h *SignupHandler) HandleSignup(ctx context.Context, req SignupRequest) (Ac
 
 // Coordinator must pass all assigneeIDs; eligibility and assignment fetching is already checked in coordinator
 func (h *SignupHandler) handleApprove(ctx context.Context, req SignupRequest) (ActionResponse, error) {
-	// validate eligibility
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
 	}
 	app := req.Application
 
-	// 3. Update assignments using provided assigneeIDs
-	for _, assignment := range req.Assignments {
-		assignment := acl.ApplicationAssignment{
-			ApplicationID: app.ID,
-			ReviewerID:    assignment.ReviewerID,
-			UpdatedAt:     time.Now(),
-		}
-		if assignment.ReviewerID == user.ID {
-			assignment.ReviewStatus = acl.ReviewStatusApproved
-			assignment.ReviewedAt = time.Now()
-		} else {
-			assignment.ReviewStatus = acl.ReviewStatusPassed
-		}
-		if err := h.repo.UpdateApplicationAssignment(assignment); err != nil {
-			log.Println("Failed to update assignment", err)
-		}
-	}
-
-	// 5. Add application history
-	history := acl.ApplicationHistory{
-		ID:            uuid.NewString(),
-		ApplicationID: app.ID,
-		Action:        acl.ActionApprove,
-		ActorID:       user.ID,
-		Comment:       "Signup approved",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-	if err := h.repo.CreateApplicationHistory(history); err != nil {
-		log.Println("Failed to create application history", err)
-	}
-
-	// 6. Create user from pending user
+	// Create user from pending user
 	applicant, err := h.repo.GetUserPendingByID(app.UserID)
 	if err != nil {
 		return ActionResponse{Status: "error", Message: "Failed to get user pending"}, err
@@ -119,11 +83,16 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req SignupRequest) (A
 		return ActionResponse{Status: "error", Message: "Failed to create user group"}, err
 	}
 
-	// Mark application as completed
-	app.Status = acl.StatusCompleted
-	app.UpdatedAt = time.Now()
-	if err := h.repo.UpdateApplication(app); err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
+	// Use reusable approval logic
+	err = auth.ApproveApplication(
+		ctx,
+		h.repo,
+		app.ID,
+		req.Assignments,
+		"Signup approved",
+	)
+	if err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to approve application"}, err
 	}
 
 	return ActionResponse{Status: "success", Message: "Signup completed"}, nil
@@ -131,14 +100,13 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req SignupRequest) (A
 
 // Coordinator must pass all assigneeIDs; eligibility and assignment fetching is already checked in coordinator
 func (h *SignupHandler) handleReject(ctx context.Context, req SignupRequest) (ActionResponse, error) {
-	// validate eligibility
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
 	}
 	app := req.Application
 
-	// Delete user pending by id
+	// Deactivate user pending by id (if exists)
 	applicant, err := h.repo.GetUserPendingByID(app.UserID)
 	if err == nil {
 		applicant.Status = acl.UserStatusInactive
@@ -148,43 +116,16 @@ func (h *SignupHandler) handleReject(ctx context.Context, req SignupRequest) (Ac
 		}
 	}
 
-	// Update assignments using provided assigneeIDs
-	for _, assignment := range req.Assignments {
-		assignment := acl.ApplicationAssignment{
-			ApplicationID: app.ID,
-			ReviewerID:    assignment.ReviewerID,
-			UpdatedAt:     time.Now(),
-		}
-		if assignment.ReviewerID == user.ID {
-			assignment.ReviewStatus = acl.ReviewStatusRejected
-			assignment.ReviewedAt = time.Now()
-		} else {
-			assignment.ReviewStatus = acl.ReviewStatusPassed
-		}
-		if err := h.repo.UpdateApplicationAssignment(assignment); err != nil {
-			log.Println("Failed to update assignment", err)
-		}
-	}
-
-	// Add application history
-	history := acl.ApplicationHistory{
-		ID:            uuid.NewString(),
-		ApplicationID: app.ID,
-		Action:        acl.ActionReject,
-		ActorID:       user.ID,
-		Comment:       "Signup rejected",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-	if err := h.repo.CreateApplicationHistory(history); err != nil {
-		log.Println("Failed to create application history", err)
-	}
-
-	// Mark application as completed
-	app.Status = acl.StatusCompleted
-	app.UpdatedAt = time.Now()
-	if err := h.repo.UpdateApplication(app); err != nil {
-		return ActionResponse{Status: "error", Message: "Failed to update application"}, err
+	// Use reusable rejection logic
+	err = auth.RejectApplication(
+		ctx,
+		h.repo,
+		app.ID,
+		req.Assignments,
+		"Signup rejected",
+	)
+	if err != nil {
+		return ActionResponse{Status: "error", Message: "Failed to reject application"}, err
 	}
 
 	return ActionResponse{Status: "success", Message: "Signup rejected and user deleted"}, nil
