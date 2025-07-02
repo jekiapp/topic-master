@@ -75,7 +75,11 @@ func (ac *ActionCoordinator) Handle(ctx context.Context, req ActionRequest) (Act
 
 	switch app.Type {
 	case acl.ApplicationType_Signup:
-		return ac.signupHandler.HandleSignup(ctx, req)
+		return ac.signupHandler.HandleSignup(ctx, SignupRequest{
+			Action:      req.Action,
+			Application: app,
+			Assignments: assignments,
+		})
 	case acl.ApplicationType_Claim:
 		return ac.claimEntityHandler.HandleClaimEntity(ctx, ClaimEntityInput{
 			Action:      req.Action,

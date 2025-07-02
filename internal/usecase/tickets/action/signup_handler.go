@@ -33,38 +33,40 @@ func NewSignupHandler(db *buntdb.DB) *SignupHandler {
 	return &SignupHandler{repo: &signupRepo{db: db}}
 }
 
-func (h *SignupHandler) HandleSignup(ctx context.Context, req ActionRequest) (ActionResponse, error) {
+type SignupRequest struct {
+	Action      string
+	Application acl.Application
+	Assignments []acl.ApplicationAssignment
+}
+
+func (h *SignupHandler) HandleSignup(ctx context.Context, req SignupRequest) (ActionResponse, error) {
 	switch req.Action {
 	case acl.ActionApprove:
-		return h.handleApprove(ctx, req, nil)
+		return h.handleApprove(ctx, req)
 	case acl.ActionReject:
-		return h.handleReject(ctx, req, nil)
+		return h.handleReject(ctx, req)
 	default:
 		return ActionResponse{Status: "error", Message: fmt.Sprintf("Invalid action: %s", req.Action)}, nil
 	}
 }
 
 // Coordinator must pass all assigneeIDs; eligibility and assignment fetching is already checked in coordinator
-func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest, assigneeIDs []string) (ActionResponse, error) {
+func (h *SignupHandler) handleApprove(ctx context.Context, req SignupRequest) (ActionResponse, error) {
 	// validate eligibility
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
 	}
-	// 1. Get application
-	app, err := h.repo.GetApplicationByID(req.ApplicationID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Application not found"}, err
-	}
+	app := req.Application
 
 	// 3. Update assignments using provided assigneeIDs
-	for _, reviewerID := range assigneeIDs {
+	for _, assignment := range req.Assignments {
 		assignment := acl.ApplicationAssignment{
 			ApplicationID: app.ID,
-			ReviewerID:    reviewerID,
+			ReviewerID:    assignment.ReviewerID,
 			UpdatedAt:     time.Now(),
 		}
-		if reviewerID == user.ID {
+		if assignment.ReviewerID == user.ID {
 			assignment.ReviewStatus = acl.ReviewStatusApproved
 			assignment.ReviewedAt = time.Now()
 		} else {
@@ -128,17 +130,13 @@ func (h *SignupHandler) handleApprove(ctx context.Context, req ActionRequest, as
 }
 
 // Coordinator must pass all assigneeIDs; eligibility and assignment fetching is already checked in coordinator
-func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest, assigneeIDs []string) (ActionResponse, error) {
+func (h *SignupHandler) handleReject(ctx context.Context, req SignupRequest) (ActionResponse, error) {
 	// validate eligibility
 	user := util.GetUserInfo(ctx)
 	if user == nil {
 		return ActionResponse{Status: "error", Message: "Unauthorized"}, nil
 	}
-	// 1. Get application by id
-	app, err := h.repo.GetApplicationByID(req.ApplicationID)
-	if err != nil {
-		return ActionResponse{Status: "error", Message: "Application not found"}, err
-	}
+	app := req.Application
 
 	// Delete user pending by id
 	applicant, err := h.repo.GetUserPendingByID(app.UserID)
@@ -151,13 +149,13 @@ func (h *SignupHandler) handleReject(ctx context.Context, req ActionRequest, ass
 	}
 
 	// Update assignments using provided assigneeIDs
-	for _, reviewerID := range assigneeIDs {
+	for _, assignment := range req.Assignments {
 		assignment := acl.ApplicationAssignment{
 			ApplicationID: app.ID,
-			ReviewerID:    reviewerID,
+			ReviewerID:    assignment.ReviewerID,
 			UpdatedAt:     time.Now(),
 		}
-		if reviewerID == user.ID {
+		if assignment.ReviewerID == user.ID {
 			assignment.ReviewStatus = acl.ReviewStatusRejected
 			assignment.ReviewedAt = time.Now()
 		} else {
