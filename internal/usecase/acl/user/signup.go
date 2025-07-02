@@ -115,13 +115,20 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, errors.New("failed to list root group members")
 	}
 
-	adminUserIDs, err := uc.repo.GetAdminUserIDsByGroupID(req.GroupID)
-	if err != nil && err != buntdb.ErrNotFound {
-		return SignupResponse{}, errors.New("failed to get admin user ids: " + err.Error())
+	adminUserIDs := []string{}
+	if req.GroupName != acl.GroupRoot {
+		adminUserIDs, err = uc.repo.GetAdminUserIDsByGroupID(req.GroupID)
+		if err != nil && err != buntdb.ErrNotFound {
+			return SignupResponse{}, errors.New("failed to get admin user ids: " + err.Error())
+		}
 	}
 
 	for _, member := range rootMembers {
 		adminUserIDs = append(adminUserIDs, member.UserID)
+	}
+
+	if len(adminUserIDs) == 0 {
+		return SignupResponse{}, errors.New("no active reviewers found: no group admin and no root group members")
 	}
 
 	hasActiveReviewer := false
