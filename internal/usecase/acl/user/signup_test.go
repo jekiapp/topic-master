@@ -1,0 +1,6 @@
+package user
+
+// ... existing code ...
+// All test logic remains the same, but update mockRepo := user_mock.NewMockISignupRepo(ctrl)
+// and uc := SignupUsecase{repo: mockRepo}
+// ... existing code ...

@@ -1,4 +1,4 @@
-package acl
+package user
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
-//go:generate go run github.com/golang/mock/mockgen -destination=mock/signup_mock.go -package=mock github.com/jekiapp/topic-master/internal/usecase/acl/auth ISignupRepo
+//go:generate mockgen -source=signup.go -destination=mock/mock_signup_repo.go -package=user_mock
 
 type SignupRequest struct {
 	Username        string `json:"username"`
@@ -26,12 +26,13 @@ type SignupRequest struct {
 	Reason          string `json:"reason"`
 	GroupID         string `json:"group_id"`
 	GroupName       string `json:"group_name"`
-	GroupRole       string `json:"group_role"` // member or admin
+	GroupRole       string `json:"group_role"`
 }
 
 type SignupResponse struct {
 	ApplicationID string `json:"application_id"`
 }
+
 type SignupUsecase struct {
 	repo ISignupRepo
 }
@@ -42,7 +43,7 @@ func NewSignupUsecase(db *buntdb.DB) SignupUsecase {
 	}
 }
 
-func (r SignupRequest) Validate() error {
+func (uc SignupUsecase) Validate(r SignupRequest) error {
 	if r.Username == "" {
 		return errors.New("missing username")
 	}
@@ -65,13 +66,22 @@ func (r SignupRequest) Validate() error {
 		return errors.New("missing group_role")
 	}
 
+	user, err := uc.repo.GetUserByUsername(r.Username)
+	if err != nil {
+		return errors.New("failed to get user by username: " + err.Error())
+	}
+	if user.ID != "" {
+		return errors.New("username already exists")
+	}
+
 	return nil
 }
 
 func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupResponse, error) {
-	if err := req.Validate(); err != nil {
+	if err := uc.Validate(req); err != nil {
 		return SignupResponse{}, err
 	}
+
 	userID := uuid.NewString()
 	app := &acl.Application{
 		ID:            uuid.NewString(),
@@ -88,7 +98,6 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, err
 	}
 
-	// 1. Select all members of root group
 	rootGroup, err := uc.repo.GetGroupByName(acl.GroupRoot)
 	if err != nil {
 		return SignupResponse{}, errors.New("root group not found")
@@ -104,14 +113,12 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, errors.New("failed to get admin user ids: " + err.Error())
 	}
 
-	// merge together adminUserIDs and rootMembers
 	for _, member := range rootMembers {
 		adminUserIDs = append(adminUserIDs, member.UserID)
 	}
 
 	hasActiveReviewer := false
 	for _, userID := range adminUserIDs {
-		// check if the user status is "active"
 		user, err := uc.repo.GetUserByID(userID)
 		if err != nil {
 			log.Printf("failed to get user by id %s: %v", userID, err)
@@ -140,8 +147,6 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 		return SignupResponse{}, errors.New("no active reviewers found")
 	}
 
-	// 2. Create a new user with status "in approval"
-	// Hash the password (SHA256)
 	hash := sha256.Sum256([]byte(req.Password))
 	hashedPassword := hex.EncodeToString(hash[:])
 	user := acl.UserPending{
@@ -165,7 +170,6 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	if err := uc.repo.CreateUserPending(user); err != nil {
 		return SignupResponse{}, fmt.Errorf("failed to create user pending: %w", err)
 	}
-	// Assign user to the requested group
 	userGroup := acl.UserGroup{
 		ID:        uuid.NewString(),
 		UserID:    userID,
@@ -177,7 +181,6 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	if err := uc.repo.CreateUserGroup(userGroup); err != nil {
 		return SignupResponse{}, fmt.Errorf("failed to create user group: %w", err)
 	}
-	// 3. Create ApplicationHistory as "waiting for approval"
 	history := &acl.ApplicationHistory{
 		ID:            uuid.NewString(),
 		ApplicationID: app.ID,
@@ -191,8 +194,7 @@ func (uc SignupUsecase) Handle(ctx context.Context, req SignupRequest) (SignupRe
 	return SignupResponse{ApplicationID: app.ID}, nil
 }
 
-//go:generate go run github.com/golang/mock/mockgen -destination=mock/signup_mock.go -package=mock github.com/jekiapp/topic-master/internal/usecase/acl/auth ISignupRepo
-
+// --- ISignupRepo interface and implementation ---
 type ISignupRepo interface {
 	CreateApplication(app acl.Application) error
 	GetGroupByName(name string) (acl.Group, error)
@@ -203,6 +205,7 @@ type ISignupRepo interface {
 	GetUserByID(userID string) (acl.User, error)
 	CreateUserPending(user acl.UserPending) error
 	CreateUserGroup(userGroup acl.UserGroup) error
+	GetUserByUsername(username string) (acl.User, error)
 }
 
 type signupRepo struct {
@@ -243,4 +246,8 @@ func (r *signupRepo) CreateUserPending(user acl.UserPending) error {
 
 func (r *signupRepo) CreateUserGroup(userGroup acl.UserGroup) error {
 	return db.Insert(r.db, &userGroup)
+}
+
+func (r *signupRepo) GetUserByUsername(username string) (acl.User, error) {
+	return db.SelectOne[acl.User](r.db, username, acl.IdxUser_Username)
 }

@@ -45,3 +45,10 @@ My Topics
 
 Tickets
 - should say, please login to see assignment/application [v]
+
+Signup
+- using the same username should be banned [x]
+- password enforcement, minimum 4 character [x]
+- confirm password should same [v]
+- validate group [v]
+- assignee should be root and group admin if any 
