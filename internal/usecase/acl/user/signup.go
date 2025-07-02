@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,8 +60,8 @@ func (uc SignupUsecase) Validate(r SignupRequest) error {
 	if r.Password != r.ConfirmPassword {
 		return errors.New("password and confirm_password do not match")
 	}
-	if len(r.Password) < 4 {
-		return errors.New("password must be at least 4 characters long")
+	if len(r.Password) < acl.MinPasswordLength {
+		return errors.New("password must be at least " + strconv.Itoa(acl.MinPasswordLength) + " characters long")
 	}
 	if r.GroupID == "" {
 		return errors.New("missing group_id")

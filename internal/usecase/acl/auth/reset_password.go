@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
 	"time"
 
 	"github.com/jekiapp/topic-master/internal/model/acl"
@@ -106,8 +107,8 @@ func (uc ResetPasswordUsecase) HandlePost(ctx context.Context, req ResetPassword
 	if req.NewPassword != req.ConfirmPassword {
 		return ResetPasswordResponse{Success: false, Error: "Passwords do not match"}, nil
 	}
-	if len(req.NewPassword) < 8 {
-		return ResetPasswordResponse{Success: false, Error: "Password too short (min 8)"}, nil
+	if len(req.NewPassword) < acl.MinPasswordLength {
+		return ResetPasswordResponse{Success: false, Error: "Password too short (min " + strconv.Itoa(acl.MinPasswordLength) + ")"}, nil
 	}
 
 	rp, err := uc.rpRepo.GetResetPasswordByToken(req.Token)
