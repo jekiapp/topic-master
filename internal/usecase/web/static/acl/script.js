@@ -380,8 +380,8 @@ function handleUserFormSubmit(e) {
     },
     error: function(xhr) {
       let msg = 'Failed to create user';
-      if (xhr.responseJSON && xhr.responseJSON.error) {
-        msg = xhr.responseJSON.error;
+      if (xhr.responseJSON && xhr.responseJSON.message) {
+        msg = xhr.responseJSON.message;
       } else if (xhr.responseText) {
         try {
           const data = JSON.parse(xhr.responseText);

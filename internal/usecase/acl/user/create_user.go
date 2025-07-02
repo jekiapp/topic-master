@@ -78,6 +78,9 @@ func validateCreateUserRequest(req CreateUserRequest) error {
 			return errors.New("role is required for group index " + strconv.Itoa(i))
 		}
 		if g.Name == acl.GroupRoot {
+			if g.Role == acl.RoleGroupAdmin {
+				return errors.New("root group must have member role")
+			}
 			rootCount++
 		}
 	}
