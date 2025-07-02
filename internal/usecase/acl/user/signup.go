@@ -59,6 +59,9 @@ func (uc SignupUsecase) Validate(r SignupRequest) error {
 	if r.Password != r.ConfirmPassword {
 		return errors.New("password and confirm_password do not match")
 	}
+	if len(r.Password) < 4 {
+		return errors.New("password must be at least 4 characters long")
+	}
 	if r.GroupID == "" {
 		return errors.New("missing group_id")
 	}
@@ -66,8 +69,12 @@ func (uc SignupUsecase) Validate(r SignupRequest) error {
 		return errors.New("missing group_role")
 	}
 
+	if r.GroupName == acl.GroupRoot && r.GroupRole == acl.RoleGroupAdmin {
+		return errors.New("cannot apply to become admin of root group")
+	}
+
 	user, err := uc.repo.GetUserByUsername(r.Username)
-	if err != nil {
+	if err != nil && err != buntdb.ErrNotFound {
 		return errors.New("failed to get user by username: " + err.Error())
 	}
 	if user.ID != "" {

@@ -23,7 +23,6 @@ type Response[O any] struct {
 	Status  ResponseStatus `json:"status"`
 	Message string         `json:"message"`
 	Data    O              `json:"data,omitempty"`
-	Error   string         `json:"error,omitempty"`
 }
 
 type GenericPostHandler[I any, O any] func(ctx context.Context, input I) (output O, err error)
@@ -48,8 +47,7 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(Response[O]{
 				Status:  StatusError,
-				Message: "Failed to read request body",
-				Error:   err.Error(),
+				Message: "Failed to read request body: " + err.Error(),
 			})
 			return
 		}
@@ -61,8 +59,7 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(Response[O]{
 				Status:  StatusError,
-				Message: "Invalid JSON format",
-				Error:   err.Error(),
+				Message: "Invalid JSON format: " + err.Error(),
 			})
 			return
 		}
@@ -72,8 +69,7 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(Response[O]{
 				Status:  StatusError,
-				Message: "Validation failed",
-				Error:   err.Error(),
+				Message: "Validation failed: " + err.Error(),
 			})
 			return
 		}
@@ -85,9 +81,8 @@ func HandleGenericPost[I any, O any](handler GenericPostHandler[I, O]) func(w ht
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response[O]{
 				Status:  StatusError,
-				Message: "Handler execution failed",
+				Message: err.Error(),
 				Data:    result,
-				Error:   err.Error(),
 			})
 			return
 		}

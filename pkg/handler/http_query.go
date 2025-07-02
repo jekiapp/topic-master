@@ -39,8 +39,7 @@ func HandleGenericGet[R any](handler GenericQueryHandler[R]) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			response = Response[R]{
 				Status:  StatusError,
-				Message: "Handler execution failed",
-				Error:   err.Error(),
+				Message: err.Error(),
 			}
 		} else {
 			w.WriteHeader(http.StatusOK)

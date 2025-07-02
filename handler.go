@@ -39,7 +39,7 @@ type Handler struct {
 	updateGroupByIDUC       aclGroup.UpdateGroupByIDUsecase
 	deleteGroupUC           aclGroup.DeleteGroupUsecase
 	resetPasswordUC         aclAuth.ResetPasswordUsecase
-	signupUC                aclAuth.SignupUsecase
+	signupUC                aclUser.SignupUsecase
 	viewSignupApplicationUC aclAuth.ViewSignupApplicationUsecase
 	listMyAssignmentUC      tickets.ListMyAssignmentUsecase
 	listMyApplicationsUC    tickets.ListMyApplicationsUsecase
@@ -84,7 +84,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		updateGroupByIDUC:       aclGroup.NewUpdateGroupByIDUsecase(db),
 		deleteGroupUC:           aclGroup.NewDeleteGroupUsecase(db),
 		resetPasswordUC:         aclAuth.NewResetPasswordUsecase(db),
-		signupUC:                aclAuth.NewSignupUsecase(db),
+		signupUC:                aclUser.NewSignupUsecase(db),
 		viewSignupApplicationUC: aclAuth.NewViewSignupApplicationUsecase(db),
 		listMyAssignmentUC:      tickets.NewListMyAssignmentUsecase(db),
 		listMyApplicationsUC:    tickets.NewListMyApplicationsUsecase(db),

@@ -47,8 +47,14 @@ Tickets
 - should say, please login to see assignment/application [v]
 
 Signup
-- using the same username should be banned [x]
-- password enforcement, minimum 4 character [x]
+- using the same username should be banned [v]
+- password enforcement, minimum 4 character [v]
 - confirm password should same [v]
 - validate group [v]
 - assignee should be root and group admin if any 
+- assignee should be root users if no admins
+- cannot apply to become admin of root group [v]
+
+
+create user, 
+- cannot create admin of root group
