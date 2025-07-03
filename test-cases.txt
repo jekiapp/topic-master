@@ -54,7 +54,11 @@ Signup
 - assignee should be root and group admin if any [v]
 - assignee should be root users if no admins [v]
 - cannot apply to become admin of root group [v]
+- reset password [v]
+- signup assignee normal [v]
+- reject is ok [v]
 
-
-create user, 
+create user
 - cannot create admin of root group [v]
+
+login exp
