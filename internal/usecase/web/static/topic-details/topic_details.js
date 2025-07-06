@@ -421,8 +421,38 @@ $(function() {
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;
-                    $('#publish-panel').show();
-                    $('.btn-publish').prop('disabled', true);
+                    var $panel = $('#publish-panel');
+                    var isVisible = $panel.is(':visible');
+                    if (isVisible) {
+                        $panel.hide();
+                        $('.btn-publish').prop('disabled', false);
+                    } else {
+                        $panel.show();
+                        $('.btn-publish').prop('disabled', true);
+                    }
+                    adjustPanelWidths();
+                }
+            );
+        });
+        // --- Tail button logic (toggle) ---
+        $('.btn-tail').off('click').on('click', function() {
+            if (!currentTopicDetail) return;
+            checkActionPermissionAsync(
+                currentTopicDetail.is_free_action,
+                currentTopicDetail.group_owner,
+                'tail',
+                currentTopicDetail.id,
+                function(allowed) {
+                    if (!allowed) return;
+                    var $panel = $('#tail-panel');
+                    var isVisible = $panel.is(':visible');
+                    if (isVisible) {
+                        $panel.hide();
+                        $('.btn-tail').prop('disabled', false);
+                    } else {
+                        $panel.show();
+                        $('.btn-tail').prop('disabled', true);
+                    }
                     adjustPanelWidths();
                 }
             );

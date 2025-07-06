@@ -69,24 +69,6 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
     }
     setTailingActive(false);
 
-    $tailBtn.on('click', function() {
-        var currentTopicDetail = getCurrentTopicDetail && getCurrentTopicDetail();
-        if (!currentTopicDetail) return;
-        checkActionPermissionAsync(
-            currentTopicDetail.is_free_action,
-            currentTopicDetail.group_owner,
-            'tail',
-            currentTopicDetail.id,
-            function(allowed) {
-                if (!allowed) return;
-                $tailPanel.show();
-                $tailPanelBtn.show();
-                $tailStopBtn.hide();
-                $tailStatus.text('');
-                if (adjustPanelWidths) adjustPanelWidths();
-            }
-        );
-    });
     $tailCloseBtn.on('click', function() {
         $tailPanel.hide();
         if (tailSocket) {
@@ -96,6 +78,7 @@ function initTailPanel({getCurrentTopicDetail, adjustPanelWidths}) {
         setTailingActive(false);
         $tailStatus.text('');
         $tailContent.empty();
+        $('.btn-tail').prop('disabled', false); // Re-enable the tail button
         if (adjustPanelWidths) adjustPanelWidths();
     });
     $tailPanelBtn.on('click', function() {
