@@ -7,28 +7,28 @@ type Permission struct {
 
 var (
 	Permission_Topic_Publish = Permission{
-		Name:        "publish",
+		Name:        "topic:publish",
 		Description: "Publish a topic",
 	}
 	Permission_Topic_Tail = Permission{
-		Name:        "tail",
+		Name:        "topic:tail",
 		Description: "Tail a topic",
 	}
 	Permission_Topic_Delete = Permission{
-		Name:        "delete",
+		Name:        "topic:delete",
 		Description: "Delete a topic",
 	}
-	Permission_Topic_Drain = Permission{
-		Name:        "drain",
-		Description: "Drain a topic",
+	Permission_Topic_Empty = Permission{
+		Name:        "topic:empty",
+		Description: "Empty a topic",
 	}
 	Permission_Topic_Pause = Permission{
-		Name:        "pause",
+		Name:        "topic:pause",
 		Description: "Pause a topic",
 	}
 
 	Permission_Claim_Entity = Permission{
-		Name:        "claim_entity",
+		Name:        "claim",
 		Description: "Claim an entity",
 	}
 	Permission_Signup_User = Permission{
@@ -46,7 +46,7 @@ var PermissionList = map[string]Permission{
 	Permission_Topic_Publish.Name: Permission_Topic_Publish,
 	Permission_Topic_Tail.Name:    Permission_Topic_Tail,
 	Permission_Topic_Delete.Name:  Permission_Topic_Delete,
-	Permission_Topic_Drain.Name:   Permission_Topic_Drain,
+	Permission_Topic_Empty.Name:   Permission_Topic_Empty,
 	Permission_Topic_Pause.Name:   Permission_Topic_Pause,
 
 	// channel permissions
@@ -58,22 +58,22 @@ var PermissionList = map[string]Permission{
 var TopicActionPermissions = []Permission{
 	Permission_Topic_Publish,
 	Permission_Topic_Tail,
-	Permission_Topic_Drain,
+	Permission_Topic_Empty,
 	Permission_Topic_Pause,
 	Permission_Topic_Delete,
 }
 
 var (
 	Permission_Channel_Pause = Permission{
-		Name:        "pause",
+		Name:        "chan:pause",
 		Description: "Pause a channel",
 	}
 	Permission_Channel_Empty = Permission{
-		Name:        "empty",
+		Name:        "chan:empty",
 		Description: "Empty a channel",
 	}
 	Permission_Channel_Delete = Permission{
-		Name:        "delete",
+		Name:        "chan:delete",
 		Description: "Delete a channel",
 	}
 )

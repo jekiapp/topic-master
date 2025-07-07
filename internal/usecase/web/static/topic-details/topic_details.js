@@ -208,7 +208,7 @@ $(function() {
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'pause',
+                'topic:pause',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;
@@ -258,7 +258,7 @@ $(function() {
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'pause',
+                'topic:pause',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;
@@ -308,7 +308,7 @@ $(function() {
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'delete',
+                'topic:delete',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;
@@ -361,13 +361,13 @@ $(function() {
             );
         });
 
-        // --- Empty/Drain button logic ---
-        $('.btn-drain, .btn-empty').off('click').on('click', function() {
+        // --- Empty button logic ---
+        $('.btn-empty').off('click').on('click', function() {
             if (!currentTopicDetail) return;
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'empty',
+                'topic:empty',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;
@@ -417,7 +417,7 @@ $(function() {
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'publish',
+                'topic:publish',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;
@@ -440,7 +440,7 @@ $(function() {
             checkActionPermissionAsync(
                 currentTopicDetail.is_free_action,
                 currentTopicDetail.group_owner,
-                'tail',
+                'topic:tail',
                 currentTopicDetail.id,
                 function(allowed) {
                     if (!allowed) return;

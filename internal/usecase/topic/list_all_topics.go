@@ -49,7 +49,7 @@ func (uc ListAllTopicsUsecase) listBookmarkedTopics(ctx context.Context) (ListTo
 		return ListTopicsResponse{Topics: nil}, nil
 	}
 	ids, err := uc.repo.ListBookmarkedTopicIDsByUser(user.ID)
-	if err != nil {
+	if err != nil && err != dbPkg.ErrNotFound {
 		return ListTopicsResponse{}, err
 	}
 	if len(ids) == 0 {
@@ -59,6 +59,7 @@ func (uc ListAllTopicsUsecase) listBookmarkedTopics(ctx context.Context) (ListTo
 	if err != nil {
 		return ListTopicsResponse{}, err
 	}
+
 	topics := make([]TopicResponse, len(topicEntities))
 	for i, t := range topicEntities {
 		topics[i] = TopicResponse{

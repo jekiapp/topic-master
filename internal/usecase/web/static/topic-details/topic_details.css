@@ -164,7 +164,6 @@ body {
     transform: translateY(-1px) scale(1.03);
 }
 .btn-pause { background: #ffe5b4; color: #7a5c00; }
-.btn-drain { background: #f8d7da; color: #a94442; }
 .btn-publish { background: #c7efc0; color: #333; }
 .btn-delete { background: #ff2d2d; color: #fff; }
 .btn-tail { background: #b3d8fd; color: #155a8a; }

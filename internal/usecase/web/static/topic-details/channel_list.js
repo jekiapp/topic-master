@@ -211,7 +211,7 @@ function updateChannelsTable(topic, hosts) {
                         checkChannelActionPermissionAsync(
                             channel.is_free_action,
                             channel.group_owner,
-                            'pause',
+                            'chan:pause',
                             channel.id,
                             function(allowed) {
                                 if (!allowed) return;
@@ -231,7 +231,7 @@ function updateChannelsTable(topic, hosts) {
                         checkChannelActionPermissionAsync(
                             channel.is_free_action,
                             channel.group_owner,
-                            'pause',
+                            'chan:pause',
                             channel.id,
                             function(allowed) {
                                 if (!allowed) return;
@@ -252,7 +252,7 @@ function updateChannelsTable(topic, hosts) {
                     checkChannelActionPermissionAsync(
                         channel.is_free_action,
                         channel.group_owner,
-                        'delete',
+                        'chan:delete',
                         channel.id,
                         function(allowed) {
                             if (!allowed) return;
@@ -271,7 +271,7 @@ function updateChannelsTable(topic, hosts) {
                     checkChannelActionPermissionAsync(
                         channel.is_free_action,
                         channel.group_owner,
-                        'empty',
+                        'chan:empty',
                         channel.id,
                         function(allowed) {
                             if (!allowed) return;

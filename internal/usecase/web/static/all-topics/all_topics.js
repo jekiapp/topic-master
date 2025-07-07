@@ -49,9 +49,8 @@ $(function() {
     dataType: 'json',
     xhrFields: { withCredentials: true },
     success: function(resp) {
-      if (resp.error) {
-        let msg = resp.error === "record not found" ? "No topics found" : resp.error;
-        $('#topics-table tbody').html(`<tr><td colspan="7" style="color: var(--error-red);">${msg}</td></tr>`);
+      if (resp.status === "success" && isBookmarked !== null && resp.data.topics === null) {
+        $('#topics-table tbody').html(`<tr><td colspan="7" style="text-align: center;">Bookmarked topics will be shown here.</td></tr>`);
         return;
       }
       const topics = resp.data && resp.data.topics ? resp.data.topics : [];
