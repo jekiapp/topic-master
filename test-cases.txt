@@ -62,3 +62,5 @@ create user
 - cannot create admin of root group [v]
 
 login exp
+- claim entity [v]
+- None ownership should be allowed all action [v]
