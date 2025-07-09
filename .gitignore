@@ -4,3 +4,4 @@ topic-master
 __debug_bin*
 *.json
 .vscode/
+docs/public/*
