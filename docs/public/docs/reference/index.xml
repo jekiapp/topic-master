@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reference on My New Hugo Site</title>
+    <link>http://localhost:1414/docs/reference/</link>
+    <description>Recent content in Reference on My New Hugo Site</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Sep 2023 16:13:18 +0200</lastBuildDate>
+    <atom:link href="http://localhost:1414/docs/reference/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Example Reference</title>
+      <link>http://localhost:1414/docs/reference/example/</link>
+      <pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate>
+      <guid>http://localhost:1414/docs/reference/example/</guid>
+      <description>&lt;p&gt;Reference pages are ideal for outlining how things work in terse and clear terms. Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.&lt;/p&gt;&#xA;&lt;h2 id=&#34;further-reading&#34;&gt;Further reading&lt;/h2&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Read &lt;a href=&#34;https://diataxis.fr/reference/&#34;&gt;about reference&lt;/a&gt; in the Diátaxis framework&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>
