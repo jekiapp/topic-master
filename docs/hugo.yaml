@@ -7,6 +7,10 @@ module:
     - path: github.com/imfing/hextra
       disable: false
 
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
 
 params:
   navbar:
