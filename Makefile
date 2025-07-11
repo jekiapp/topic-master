@@ -6,4 +6,4 @@ stop-test-setup:
  
 build-run:
 	go build -o topic-master *.go
-	./topic-master -data_path=infra/data/topic-master.db -port=4181 -nsqlookupd_http_address=http://localhost:4161
+	./topic-master -data_path=infra/data/ -port=4181 -nsqlookupd_http_address=http://localhost:4161
