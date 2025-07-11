@@ -99,6 +99,8 @@ func (uc DeleteTopicUsecase) Handle(ctx context.Context, params map[string]strin
 
 	if err := uc.repo.DeleteEntityByID(ent.ID); err != nil {
 		return DeleteTopicResponse{}, fmt.Errorf("failed to delete entity from db: %w", err)
+	} else {
+		fmt.Printf("[INFO] topic %s deleted from db\n", ent.Name)
 	}
 
 	channels, err := uc.repo.GetChannelsByTopic(ent.Name)
@@ -108,6 +110,8 @@ func (uc DeleteTopicUsecase) Handle(ctx context.Context, params map[string]strin
 	for _, channel := range channels {
 		if err := uc.repo.DeleteEntityByID(channel.ID); err != nil {
 			fmt.Printf("[ERROR] failed to delete channel from db: %s\n", err)
+		} else {
+			fmt.Printf("[INFO] channel %s deleted from db\n", channel.Name)
 		}
 	}
 
