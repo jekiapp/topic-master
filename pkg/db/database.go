@@ -16,9 +16,10 @@ type DbConfig struct {
 }
 
 type Index struct {
-	Name    string
-	Pattern string
-	Type    IndexType
+	Name     string
+	Pattern  string
+	Optional bool
+	Type     IndexType
 }
 
 type IndexType func(a, b string) bool
@@ -379,7 +380,7 @@ func DeleteByID[Y any](db *buntdb.DB, id string) error {
 			field := strings.Split(index.Name, ":")[1]
 			idxKey := key + ":" + field
 			_, err := tx.Delete(idxKey)
-			if err != nil {
+			if err != nil && !index.Optional {
 				log.Printf("[ERROR] deleting index key: %s, %s", idxKey, err)
 			}
 		}
