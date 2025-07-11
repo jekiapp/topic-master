@@ -36,6 +36,7 @@ type iDeleteTopicRepo interface {
 	GetNsqdHosts(lookupdURL, topic string) ([]nsqmodel.SimpleNsqd, error)
 	DeleteEntityByID(id string) error
 	DeleteTopicFromNsqd(host, topic string) error
+	GetChannelsByTopic(topic string) ([]entity.Entity, error)
 }
 
 type deleteTopicRepo struct {
@@ -56,6 +57,10 @@ func (r *deleteTopicRepo) DeleteEntityByID(id string) error {
 
 func (r *deleteTopicRepo) DeleteTopicFromNsqd(host, topic string) error {
 	return nsqrepo.DeleteTopicFromNsqd(host, topic)
+}
+
+func (r *deleteTopicRepo) GetChannelsByTopic(topic string) ([]entity.Entity, error) {
+	return dbpkg.SelectAll[entity.Entity](r.db, "="+topic, entity.IdxEntity_TopicChannel)
 }
 
 func NewDeleteTopicUsecase(cfg *config.Config, db *buntdb.DB) DeleteTopicUsecase {
@@ -94,6 +99,16 @@ func (uc DeleteTopicUsecase) Handle(ctx context.Context, params map[string]strin
 
 	if err := uc.repo.DeleteEntityByID(ent.ID); err != nil {
 		return DeleteTopicResponse{}, fmt.Errorf("failed to delete entity from db: %w", err)
+	}
+
+	channels, err := uc.repo.GetChannelsByTopic(ent.Name)
+	if err != nil && err != buntdb.ErrNotFound {
+		return DeleteTopicResponse{}, fmt.Errorf("failed to get channels by topic: %w", err)
+	}
+	for _, channel := range channels {
+		if err := uc.repo.DeleteEntityByID(channel.ID); err != nil {
+			fmt.Printf("[ERROR] failed to delete channel from db: %s\n", err)
+		}
 	}
 
 	return DeleteTopicResponse{Message: "Topic deleted successfully"}, nil
