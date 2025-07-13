@@ -6,3 +6,4 @@ __debug_bin*
 .vscode/
 docs/public/*
 docs/resources/_gen/*
+bin/*
