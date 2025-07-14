@@ -1,11 +1,12 @@
-+++
-weight = 201
-date = '2025-07-10T09:10:14+07:00'
-draft = true
-title = 'Installation'
-+++
-
-# Installation
+---
+weight: 200
+date: '2025-07-10T09:09:20+07:00'
+draft: true
+title: 'Getting Started'
+sidebar:
+  open: true
+---
+## Download
 
 Topic Master is distributed as a single binary. You can download the executable for your platform from the [release page](https://github.com/jekiapp/topic-master/releases).
 
@@ -15,6 +16,7 @@ Make the binary executable:
 chmod +x topic-master<architecture>
 ```
 
+## Start server
 To start the application, you need to provide the HTTP address of `nsq_lookupd` and specify a data folder for Topic Master. Each `nsq_lookupd` instance should have its own `data_path`.
 
 Example command to start the app:

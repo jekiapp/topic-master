@@ -9,24 +9,14 @@ draft: true
 toc: true
 ---
 
-## Problem statement
-message queue is one of the crucial component in the modern software infrastructure. 
-Developer on daily basis will operate with message queue provider in their development lifecycle. 
-whether it is debugging, testing or sampling message.
-But the built-in tools provided is less often sufficient to fulfill the software engineer operational needs. 
-for example, publishing and sampling message is one of the most common operation for development software.
+## Problem Statement
 
-On the otherhand, opening developer for a full access to the MQ tools could open recurity risk.
-sampling message is okay, but dumping messages to local drive is not okay. 
-Deleting topics in production is also very risky if didnt protect the action.
-thats why production cluster must be secured.
-But the security measure built-in in the MQ platform is either very minimum or non-existent.
-The security choice for infra structure manager is usually all or nothing for the developer access to the tools like NSQAdmin or Kafka-ui.
+Message queues are a crucial component of modern software infrastructure. Developers interact with message queue providers daily throughout the development lifecycle—whether for debugging, testing, or sampling messages. However, the built-in tools provided by most message queue platforms are often insufficient for the operational needs of software engineers. For example, publishing and sampling messages are common tasks during development, but these are not always well-supported.
+
+On the other hand, granting developers full access to message queue tools can introduce security risks. While sampling messages may be acceptable, actions like dumping messages to a local drive or deleting topics in production can be dangerous if not properly controlled. Therefore, production clusters must be secured. Unfortunately, the security features built into most message queue platforms are minimal or even non-existent. Infrastructure managers are often forced to choose between giving developers full access or none at all to tools like NSQAdmin or Kafka-UI.
 
 ## Why Topic Master?
-Based on the previous problem. Topic Master vision is to give a developer reliable tool for doing daily development job related with the MQ operation.
-Topic Master will be developer centric, the feature in Topic master will only focused on developer tool (e.g publish, tail message), 
-not infra tools (e.g monitoring, alerting)  because I believe there are way better tools for observability.
 
-The security control designed to be efficient yet simple. becase we give the administration job distributed to each team. 
-so the main administrator (root) will not burdened with access approval.
+To address these challenges, Topic Master aims to provide developers with a reliable tool for daily message queue operations. Topic Master is developer-centric, focusing exclusively on features that assist with development tasks (such as publishing and tailing messages), rather than infrastructure management (like monitoring or alerting), as there are already excellent tools available for observability.
+
+The security model is designed to be both efficient and simple. Administration responsibilities are distributed to each team, so the main administrator (root) is not burdened with every access approval. This approach ensures that security is maintained without sacrificing developer productivity.

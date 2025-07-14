@@ -8,8 +8,8 @@ draft: false
   <p style="font-size: 1.5rem; margin-bottom: 2rem;">
     Message queue administration with streamlined security control
   </p>
-  <a href="/docs/get-started/" class="button button--primary" style="margin-right: 1rem;">Get Started</a>
-  <a href="/docs/overview" class="button">Documentation</a>
+  <a href="/docs/getting-started/" class="button button--primary" style="margin-right: 1rem;">Get Started</a>
+  <a href="/docs/overview" class="button">Why Topic Master?</a>
   <div style= "font-size: 1; color: #666; margin-top: 1rem;">
     <strong>Free, open source <span style="color: #27ae60;">✅</span></strong>
   </div>
