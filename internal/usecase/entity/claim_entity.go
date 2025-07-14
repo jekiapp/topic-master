@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/jekiapp/topic-master/internal/logic/auth"
 	usergrouplogic "github.com/jekiapp/topic-master/internal/logic/user_group"
@@ -124,10 +125,12 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 	groupOwnerID := group.ID
 	if entityObj.GroupOwner != acl.GroupNone {
 		entityOwner, err := uc.repo.GetGroupByName(entityObj.GroupOwner)
-		if err != nil {
-			return ClaimEntityResponse{}, errors.New("entity owner group not found")
+		// if err not nil, then it can be assumed the group is deleted
+		if err == nil {
+			groupOwnerID = entityOwner.ID
+		} else {
+			log.Println("group owner not found", entityObj.GroupOwner)
 		}
-		groupOwnerID = entityOwner.ID
 	}
 
 	input := auth.CreateApplicationInput{
