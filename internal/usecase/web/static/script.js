@@ -17,7 +17,7 @@ $(function() {
         $('#user-dropdown').hide();
         $('#login-signup-link').show();
       }
-      // Show Access Control only if root
+      // Show User Group only if root
       if (userData && userData.root === true) {
         $(".menu li a.hidden").removeClass('hidden');
       }
@@ -38,8 +38,8 @@ $(function() {
   const myTopicsMenu = $('.menu li a').filter(function() {
     return $(this).text().trim() === 'My Topics';
   });
-  const accessControlMenu = $('.menu li a').filter(function() {
-    return $(this).text().trim() === 'Access Control';
+  const userGroupMenu = $('.menu li a').filter(function() {
+    return $(this).text().trim() === 'User Group';
   });
 
   const mainIframe = $('#main-iframe');
@@ -48,7 +48,7 @@ $(function() {
     mainIframe.attr('src', 'all-topics/index.html?is_bookmarked=true');
   }
 
-  function showAccessControl() {
+  function showUserGroup() {
     mainIframe.attr('src', 'acl/index.html');
   }
 
@@ -67,7 +67,7 @@ $(function() {
   function setActiveMenuByHash(hash) {
     if (hash === '#access') {
       $('.menu li a').removeClass('active');
-      accessControlMenu.addClass('active');
+      userGroupMenu.addClass('active');
     } else if (hash === '#tickets' || hash.startsWith('#ticket-detail')) {
     $('.menu li a').removeClass('active');
       ticketsMenu.addClass('active');
@@ -111,8 +111,8 @@ $(function() {
   function handleHashChange() {
     const hash = window.location.hash;
     setActiveMenuByHash(hash);
-    if (hash === '#access') {
-      showAccessControl();
+    if (hash === '#user-group') {
+      showUserGroup();
     } else if (hash === '#tickets') {
       showTickets();
     } else if (hash.startsWith('#tickets-new')) {
@@ -142,12 +142,12 @@ $(function() {
     showMyTopics();
   });
 
-  accessControlMenu.on('click', function(e) {
+  userGroupMenu.on('click', function(e) {
     e.preventDefault();
-    window.location.hash = '#access';
+    window.location.hash = '#user-group';
     $('.menu li a').removeClass('active');
     $(this).addClass('active');
-    showAccessControl();
+    showUserGroup();
   });
 
   allTopicsMenu.on('click', function(e) {
