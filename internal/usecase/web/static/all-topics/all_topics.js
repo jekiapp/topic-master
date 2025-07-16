@@ -34,9 +34,15 @@ $(function() {
 
   function renderTopics(topics) {
     const rows = topics.map(function(t) {
+      let groupOwnerCell;
+      if (!t.group_owner || t.group_owner === 'None') {
+        groupOwnerCell = '<span style="display:inline-block;min-width:60px;padding:2px 12px;border-radius:999px;background:#e0e0e0;color:#888;text-align:center;">None</span>';
+      } else {
+        groupOwnerCell = `<span style="display:inline-block;min-width:60px;padding:2px 12px;border-radius:999px;background:#d4f7d4;color:#222;text-align:center;">${t.group_owner}</span>`;
+      }
       return `<tr class="topic-row" data-id="${t.id}" data-bookmarked="${t.bookmarked}">
         <td>${t.name || ''}</td>
-        <td>${t.group_owner || ''}</td>
+        <td>${groupOwnerCell}</td>
         <td>${t.event_trigger || ''}</td>
         <td style="text-align:center;vertical-align:middle;">${renderBookmark(t.bookmarked)}</td>
       </tr>`;
