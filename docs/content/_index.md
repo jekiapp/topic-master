@@ -1,6 +1,5 @@
 ---
 date: '2025-07-10T17:17:53+07:00'
-draft: false
 custom_css: ["/css/custom-index.css"]
 ---
 
@@ -13,7 +12,12 @@ custom_css: ["/css/custom-index.css"]
     <a href="/docs/getting-started/" class="button button--primary" style="margin-right: 1rem;">Get Started</a>
     <a href="/docs/overview" class="button">Why Topic Master?</a>
     <div style="font-size: 1rem; color: #666; margin-top: 1rem;">
-      <strong>Free, open source <span style="color: #27ae60;">✅</span></strong>
+    </div>
+    <div style="margin-top: .5rem;">
+      <a href="https://github.com/jekiapp/topic-master" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #24292f; font-size: 1.1rem;">
+        <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width: 24px; height: 24px; vertical-align: middle; border-radius: 4px;" />
+        <span>View on GitHub</span>
+      </a>
     </div>
   </div>
   <div style="flex: 1; min-width: 600px; display: flex; justify-content: center; align-items: center;">
