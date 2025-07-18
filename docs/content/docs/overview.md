@@ -20,3 +20,12 @@ On the other hand, granting developers full access to message queue tools can in
 To address these challenges, Topic Master aims to provide developers with a reliable tool for daily message queue operations. Topic Master is developer-centric, focusing exclusively on features that assist with development tasks (such as publishing and tailing messages), rather than infrastructure management (like monitoring or alerting), as there are already excellent tools available for observability.
 
 The security model is designed to be both efficient and simple. Administration responsibilities are distributed to each team, so the main administrator (root) is not burdened with every access approval. This approach ensures that security is maintained without sacrificing developer productivity.
+
+<br>
+<br>
+
+<video controls width="600">
+  <source src="/images/docs/access_enforcement.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+

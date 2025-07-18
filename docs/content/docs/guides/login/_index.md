@@ -2,7 +2,7 @@
 weight = 330
 date = '2025-07-10T09:12:22+07:00'
 draft = true
-title = 'Login'
+title = 'Logged-in User'
 +++
 
 A logged-in user has access to all the basic features available to non-logged-in users, plus additional features that require a user session.
@@ -24,7 +24,20 @@ Once an entity is claimed by a group, it is protected from users outside the own
 ## Apply for Permission
 
 If an action on an entity is restricted because the user is not a member of the owning group, the user can apply for access by clicking the relevant action button (e.g., publish, tail). If the action is prohibited, a popup will appear with a link to open a new application page. On this page, the user can select the permissions they wish to request. The approver for these applications is the admin of the owning group.
+<br/>
+
+<div style="display: flex; justify-content: center; align-items: center; margin: 2rem 0;">
+  <img src="/images/docs/application form.png" alt="application form" style="max-width: 700px; width: 100%; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
+</div>
+
+
 
 ## Ticket Assignment
 
 If a user is a root member or has an admin role in a group, the ticket list page will show assignments for that user. All applications that the user is eligible to approve are listed there. Only one assignee is required to take action; if someone else has already acted, the other assignees will be marked as passed.
+<br/>
+
+<div style="display: flex; justify-content: center; align-items: center; margin: 2rem 0;">
+  <img src="/images/docs/application detail.png" alt="application detail" style="max-width: 700px; width: 100%; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
+</div>
+
