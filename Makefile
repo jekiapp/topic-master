@@ -3,6 +3,9 @@ start-test-setup:
 
 stop-test-setup:
 	docker compose -f infra/test_setup/docker-compose.yml down 
+
+start-docs:
+	hugo server -s docs -D --disableFastRender -p 1414
  
 build-run:
 	go build -o topic-master *.go
