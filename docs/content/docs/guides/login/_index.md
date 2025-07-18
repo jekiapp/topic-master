@@ -5,26 +5,26 @@ draft = true
 title = 'Login'
 +++
 
-For a logged-in user, it will have the all the basic features granted for non-login users, with additional feature that requiring user session.
-In this page will be introduced a term "Entity" this is an object to apply the access control into, for example topic and channel
+A logged-in user has access to all the basic features available to non-logged-in users, plus additional features that require a user session.
+
+This page introduces the term "Entity," which refers to an object that access control is applied to, such as a topic or channel.
 
 ## Bookmark
-Logged in user could bookmark the entity. For all the bookmarked topic, it will shown in the "My Topics" menu. For now, bookmarking a channel will only give a mark icon.
+
+Logged-in users can bookmark entities. All bookmarked topics will appear in the "My Topics" menu. Currently, bookmarking a channel only displays a mark icon.
 
 ## Claim
-Exntities is available to claim, whether it's a None ownered entities or a group ownered one. 
-For orphaned entity, the default approver would be the group admin of the entity claimed into.
-For claimed entity (entity with owned by specific group), external user still able to request to claim the entity, 
-but the approver would be the group admin of the current owner.
-Claimed entities will be protected for other user outside the group owner. All the action is restricted by default for external user.
 
-## Apply for permission
-If the action of an entity is restricted due to the user is not a member of the group owner, user can apply the access by clicking the action button (e.g publish, tail button).
-Then if the action is prohibited, there should be a popup with a link to open a new application page. 
-In the application page, user could check permissions that deemed suitable. 
-The approver of the application page would be the admin of the group owner. 
+Entities can be claimed by users. There are two types of entities:
+- **Unowned entities**: Entities that do not currently have an owner (Group owner: None). When claiming an unowned entity, the default approver is the group admin of the group the entity is being claimed into.
+- **Group-owned entities**: Entities that are already owned by a specific group. External users (those not in the owning group) can request to claim these entities, but the approver will be the group admin of the current owner group.
 
-## Ticket assignment
-If a user is a root member or an admin role of a group, The ticket list page will show the assignment for the user. 
-All the application that the user eligible to approve is listed there. 
-Only one of the assignee required to take an action, so if someone else already took the action, the other assignee will be marked as pass.
+Once an entity is claimed by a group, it is protected from users outside the owning group. By default, all actions are restricted for external users.
+
+## Apply for Permission
+
+If an action on an entity is restricted because the user is not a member of the owning group, the user can apply for access by clicking the relevant action button (e.g., publish, tail). If the action is prohibited, a popup will appear with a link to open a new application page. On this page, the user can select the permissions they wish to request. The approver for these applications is the admin of the owning group.
+
+## Ticket Assignment
+
+If a user is a root member or has an admin role in a group, the ticket list page will show assignments for that user. All applications that the user is eligible to approve are listed there. Only one assignee is required to take action; if someone else has already acted, the other assignees will be marked as passed.

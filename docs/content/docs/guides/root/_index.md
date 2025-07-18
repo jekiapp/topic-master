@@ -5,18 +5,15 @@ draft = true
 title = 'Root'
 +++
 
-Root group and root user by default is created when Topic Master initialized with a new data.
-This group is a main administrator for Topic Master.
-By default, root group has one `root` user, but it can also have more than one user. 
-New user for root group can be created in the Access Control page, or anyone can signup and apply to be a member of root group (if approved).
-root group has no admin role.
+The root group and root user are created by default when Topic Master is initialized with new data. This group serves as the main administrator for Topic Master. By default, the root group has one `root` user, but additional users can be added. New users for the root group can be created on the Access Control page, or anyone can sign up and apply to join the root group (subject to approval). The root group does not have an admin role.
 
-#User Group
-the first thing to do for root user is creating groups. It is important because new user would looking for their group when they try to signup.
-Root user could also creating new users, the password would be auto-generated, then it can be given to the target person then they will be forced to create a new password for the first login.
+## User Group
 
-#Tickets assignment
-Root group member(s) will be assigned as approver for signup application, along with the admin of the group being applied to.
-It also assigned for an application targeting to a group that has no admin role in it.
-For example, if someone try to apply to publish to a topic that owned by GroupA, but there's no user with admin role registered in GroupA, then the root group member will be assigned as approver.
+The first task for a root user is to create groups. This is important because new users will look for their group when signing up. Root users can also create new users; the password will be auto-generated and can be given to the intended person, who will then be required to create a new password upon their first login.
+
+## Ticket Assignment
+
+Root group members are assigned as approvers for signup applications, along with the admin of the group being applied to. They are also assigned to applications targeting a group that does not have an admin role.
+
+For example, if someone applies to publish to a topic owned by `Group A`, but there is no user with an admin role registered in `Group A`, then the root group members will be assigned as approvers.
 
