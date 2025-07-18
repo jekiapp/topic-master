@@ -16,14 +16,17 @@ custom_css: ["/css/custom-index.css"]
       <strong>Free, open source <span style="color: #27ae60;">✅</span></strong>
     </div>
   </div>
-  <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center;">
-    <img src="/images/docs/hero_image.png" alt="Hero image" style="max-width: 100%; height: auto; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
+  <div style="flex: 1; min-width: 600px; display: flex; justify-content: center; align-items: center;">
+    <img src="/images/docs/alltopics.png" alt="Hero image" style="max-width: 100%; height: auto; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
   </div>
 </div>
 
-{{< cards >}}
+{{< cards cols="2">}}
   {{< card title="👨‍💻 Developer Friendly" subtitle="Simple and intuitive for developers. Includes features for daily operations." >}}
   {{< card title="🔒 Secure Access" subtitle="Powerful, easy-to-use access control for practical security management." >}}
+{{< /cards >}}
+
+{{< cards cols="2">}}
   {{< card title="🖥️ Supported Platform" subtitle="Supports NSQ now. Kafka and other popular MQs coming soon." >}}
   {{< card title="📦 No External Dependency" subtitle="Runs out of the box—no external database or third-party dependencies required." >}}
 {{< /cards >}}

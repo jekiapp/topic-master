@@ -12,7 +12,7 @@ Although Topic Master is designed with access control in mind, it can also be us
 In this menu, users can view all synchronized topics. By clicking on a topic, users are taken to the topic detail page. Here, all available actions can be performed as long as the entity is not owned by a specific group (indicated by `Group owner: None`).
 
 <div style="display: flex; justify-content: center; align-items: center; margin: 2rem 0;">
-  <img src="/images/docs/hero_image.png" alt="all topics" style="max-width: 600px; width: 100%; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
+  <img src="/images/docs/alltopics.png" alt="all topics" style="max-width: 600px; width: 100%; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
 </div>
 
 ## Detail Topics
