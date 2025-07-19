@@ -9,10 +9,19 @@ custom_css: ["/css/custom-index.css"]
     <p style="font-size: 1.5rem; margin-bottom: 2rem;">
       Message queue administration with streamlined security control
     </p>
-    <a href="/docs/getting-started/" class="button button--primary" style="margin-right: 1rem;">Get Started</a>
+    <a href="/docs/getting-started/" class="button button--primary" style="margin-right: 0rem;">Get Started</a>
     <a href="/docs/overview" class="button">Why Topic Master?</a>
-    <div style="font-size: 1rem; color: #666; margin-top: 1rem;">
+    <!-- supported platform -->
+    <div style="margin-top: 2rem;">
+      <div style="margin-bottom: .5rem; font-weight: bold;">Supported Platforms:</div>
+      <span style="display: inline-block; background: #e6f4ea; color: #217a3c; border-radius: 1em; padding: 0.2em 0.8em; margin-left: 0.5em; font-weight: 500;">
+        NSQ <small>@v0.1.0</small>
+      </span>
+      <span style="display: inline-block; background: #f0f0f0; color: #888; border-radius: 1em; padding: 0.2em 0.8em; margin-left: 0.5em;">
+        Kafka <small>(coming soon!)</small>
+      </span>
     </div>
+    <!-- view on github -->
     <div style="margin-top: .5rem;">
       <a href="https://github.com/jekiapp/topic-master" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #24292f; font-size: 1.1rem;">
         <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width: 24px; height: 24px; vertical-align: middle; border-radius: 4px;" />
@@ -25,12 +34,9 @@ custom_css: ["/css/custom-index.css"]
   </div>
 </div>
 
-{{< cards cols="2">}}
+{{< cards >}}
   {{< card title="👨‍💻 Developer Friendly" subtitle="Simple and intuitive for developers. Includes features for daily operations." >}}
   {{< card title="🔒 Secure Access" subtitle="Powerful, easy-to-use access control for practical security management." >}}
-{{< /cards >}}
-
-{{< cards cols="2">}}
-  {{< card title="🖥️ Supported Platform" subtitle="Supports NSQ now. Kafka and other popular MQs coming soon." >}}
   {{< card title="📦 No External Dependency" subtitle="Runs out of the box—no external database or third-party dependencies required." >}}
 {{< /cards >}}
+
