@@ -30,7 +30,24 @@ custom_css: ["/css/custom-index.css"]
     </div>
   </div>
   <div style="flex: 1; min-width: 600px; display: flex; justify-content: center; align-items: center;">
-    <img src="/images/docs/alltopics.png" alt="Hero image" style="max-width: 100%; height: auto; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />
+    <div style="background:rgb(240, 232, 253); border-radius: 1.5rem; padding: 2rem; width: 100%; max-width: 700px; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
+      <div id="slideshow" style="position: relative; width: 100%; max-width: 600px; aspect-ratio: 16/9; display: flex; justify-content: center; align-items: center;">
+        <img src="/images/docs/alltopics.png" alt="All Topics" class="slide-img" style="position: absolute; width: 100%; height: auto; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08); opacity: 1; transition: opacity 0.5s;" />
+        <img src="/images/docs/topic detail.png" alt="Topic Detail" class="slide-img" style="position: absolute; width: 80%; height: auto; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08); opacity: 0; transition: opacity 0.5s;" />
+        <img src="/images/docs/user list.png" alt="User List" class="slide-img" style="position: absolute; width: 100%; height: auto; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.08); opacity: 0; transition: opacity 0.5s;" />
+      </div>
+    </div>
+    <script>
+      (function() {
+        var slides = document.querySelectorAll('#slideshow .slide-img');
+        var current = 0;
+        setInterval(function() {
+          slides[current].style.opacity = 0;
+          current = (current + 1) % slides.length;
+          slides[current].style.opacity = 1;
+        }, 3000);
+      })();
+    </script>
   </div>
 </div>
 

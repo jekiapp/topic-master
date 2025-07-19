@@ -1,6 +1,9 @@
 start-test-setup:
 	docker compose -f infra/test_setup/docker-compose.yml up
 
+start-test-detach:
+	docker compose -f infra/test_setup/docker-compose.yml up -d
+
 stop-test-setup:
 	docker compose -f infra/test_setup/docker-compose.yml down 
 
