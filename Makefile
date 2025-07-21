@@ -27,3 +27,6 @@ build-macos-arm64:
 	GOOS=darwin GOARCH=arm64 go build -o bin/topic-master-darwin-arm64 *.go
 
 build-all: build-linux-amd64 build-linux-arm64 build-macos-amd64 build-macos-arm64
+
+start-test-all:
+	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_script/docker-compose.yml up

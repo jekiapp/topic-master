@@ -8,5 +8,6 @@ RUN go build -o topic-master ./cmd/main.go
 # Run stage
 FROM alpine:latest
 WORKDIR /app
+RUN mkdir -p /app/infra/test_data/
 COPY --from=builder /app/topic-master .
 CMD ["./topic-master"] 
