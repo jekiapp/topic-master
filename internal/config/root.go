@@ -30,22 +30,30 @@ func CheckAndSetupRoot(db *buntdb.DB) error {
 
 	fmt.Println("Root group or root user not found. Setting up...")
 	var password string
-	for {
-		fmt.Print("Set password for root user: ")
-		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
-		fmt.Println("") // for newline after password input
-		if err != nil {
-			return errors.New("failed to read password: " + err.Error())
-		}
-		password = strings.TrimSpace(string(bytePassword))
+	// Check environment variable first
+	password = strings.TrimSpace(os.Getenv("TOPIC_MASTER_ROOT_PASS"))
+	if password != "" {
 		if len(password) < aclmodel.MinPasswordLength {
-			fmt.Println("Password must be at least " + strconv.Itoa(aclmodel.MinPasswordLength) + " characters. Please try again.")
-			continue
+			return fmt.Errorf("Password from TOPIC_MASTER_ROOT_PASS must be at least %d characters", aclmodel.MinPasswordLength)
 		}
-		break
+		fmt.Println("Using root password from environment variable TOPIC_MASTER_ROOT_PASS.")
+	} else {
+		for {
+			fmt.Print("Set password for root user: ")
+			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+			fmt.Println("") // for newline after password input
+			if err != nil {
+				return errors.New("failed to read password: " + err.Error())
+			}
+			password = strings.TrimSpace(string(bytePassword))
+			if len(password) < aclmodel.MinPasswordLength {
+				fmt.Println("Password must be at least " + strconv.Itoa(aclmodel.MinPasswordLength) + " characters. Please try again.")
+				continue
+			}
+			break
+		}
+		fmt.Println("Password set successfully.")
 	}
-
-	fmt.Println("Password set successfully.")
 	fmt.Println("Now you can login using username: root")
 
 	now := time.Now()
