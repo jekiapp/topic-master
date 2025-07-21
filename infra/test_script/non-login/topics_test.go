@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -205,7 +206,7 @@ func claimShouldFail(t *testing.T, topic Topic) {
 	}
 	claimBody, _ := json.Marshal(claimReq)
 	claimResp, err := http.Post(
-		fmt.Sprintf("%s/api/topic/claim", topicMasterHost),
+		fmt.Sprintf("%s/api/entity/claim", topicMasterHost),
 		"application/json",
 		bytes.NewReader(claimBody),
 	)
@@ -213,6 +214,8 @@ func claimShouldFail(t *testing.T, topic Topic) {
 		t.Fatalf("failed to POST claim: %v", err)
 	}
 	defer claimResp.Body.Close()
+	body, _ := io.ReadAll(claimResp.Body)
+	t.Logf("claimShouldFail response body: %s", string(body))
 	assert.NotEqual(t, http.StatusOK, claimResp.StatusCode, "claim should fail")
 }
 
@@ -222,7 +225,7 @@ func bookmarkShouldFail(t *testing.T, topic Topic) {
 	}
 	bookmarkBody, _ := json.Marshal(bookmarkReq)
 	bookmarkResp, err := http.Post(
-		fmt.Sprintf("%s/api/topic/bookmark", topicMasterHost),
+		fmt.Sprintf("%s/api/entity/toggle-bookmark", topicMasterHost),
 		"application/json",
 		bytes.NewReader(bookmarkBody),
 	)
@@ -230,6 +233,8 @@ func bookmarkShouldFail(t *testing.T, topic Topic) {
 		t.Fatalf("failed to POST bookmark: %v", err)
 	}
 	defer bookmarkResp.Body.Close()
+	body, _ := io.ReadAll(bookmarkResp.Body)
+	t.Logf("bookmarkShouldFail response body: %s", string(body))
 	assert.NotEqual(t, http.StatusOK, bookmarkResp.StatusCode, "bookmark should fail")
 }
 
@@ -240,7 +245,14 @@ func pauseShouldSucceed(t *testing.T, topic Topic) {
 		t.Fatalf("failed to GET pause: %v", err)
 	}
 	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	t.Logf("pauseShouldSucceed response body: %s", string(body))
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "pause should succeed")
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if assert.NoError(t, err, "pause response should be valid JSON") {
+		assert.Equal(t, "success", result["status"], "pause response status should be success")
+	}
 }
 
 func resumeShouldSucceed(t *testing.T, topic Topic) {
@@ -250,7 +262,14 @@ func resumeShouldSucceed(t *testing.T, topic Topic) {
 		t.Fatalf("failed to GET resume: %v", err)
 	}
 	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	t.Logf("resumeShouldSucceed response body: %s", string(body))
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "resume should succeed")
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if assert.NoError(t, err, "resume response should be valid JSON") {
+		assert.Equal(t, "success", result["status"], "resume response status should be success")
+	}
 }
 
 func emptyShouldSucceed(t *testing.T, topic Topic) {
@@ -260,7 +279,14 @@ func emptyShouldSucceed(t *testing.T, topic Topic) {
 		t.Fatalf("failed to GET empty: %v", err)
 	}
 	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	t.Logf("emptyShouldSucceed response body: %s", string(body))
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "empty should succeed")
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if assert.NoError(t, err, "empty response should be valid JSON") {
+		assert.Equal(t, "success", result["status"], "empty response status should be success")
+	}
 }
 
 func tailTopic(t *testing.T, topic Topic, messageCh chan<- string, errCh chan<- error) {
