@@ -2,13 +2,18 @@ package nonlogin
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	nhooyrws "nhooyr.io/websocket"
 )
 
 var topicMasterHost = "http://localhost:4181"
@@ -194,6 +199,115 @@ func publishTopic(t *testing.T, topic Topic) {
 	assert.Contains(t, pubResp.Data.Message, "published", "publish response should indicate success")
 }
 
+func claimShouldFail(t *testing.T, topic Topic) {
+	claimReq := map[string]interface{}{
+		"entity_id": topic.ID,
+	}
+	claimBody, _ := json.Marshal(claimReq)
+	claimResp, err := http.Post(
+		fmt.Sprintf("%s/api/topic/claim", topicMasterHost),
+		"application/json",
+		bytes.NewReader(claimBody),
+	)
+	if err != nil {
+		t.Fatalf("failed to POST claim: %v", err)
+	}
+	defer claimResp.Body.Close()
+	assert.NotEqual(t, http.StatusOK, claimResp.StatusCode, "claim should fail")
+}
+
+func bookmarkShouldFail(t *testing.T, topic Topic) {
+	bookmarkReq := map[string]interface{}{
+		"entity_id": topic.ID,
+	}
+	bookmarkBody, _ := json.Marshal(bookmarkReq)
+	bookmarkResp, err := http.Post(
+		fmt.Sprintf("%s/api/topic/bookmark", topicMasterHost),
+		"application/json",
+		bytes.NewReader(bookmarkBody),
+	)
+	if err != nil {
+		t.Fatalf("failed to POST bookmark: %v", err)
+	}
+	defer bookmarkResp.Body.Close()
+	assert.NotEqual(t, http.StatusOK, bookmarkResp.StatusCode, "bookmark should fail")
+}
+
+func pauseShouldSucceed(t *testing.T, topic Topic) {
+	url := fmt.Sprintf("%s/api/topic/nsq/pause?id=%s&entity_id=%s", topicMasterHost, topic.ID, topic.ID)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("failed to GET pause: %v", err)
+	}
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "pause should succeed")
+}
+
+func resumeShouldSucceed(t *testing.T, topic Topic) {
+	url := fmt.Sprintf("%s/api/topic/nsq/resume?id=%s&entity_id=%s", topicMasterHost, topic.ID, topic.ID)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("failed to GET resume: %v", err)
+	}
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "resume should succeed")
+}
+
+func emptyShouldSucceed(t *testing.T, topic Topic) {
+	url := fmt.Sprintf("%s/api/topic/nsq/empty?id=%s&entity_id=%s", topicMasterHost, topic.ID, topic.ID)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("failed to GET empty: %v", err)
+	}
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "empty should succeed")
+}
+
+func tailTopic(t *testing.T, topic Topic, messageCh chan<- string, errCh chan<- error) {
+	if len(topic.NsqdHosts) == 0 {
+		errCh <- nil // skip if no hosts
+		return
+	}
+	hosts := ""
+	for i, h := range topic.NsqdHosts {
+		hosts += h.Address
+		if i < len(topic.NsqdHosts)-1 {
+			hosts += ","
+		}
+	}
+
+	// Build ws URL with all required params
+	wsBase := "ws://" + topicMasterHost[len("http://"):]
+	wsTailURL := fmt.Sprintf("%s/api/topic/tail?topic=%s&limit_msg=1&nsqd_hosts=%s&entity_id=%s",
+		wsBase,
+		topic.Name,
+		url.QueryEscape(hosts),
+		topic.ID,
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, _, err := nhooyrws.Dial(ctx, wsTailURL, nil)
+	if err != nil {
+		errCh <- err
+		return
+	}
+	defer conn.Close(nhooyrws.StatusNormalClosure, "done")
+
+	_, data, err := conn.Read(ctx)
+	if err != nil {
+		errCh <- err
+		return
+	}
+
+	t.Logf("raw ws message: %q", data)
+
+	// Convert to string, strip trailing \x1e, and send
+	msg := string(bytes.Trim(data, "\x1e"))
+	messageCh <- msg
+}
+
 func TestTopicIntegrationFlow(t *testing.T) {
 	if envHost := os.Getenv("TOPIC_MASTER_HOST"); envHost != "" {
 		topicMasterHost = envHost
@@ -220,7 +334,44 @@ func TestTopicIntegrationFlow(t *testing.T) {
 		checkTopicStats(t, topicDetail)
 	})
 
-	t.Run("publishTopic", func(t *testing.T) {
+	t.Run("tail and publish", func(t *testing.T) {
+		messageCh := make(chan string, 1)
+		errCh := make(chan error, 1)
+		go tailTopic(t, topicDetail, messageCh, errCh)
+		// Wait a moment to ensure tail is listening before publish
+		time.Sleep(300 * time.Millisecond)
+		// Now publish
 		publishTopic(t, topicDetail)
+		select {
+		case msg := <-messageCh:
+			assert.Contains(t, msg, "integration test message", "tail should receive published message")
+		case err := <-errCh:
+			if err != nil {
+				t.Fatalf("tailTopic error: %v", err)
+			}
+		case <-time.After(3 * time.Second):
+			t.Fatal("timeout waiting for tail message")
+		}
 	})
+
+	t.Run("claimShouldFail", func(t *testing.T) {
+		claimShouldFail(t, topicDetail)
+	})
+
+	t.Run("bookmarkShouldFail", func(t *testing.T) {
+		bookmarkShouldFail(t, topicDetail)
+	})
+
+	t.Run("pauseShouldSucceed", func(t *testing.T) {
+		pauseShouldSucceed(t, topicDetail)
+	})
+
+	t.Run("resumeShouldSucceed", func(t *testing.T) {
+		resumeShouldSucceed(t, topicDetail)
+	})
+
+	t.Run("emptyShouldSucceed", func(t *testing.T) {
+		emptyShouldSucceed(t, topicDetail)
+	})
+
 }
