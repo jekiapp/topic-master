@@ -12,6 +12,8 @@ services:
       - -nsqlookupd_http_address=http://nsqlookupd:4161
     environment:
       - TOPIC_MASTER_ROOT_PASS=rootroot
+    ports:
+      - 4181:4181
     networks:
       - topic_master_network
   test-script:

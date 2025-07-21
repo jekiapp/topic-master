@@ -3,7 +3,6 @@ topic-master
 *.db
 __debug_bin*
 *.json
-.vscode/
 docs/public/*
 docs/resources/_gen/*
 bin/*
