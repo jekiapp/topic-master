@@ -7,6 +7,8 @@ services:
       - "4160:4160"  # TCP interface
     volumes:
       - nsq_data:/data
+    networks:
+      - topic_master_network
 
   nsqd:
     image: nsqio/nsq:latest
@@ -19,6 +21,8 @@ services:
       - nsq_data:/data
     depends_on:
       - nsqlookupd
+    networks:
+      - topic_master_network
 
   nsqadmin:
     image: nsqio/nsq:latest
@@ -28,6 +32,8 @@ services:
     depends_on:
       - nsqlookupd
       - nsqd
+    networks:
+      - topic_master_network
 
   publisher:
     build:
@@ -37,6 +43,8 @@ services:
       - ./topics.txt:/app/topics.txt
     depends_on:
       - nsqd
+    networks:
+      - topic_master_network
 
   consumer:
     build:
@@ -51,6 +59,8 @@ services:
       - nsqd
       - nsqlookupd
       - publisher
+    networks:
+      - topic_master_network
 
 volumes:
   nsq_data:
@@ -59,3 +69,7 @@ volumes:
       type: none
       o: bind
       device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/data
+
+networks:
+  topic_master_network:
+    external: true

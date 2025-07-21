@@ -29,4 +29,7 @@ build-macos-arm64:
 build-all: build-linux-amd64 build-linux-arm64 build-macos-amd64 build-macos-arm64
 
 start-test-all:
-	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_script/docker-compose.yml up
+	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_script/docker-compose.yml up --abort-on-container-exit
+
+start-test-script:
+	docker compose -f infra/test_script/docker-compose.yml up --abort-on-container-exit
