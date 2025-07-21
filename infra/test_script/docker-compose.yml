@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  topic-master:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    image: topic-master:latest
+    container_name: topic-master
+  test-script:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: test-script:latest
+    container_name: test-script
