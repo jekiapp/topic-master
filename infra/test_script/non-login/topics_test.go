@@ -334,6 +334,28 @@ func tailTopic(t *testing.T, topic Topic, messageCh chan<- string, errCh chan<- 
 	messageCh <- msg
 }
 
+func deleteTopicShouldSucceed(t *testing.T, topic Topic) {
+	url := fmt.Sprintf("%s/api/topic/delete?id=%s&entity_id=%s", topicMasterHost, topic.ID, topic.ID)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("failed to GET /api/topic/delete: %v", err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	t.Logf("deleteTopic response body: %s", string(body))
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "delete topic should succeed")
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if assert.NoError(t, err, "delete response should be valid JSON") {
+		assert.Equal(t, "success", result["status"], "delete response status should be success")
+	}
+	// Ensure topic is gone
+	topicsAfter := getAllTopics(t)
+	for _, tp := range topicsAfter {
+		assert.NotEqual(t, topic.ID, tp.ID, "deleted topic should not be in the list")
+	}
+}
+
 func TestTopicIntegrationFlow(t *testing.T) {
 	if envHost := os.Getenv("TOPIC_MASTER_HOST"); envHost != "" {
 		topicMasterHost = envHost
@@ -398,6 +420,11 @@ func TestTopicIntegrationFlow(t *testing.T) {
 
 	t.Run("emptyShouldSucceed", func(t *testing.T) {
 		emptyShouldSucceed(t, topicDetail)
+	})
+
+	// Delete the topic at the end
+	t.Run("deleteTopicShouldSucceed", func(t *testing.T) {
+		deleteTopicShouldSucceed(t, topicDetail)
 	})
 
 }
