@@ -7,14 +7,13 @@ services:
     image: topic-master:latest
     container_name: topic-master
     command:
-      - /app/topic-master
-      - -data_path=/app/infra/data/
+      - -data_path=/app/infra/test_data/
       - -port=4181
-      - -nsqlookupd_http_address=http://localhost:4161
+      - -nsqlookupd_http_address=http://nsqlookupd:4161
     environment:
       - TOPIC_MASTER_ROOT_PASS=rootroot
-    depends_on:
-      - nsqlookupd
+    networks:
+      - topic_master_network
   test-script:
     build:
       context: .
@@ -23,3 +22,8 @@ services:
     container_name: test-script
     depends_on:
       - topic-master
+    networks:
+      - topic_master_network
+networks:
+  topic_master_network:
+    external: true
