@@ -127,6 +127,11 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/user/update", rootMiddleware(handlerPkg.HandleGenericPost(h.updateUserUC.Handle)))
 	mux.HandleFunc("/api/user/assign-to-group", rootMiddleware(handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle)))
 	mux.HandleFunc("/api/user/delete", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteUserUC.Handle)))
+	mux.HandleFunc("/api/user/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
+	mux.HandleFunc("/api/user/reset-password", handlerPkg.HandleGetPost(
+		h.resetPasswordUC.HandleGet,
+		h.resetPasswordUC.HandlePost,
+	))
 
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
 	mux.HandleFunc("/api/sync-topics", handlerPkg.HandleGenericGet(h.syncTopicsUC.HandleQuery))
