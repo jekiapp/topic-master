@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestManualUserCreationAndPasswordChange(t *testing.T) {
+func TestManualUserCreation(t *testing.T) {
 	client := &http.Client{}
 	accessToken := helpers.LoginAsRoot(t, client, helpers.GetHost())
 	group := helpers.CreateGroup(
@@ -108,4 +108,8 @@ func TestManualUserCreationAndPasswordChange(t *testing.T) {
 	loginResp2, _ := helpers.LoginUser(t, client, username, newPassword)
 	defer loginResp2.Body.Close()
 	require.Equal(t, http.StatusOK, loginResp2.StatusCode)
+
+	// clean up
+	helpers.DeleteUser(t, client, accessToken, u.ID)
+	helpers.DeleteGroup(t, client, accessToken, group.ID)
 }

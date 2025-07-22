@@ -120,4 +120,9 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 		require.NotEqual(t, http.StatusOK, resp.StatusCode, "deleting root group should not be allowed")
 	})
 
+	// delete group engineering and support
+	t.Run("delete group engineering and support", func(t *testing.T) {
+		helpers.DeleteGroup(t, client, accessToken, createdGroups[0].ID)
+		helpers.DeleteGroup(t, client, accessToken, createdGroups[2].ID)
+	})
 }

@@ -110,7 +110,10 @@ func CreateGroup(t *testing.T, client *http.Client, host, accessToken, name, des
 	resp, err := client.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+	}
 	groups, err := GetAllGroups(t, client, host, accessToken)
 	require.NoError(t, err)
 	for _, g := range groups {
@@ -223,7 +226,10 @@ func DeleteUser(
 	resp, err := client.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+	}
 }
 
 // LoginUser logs in a user and returns the response and cookies.
