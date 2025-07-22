@@ -1,0 +1,10 @@
+customer_registered
+customer_login
+customer_address_updated
+cart_updated
+cart_abandoned
+product_viewed
+product_reviewed
+promotion_created
+promotion_applied
+refund_requested
