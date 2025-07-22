@@ -7,23 +7,24 @@ import (
 	"os"
 	"testing"
 
+	helpers "github.com/jekiapp/topic-master/infra/test_script/helpers"
 	"github.com/stretchr/testify/require"
 )
 
-var groupTestHost = "http://localhost:4181"
-
 func TestRootUserGroupListIntegration(t *testing.T) {
+	groupTestHost := helpers.GetHost()
 	if envHost := os.Getenv("TOPIC_MASTER_HOST"); envHost != "" {
 		groupTestHost = envHost
 	}
 
 	client := &http.Client{}
-	accessToken := LoginAsRoot(t, client, groupTestHost)
+	accessToken := helpers.LoginAsRoot(t, client, groupTestHost)
 
-	var createdGroups []TestGroup
+	var createdGroups []helpers.TestGroup
 
 	t.Run("group list should only have root", func(t *testing.T) {
-		groups := GetAllGroups(t, client, groupTestHost, accessToken)
+		groups, err := helpers.GetAllGroups(t, client, groupTestHost, accessToken)
+		require.NoError(t, err)
 		var rootCount int
 		for _, g := range groups {
 			if g.Name == "root" {
@@ -37,7 +38,7 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 		groupNames := []string{"engineering", "marketing", "support"}
 		descriptions := []string{"Engineering Team", "Marketing Team", "Support Team"}
 		for i := 0; i < 3; i++ {
-			createdGroup := CreateGroup(t, client, groupTestHost, accessToken, groupNames[i], descriptions[i])
+			createdGroup := helpers.CreateGroup(t, client, groupTestHost, accessToken, groupNames[i], descriptions[i])
 			createdGroups = append(createdGroups, createdGroup)
 		}
 		require.Len(t, createdGroups, 3, "should have 3 created groups (excluding root)")
@@ -60,7 +61,8 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 		defer resp.Body.Close()
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 		// Verify update
-		groups := GetAllGroups(t, client, groupTestHost, accessToken)
+		groups, err := helpers.GetAllGroups(t, client, groupTestHost, accessToken)
+		require.NoError(t, err)
 		var found bool
 		for _, g := range groups {
 			if g.ID == firstGroup.ID {
@@ -86,15 +88,17 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 		defer resp.Body.Close()
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 		// Verify deletion
-		groups := GetAllGroups(t, client, groupTestHost, accessToken)
+		groups, err := helpers.GetAllGroups(t, client, groupTestHost, accessToken)
+		require.NoError(t, err)
 		for _, g := range groups {
 			require.NotEqual(t, secondGroup.ID, g.ID, "deleted group should not be in the list")
 		}
 	})
 
 	t.Run("deleting root group should be failed", func(t *testing.T) {
-		groups := GetAllGroups(t, client, groupTestHost, accessToken)
-		var rootGroup *TestGroup
+		groups, err := helpers.GetAllGroups(t, client, groupTestHost, accessToken)
+		require.NoError(t, err)
+		var rootGroup *helpers.TestGroup
 		for _, g := range groups {
 			if g.Name == "root" {
 				rootGroup = &g
@@ -115,4 +119,5 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 		// Should not be 200 OK for forbidden delete
 		require.NotEqual(t, http.StatusOK, resp.StatusCode, "deleting root group should not be allowed")
 	})
+
 }

@@ -7,18 +7,23 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type User struct {
-	ID       string
-	Username string
-	Name     string
-	Groups   []string
-	Role     string
+	ID           string        `json:"id"`
+	Username     string        `json:"username"`
+	Name         string        `json:"name"`
+	Groups       string        `json:"groups"`
+	GroupDetails []GroupDetail `json:"group_details"`
+}
+
+type GroupDetail struct {
+	GroupID string `json:"group_id"`
+	Role    string `json:"role"`
 }
 
 type TestGroup struct {
@@ -129,30 +134,15 @@ func GetAllUsers(client *http.Client, accessToken string) ([]User, error) {
 	body, _ := io.ReadAll(resp.Body)
 	var userList struct {
 		Data struct {
-			Users []struct {
-				ID       string `json:"id"`
-				Username string `json:"username"`
-				Name     string `json:"name"`
-				Groups   string `json:"groups"`
-				Role     string `json:"role"`
-			} `json:"users"`
+			Users []User `json:"users"`
 		} `json:"data"`
 	}
 	err = json.Unmarshal(body, &userList)
 	if err != nil {
+		fmt.Println(string(body))
 		return nil, err
 	}
-	var result []User
-	for _, u := range userList.Data.Users {
-		result = append(result, User{
-			ID:       u.ID,
-			Username: u.Username,
-			Name:     u.Name,
-			Groups:   strings.Split(u.Groups, ","),
-			Role:     u.Role,
-		})
-	}
-	return result, nil
+	return userList.Data.Users, nil
 }
 
 type GroupsReq struct {
@@ -191,6 +181,49 @@ func CreateUser(client *http.Client, accessToken, username, name, password strin
 		}
 	}
 	return User{}, fmt.Errorf("user %s not found after creation", username)
+}
+
+// DeleteGroup deletes a group by its ID using the API
+func DeleteGroup(
+	t *testing.T,
+	client *http.Client,
+	accessToken string,
+	groupID string,
+) {
+	deleteReq := map[string]string{
+		"id": groupID,
+	}
+	body, _ := json.Marshal(deleteReq)
+	req, _ := http.NewRequest("POST", GetHost()+"/api/group/delete-group", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: accessToken})
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+	}
+}
+
+// DeleteUser deletes a user by its ID using the API
+func DeleteUser(
+	t *testing.T,
+	client *http.Client,
+	accessToken string,
+	userID string,
+) {
+	deleteReq := map[string]string{
+		"user_id": userID,
+	}
+	body, _ := json.Marshal(deleteReq)
+	req, _ := http.NewRequest("POST", GetHost()+"/api/user/delete", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: accessToken})
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 // LoginUser logs in a user and returns the response and cookies.

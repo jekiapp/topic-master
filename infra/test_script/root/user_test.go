@@ -3,129 +3,64 @@ package root
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"strings"
 	"testing"
 
+	"github.com/jekiapp/topic-master/infra/test_script/helpers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var userTestHost = "http://localhost:4181"
-
-type User struct {
-	ID       string
-	Username string
-	Name     string
-	Groups   []string
-	Role     string
-}
-
-func getAllUsers(t *testing.T, client *http.Client, accessToken string) []User {
-	req, _ := http.NewRequest("POST", userTestHost+"/api/user/list", bytes.NewReader([]byte(`{}`)))
-	req.Header.Set("Content-Type", "application/json")
-	req.AddCookie(&http.Cookie{Name: "access_token", Value: accessToken})
-	resp, err := client.Do(req)
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	var userList struct {
-		Data struct {
-			Users []struct {
-				ID       string `json:"id"`
-				Username string `json:"username"`
-				Name     string `json:"name"`
-				Groups   string `json:"groups"`
-				Role     string `json:"role"`
-			} `json:"users"`
-		} `json:"data"`
-	}
-	err = json.Unmarshal(body, &userList)
-	require.NoError(t, err)
-	var result []User
-	for _, u := range userList.Data.Users {
-		result = append(result, User{
-			ID:       u.ID,
-			Username: u.Username,
-			Name:     u.Name,
-			Groups:   strings.Split(u.Groups, ","),
-			Role:     u.Role,
-		})
-	}
-	return result
-}
-
-func createUser(t *testing.T, client *http.Client, accessToken, username, name, password, groupID, role string) User {
-	createReq := map[string]interface{}{
-		"username": username,
-		"name":     name,
-		"password": password,
-		"groups":   []string{groupID},
-		"role":     role,
-	}
-	body, _ := json.Marshal(createReq)
-	req, _ := http.NewRequest("POST", userTestHost+"/api/user/create", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.AddCookie(&http.Cookie{Name: "access_token", Value: accessToken})
-	resp, err := client.Do(req)
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-	// Fetch user list to get the new user
-	users := getAllUsers(t, client, accessToken)
-	for _, u := range users {
-		if u.Username == username {
-			return u
-		}
-	}
-	t.Fatalf("user %s not found after creation", username)
-	return User{}
-}
-
-func editUserName(t *testing.T, client *http.Client, accessToken, userID, newName string) {
+func editUserName(t *testing.T, client *http.Client, accessToken string, user helpers.User, newName string) {
 	editReq := map[string]interface{}{
-		"id":   userID,
-		"name": newName,
+		"username": user.Username,
+		"groups":   user.GroupDetails,
+		"name":     newName,
 	}
 	body, _ := json.Marshal(editReq)
-	req, _ := http.NewRequest("POST", userTestHost+"/api/user/update-user-by-id", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", helpers.GetHost()+"/api/user/update", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(&http.Cookie{Name: "access_token", Value: accessToken})
 	resp, err := client.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+	}
 }
 
-func addUserToGroup(t *testing.T, client *http.Client, accessToken, userID, groupID string) {
+func addUserToGroup(t *testing.T, client *http.Client, accessToken string, user helpers.User, groups []helpers.GroupsReq) {
 	editReq := map[string]interface{}{
-		"id":     userID,
-		"groups": []string{groupID},
+		"username": user.Username,
+		"name":     user.Name,
+		"groups":   groups,
 	}
 	body, _ := json.Marshal(editReq)
-	req, _ := http.NewRequest("POST", userTestHost+"/api/user/update-user-by-id", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", helpers.GetHost()+"/api/user/update", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(&http.Cookie{Name: "access_token", Value: accessToken})
 	resp, err := client.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+	}
 }
 
 func TestRootUserUserIntegration(t *testing.T) {
-	if envHost := os.Getenv("TOPIC_MASTER_HOST"); envHost != "" {
-		userTestHost = envHost
-	}
-
 	client := &http.Client{}
-	accessToken := LoginAsRoot(t, client, userTestHost)
+	accessToken := helpers.LoginAsRoot(t, client, helpers.GetHost())
 
-	var createdGroups []TestGroup
-	var createdUsers []User
+	var createdGroups []helpers.TestGroup
+	var createdUsers []helpers.User
 
 	t.Run("user list should only have root", func(t *testing.T) {
-		users := getAllUsers(t, client, accessToken)
+		users, err := helpers.GetAllUsers(client, accessToken)
+		require.NoError(t, err)
 		var rootCount int
 		for _, u := range users {
 			if u.Username == "root" {
@@ -139,14 +74,15 @@ func TestRootUserUserIntegration(t *testing.T) {
 		groupNames := []string{"engineering-user", "marketing-user"}
 		descriptions := []string{"Engineering Team for user test", "Marketing Team for user test"}
 		for i := 0; i < 2; i++ {
-			g := CreateGroup(t, client, userTestHost, accessToken, groupNames[i], descriptions[i])
+			g := helpers.CreateGroup(t, client, helpers.GetHost(), accessToken, groupNames[i], descriptions[i])
 			createdGroups = append(createdGroups, g)
 		}
 		require.Len(t, createdGroups, 2, "should have 2 created groups")
 	})
 
 	t.Run("get group list", func(t *testing.T) {
-		groups := GetAllGroups(t, client, userTestHost, accessToken)
+		groups, err := helpers.GetAllGroups(t, client, helpers.GetHost(), accessToken)
+		require.NoError(t, err)
 		var found int
 		for _, g := range groups {
 			if g.Name == "engineering-user" || g.Name == "marketing-user" {
@@ -161,7 +97,7 @@ func TestRootUserUserIntegration(t *testing.T) {
 			Username string
 			Name     string
 			Password string
-			Group    TestGroup
+			Group    helpers.TestGroup
 			Role     string
 		}{
 			{"alice", "Alice Smith", "alicepass", createdGroups[0], "admin"},
@@ -170,7 +106,8 @@ func TestRootUserUserIntegration(t *testing.T) {
 			{"dave", "Dave Black", "davepass", createdGroups[1], "member"},
 		}
 		for _, input := range userInputs {
-			u := createUser(t, client, accessToken, input.Username, input.Name, input.Password, input.Group.ID, input.Role)
+			u, err := helpers.CreateUser(client, accessToken, input.Username, input.Name, input.Password, []helpers.GroupsReq{{GroupID: input.Group.ID, Role: input.Role}})
+			require.NoError(t, err)
 			createdUsers = append(createdUsers, u)
 		}
 		require.Len(t, createdUsers, 4, "should have 4 created users")
@@ -180,9 +117,10 @@ func TestRootUserUserIntegration(t *testing.T) {
 		require.NotEmpty(t, createdUsers)
 		firstUser := createdUsers[0]
 		newName := "Alice Cooper"
-		editUserName(t, client, accessToken, firstUser.ID, newName)
+		editUserName(t, client, accessToken, firstUser, newName)
 		// Verify
-		users := getAllUsers(t, client, accessToken)
+		users, err := helpers.GetAllUsers(client, accessToken)
+		require.NoError(t, err)
 		var found bool
 		for _, u := range users {
 			if u.ID == firstUser.ID {
@@ -196,16 +134,17 @@ func TestRootUserUserIntegration(t *testing.T) {
 	t.Run("edit 2nd user, add to the 2nd group as member", func(t *testing.T) {
 		require.Len(t, createdUsers, 4)
 		secondUser := createdUsers[1]
-		addUserToGroup(t, client, accessToken, secondUser.ID, createdGroups[1].ID)
+		addUserToGroup(t, client, accessToken, secondUser, []helpers.GroupsReq{{GroupID: createdGroups[1].ID, Role: "member"}})
 		// Verify
-		users := getAllUsers(t, client, accessToken)
+		users, err := helpers.GetAllUsers(client, accessToken)
+		require.NoError(t, err)
 		var found bool
 		for _, u := range users {
 			if u.ID == secondUser.ID {
 				found = true
 				var inGroup bool
-				for _, gid := range u.Groups {
-					if gid == createdGroups[1].ID {
+				for _, g := range u.GroupDetails {
+					if g.GroupID == createdGroups[1].ID {
 						inGroup = true
 					}
 				}
@@ -213,5 +152,15 @@ func TestRootUserUserIntegration(t *testing.T) {
 			}
 		}
 		require.True(t, found, "edited user should be found in list")
+	})
+
+	// cleanup, delete groups and users created
+	t.Run("cleanup", func(t *testing.T) {
+		for _, g := range createdGroups {
+			helpers.DeleteGroup(t, client, accessToken, g.ID)
+		}
+		for _, u := range createdUsers {
+			helpers.DeleteUser(t, client, accessToken, u.ID)
+		}
 	})
 }
