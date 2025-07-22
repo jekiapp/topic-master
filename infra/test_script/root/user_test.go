@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -32,11 +33,11 @@ func getAllUsers(t *testing.T, client *http.Client, accessToken string) []User {
 	var userList struct {
 		Data struct {
 			Users []struct {
-				ID       string   `json:"id"`
-				Username string   `json:"username"`
-				Name     string   `json:"name"`
-				Groups   []string `json:"groups"`
-				Role     string   `json:"role"`
+				ID       string `json:"id"`
+				Username string `json:"username"`
+				Name     string `json:"name"`
+				Groups   string `json:"groups"`
+				Role     string `json:"role"`
 			} `json:"users"`
 		} `json:"data"`
 	}
@@ -48,7 +49,7 @@ func getAllUsers(t *testing.T, client *http.Client, accessToken string) []User {
 			ID:       u.ID,
 			Username: u.Username,
 			Name:     u.Name,
-			Groups:   u.Groups,
+			Groups:   strings.Split(u.Groups, ","),
 			Role:     u.Role,
 		})
 	}
@@ -138,14 +139,14 @@ func TestRootUserUserIntegration(t *testing.T) {
 		groupNames := []string{"engineering-user", "marketing-user"}
 		descriptions := []string{"Engineering Team for user test", "Marketing Team for user test"}
 		for i := 0; i < 2; i++ {
-			g := CreateGroup(t, client, accessToken, groupNames[i], descriptions[i], userTestHost)
+			g := CreateGroup(t, client, userTestHost, accessToken, groupNames[i], descriptions[i])
 			createdGroups = append(createdGroups, g)
 		}
 		require.Len(t, createdGroups, 2, "should have 2 created groups")
 	})
 
 	t.Run("get group list", func(t *testing.T) {
-		groups := GetAllGroups(t, client, accessToken, userTestHost)
+		groups := GetAllGroups(t, client, userTestHost, accessToken)
 		var found int
 		for _, g := range groups {
 			if g.Name == "engineering-user" || g.Name == "marketing-user" {
