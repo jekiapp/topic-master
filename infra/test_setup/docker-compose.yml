@@ -52,10 +52,75 @@ services:
       - nsqlookupd
       - publisher
 
+  # --- Kafka Setup ---
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - kafka_data:/data
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+
+  kafka-publisher:
+    build:
+      context: ./kafka/publisher
+      dockerfile: Dockerfile
+    volumes:
+      - ./topics.txt:/app/topics.txt
+    depends_on:
+      - kafka
+
+  kafka-consumer:
+    build:
+      context: ./kafka/consumer
+      dockerfile: Dockerfile
+    volumes:
+      - ./topics.txt:/app/topics.txt
+    environment:
+      - TOPICS=${TOPICS}
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      - kafka
+      - kafka-publisher
+
 volumes:
   nsq_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/data
+      device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/nsq/data
+  kafka_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/kafka/data
