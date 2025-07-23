@@ -27,6 +27,6 @@ while true; do
   timestamp=$(date +%s)
   message="{\"event\":\"$random_topic\",\"timestamp\":$timestamp,\"data\":{\"id\":$RANDOM}}"
   echo "Publishing to $random_topic: $message"
-  echo "$message" | kafka-console-producer.sh --broker-list $BROKER --topic "$random_topic" > /dev/null
+  echo "$message" | kafka-console-producer.sh --bootstrap-server $BROKER --topic "$random_topic" > /dev/null
   sleep 1
 done 

@@ -11,7 +11,7 @@ done
 echo "Kafka broker is ready."
 
 # Read topics from file
-mapfile -t topics < topics.txt
+mapfile -t topics < ../topics.txt
 
 # Start a consumer for each topic in the background
 for topic in "${topics[@]}"; do
