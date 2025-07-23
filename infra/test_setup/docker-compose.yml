@@ -31,8 +31,8 @@ services:
 
   publisher:
     build:
-      context: .
-      dockerfile: publisher/Dockerfile
+      context:  ./nsq/publisher
+      dockerfile: Dockerfile
     volumes:
       - ./topics.txt:/app/topics.txt
     depends_on:
@@ -40,8 +40,8 @@ services:
 
   consumer:
     build:
-      context: .
-      dockerfile: consumer/Dockerfile
+      context: ./nsq/consumer
+      dockerfile: Dockerfile
     volumes:
       - ./topics.txt:/app/topics.txt
     environment:
@@ -52,30 +52,21 @@ services:
       - nsqlookupd
       - publisher
 
-  # --- Kafka Setup ---
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    volumes:
-      - kafka_data:/data
-
+  # --- Kafka Setup (KRaft mode, no Zookeeper) ---
   kafka:
     image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
-      - "29092:29092"
+      - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      CLUSTER_ID: "q1w2e3r4t5y6u7i8o9p0zxcvbnmlkjhg"
     volumes:
       - kafka_data:/kafka
 
@@ -93,8 +84,6 @@ services:
     build:
       context: ./kafka/publisher
       dockerfile: Dockerfile
-    volumes:
-      - ./topics.txt:/app/topics.txt
     depends_on:
       - kafka
 
@@ -102,8 +91,6 @@ services:
     build:
       context: ./kafka/consumer
       dockerfile: Dockerfile
-    volumes:
-      - ./topics.txt:/app/topics.txt
     environment:
       - TOPICS=${TOPICS}
       - KAFKA_BROKER=kafka:9092
