@@ -68,7 +68,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/data
+      device: ${GOPATH}/src/github.com/jekiapp/topic-master/infra/test_setup/nsq/data
 
 networks:
   topic_master_network:
