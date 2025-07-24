@@ -105,8 +105,8 @@ func UserSignup(t *testing.T, username, rootToken string, group helpers.TestGrou
 		err = json.Unmarshal(bodyBytes, &appDetail)
 		require.NoError(t, err, "failed to decode signup app detail: %s", string(bodyBytes))
 		require.Equal(t, applicationID, appDetail.Data.Application.ID)
-		require.Equal(t, "alice", appDetail.Data.User.Username)
-		require.Equal(t, "Alice Smith", appDetail.Data.User.Name)
+		require.Equal(t, username, appDetail.Data.User.Username)
+		require.Equal(t, userSingupReqs[username].Name, appDetail.Data.User.Name)
 	})
 
 	t.Run("root assignment list", func(t *testing.T) {
@@ -160,8 +160,8 @@ func UserSignup(t *testing.T, username, rootToken string, group helpers.TestGrou
 		err = json.Unmarshal(body, &detailResp)
 		require.NoError(t, err, "failed to decode ticket detail: %s", string(body))
 		require.Equal(t, applicationID, detailResp.Data.Ticket.ID)
-		require.Equal(t, "alice", detailResp.Data.Applicant.Username)
-		require.Equal(t, "Alice Smith", detailResp.Data.Applicant.Name)
+		require.Equal(t, username, detailResp.Data.Applicant.Username)
+		require.Equal(t, userSingupReqs[username].Name, detailResp.Data.Applicant.Name)
 	})
 
 	t.Run("root approve application", func(t *testing.T) {
