@@ -33,15 +33,34 @@ var userSingupReqs = map[string]UserSignupReq{
 		Reason:          "I want to join payment team",
 		GroupRole:       "member",
 	},
+	"bob": {
+		Username:        "bob",
+		Name:            "Bob Smith",
+		Password:        "bobpass",
+		ConfirmPassword: "bobpass",
+		Reason:          "I want to join order team",
+		GroupRole:       "member",
+	},
+	"charlie": {
+		Username:        "charlie",
+		Name:            "Charlie Smith",
+		Password:        "charliepass",
+		ConfirmPassword: "charliepass",
+		Reason:          "I want to join payment team",
+		GroupRole:       "admin",
+	},
 }
 
-func UserSignup(t *testing.T, username, rootToken string) {
+// UserSignup performs the signup flow and returns the access token after approval.
+func UserSignup(t *testing.T, username, rootToken string, group helpers.TestGroup) string {
 	client := &http.Client{}
 
 	var applicationID string
 
 	t.Run("signup", func(t *testing.T) {
 		signupReq := userSingupReqs[username]
+		signupReq.GroupID = group.ID
+		signupReq.GroupName = group.Name
 		body, _ := json.Marshal(signupReq)
 		resp, err := client.Post(helpers.GetHost()+"/api/signup", "application/json", bytes.NewReader(body))
 		require.NoError(t, err)
@@ -58,7 +77,6 @@ func UserSignup(t *testing.T, username, rootToken string) {
 		applicationID = signupResp.Data.ApplicationID
 	})
 
-	userID := ""
 	t.Run("check detail", func(t *testing.T) {
 		require.NotEmpty(t, applicationID, "application_id should be set from signup subtest")
 		appDetailReq, _ := http.NewRequest("GET", helpers.GetHost()+"/api/signup/app?id="+applicationID, nil)
@@ -89,7 +107,6 @@ func UserSignup(t *testing.T, username, rootToken string) {
 		require.Equal(t, applicationID, appDetail.Data.Application.ID)
 		require.Equal(t, "alice", appDetail.Data.User.Username)
 		require.Equal(t, "Alice Smith", appDetail.Data.User.Name)
-		userID = appDetail.Data.User.ID
 	})
 
 	t.Run("root assignment list", func(t *testing.T) {
@@ -171,13 +188,25 @@ func UserSignup(t *testing.T, username, rootToken string) {
 		require.Equal(t, "success", approveResp.Data.Status)
 	})
 
+	var accessToken string
 	t.Run("user can login after approval", func(t *testing.T) {
-		loginResp, _ := helpers.LoginUser(t, client, "alice", "alicepass")
+		loginResp, cookies := helpers.LoginUser(
+			t,
+			client,
+			username,
+			userSingupReqs[username].Password,
+		)
 		defer loginResp.Body.Close()
 		if !assert.Equal(t, http.StatusOK, loginResp.StatusCode) {
 			body, _ := io.ReadAll(loginResp.Body)
 			fmt.Println(string(body))
 		}
+		for _, c := range cookies {
+			if c.Name == "access_token" {
+				accessToken = c.Value
+				break
+			}
+		}
 	})
-
+	return accessToken
 }
