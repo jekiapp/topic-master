@@ -17,7 +17,6 @@ services:
     depends_on:
       # only depens consumer to make sure the topic has channels
       # the consumer itself depends on nsqlookupd and nsqd
-      - consumer 
     networks:
       - topic_master_network
   test-script:
