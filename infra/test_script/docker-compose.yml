@@ -22,6 +22,8 @@ services:
       dockerfile: Dockerfile
     image: test-script:latest
     container_name: test-script
+    environment:
+      - TOPIC_MASTER_HOST=http://topic-master:4181
     depends_on:
       - topic-master
     networks:

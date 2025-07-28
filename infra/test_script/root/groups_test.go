@@ -17,6 +17,8 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 		groupTestHost = envHost
 	}
 
+	const randomSuffix = "964"
+
 	client := &http.Client{}
 	accessToken := helpers.LoginAsRoot(t, client, groupTestHost)
 
@@ -35,7 +37,7 @@ func TestRootUserGroupListIntegration(t *testing.T) {
 	})
 
 	t.Run("create 3 groups", func(t *testing.T) {
-		groupNames := []string{"engineering", "marketing", "support"}
+		groupNames := []string{"engineering-" + randomSuffix, "marketing-" + randomSuffix, "support-" + randomSuffix}
 		descriptions := []string{"Engineering Team", "Marketing Team", "Support Team"}
 		for i := 0; i < 3; i++ {
 			createdGroup := helpers.CreateGroup(t, client, groupTestHost, accessToken, groupNames[i], descriptions[i])

@@ -33,9 +33,9 @@ type TestGroup struct {
 	Members     string
 }
 
-// GetHost returns the test host, respecting the USER_TEST_HOST environment variable if set.
+// GetHost returns the test host, respecting the TOPIC_MASTER_HOST environment variable if set.
 func GetHost() string {
-	host := os.Getenv("USER_TEST_HOST")
+	host := os.Getenv("TOPIC_MASTER_HOST")
 	if host != "" {
 		return host
 	}

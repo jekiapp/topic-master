@@ -12,12 +12,13 @@ import (
 	"testing"
 	"time"
 
+	helpers "github.com/jekiapp/topic-master/infra/test_script/helpers"
 	"github.com/stretchr/testify/assert"
 
 	nhooyrws "nhooyr.io/websocket"
 )
 
-var topicMasterHost = "http://localhost:4181"
+var topicMasterHost = helpers.GetHost()
 
 type Topic struct {
 	ID           string `json:"id"`
@@ -108,7 +109,7 @@ func editEventTrigger(t *testing.T, topic Topic) {
 	}
 	updateBody, _ := json.Marshal(updateReq)
 	updateResp, err := http.Post(
-		fmt.Sprintf("%s/api/entity/update-description", topicMasterHost),
+		fmt.Sprintf("%s/api/entity/update-description?entity_id=%s", topicMasterHost, topic.ID),
 		"application/json",
 		bytes.NewReader(updateBody),
 	)
@@ -371,7 +372,7 @@ func TestTopicIntegrationFlow(t *testing.T) {
 
 	var topicDetail Topic
 	t.Run("checkTopicDetail", func(t *testing.T) {
-		topicDetail = checkTopicDetail(t, topics[0])
+		topicDetail = checkTopicDetail(t, topics[4])
 	})
 
 	t.Run("editEventTrigger", func(t *testing.T) {

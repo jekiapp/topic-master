@@ -1,0 +1,47 @@
+name: Automation Test
+
+on:
+  pull_request:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Docker Compose
+        uses: docker/setup-docker-compose@v3
+
+      - name: Create external Docker network if not exists
+        run: |
+          docker network inspect topic_master_network >/dev/null 2>&1 || \
+          docker network create topic_master_network
+
+      - name: Start infra/test_setup stack
+        run: |
+          docker compose -f infra/test_setup/docker-compose.yml up -d
+
+      - name: Wait for NSQ services to be healthy
+        run: |
+          for i in {1..30}; do
+            if docker ps | grep nsqlookupd && docker ps | grep nsqd; then
+              echo "NSQ services are up" && break
+            fi
+            echo "Waiting for NSQ services..."
+            sleep 2
+          done
+
+      - name: Start topic-master and test-script
+        run: |
+          docker compose -f infra/test_script/docker-compose.yml up --build --abort-on-container-exit --exit-code-from test-script
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose -f infra/test_script/docker-compose.yml down -v || true
+          docker compose -f infra/test_setup/docker-compose.yml down -v || true
+          docker network rm topic_master_network || true 

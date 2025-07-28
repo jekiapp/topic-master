@@ -52,11 +52,29 @@ func addUserToGroup(t *testing.T, client *http.Client, accessToken string, user 
 }
 
 func TestRootUserUserIntegration(t *testing.T) {
+	const randomSuffix = "8382"
+
 	client := &http.Client{}
 	accessToken := helpers.LoginAsRoot(t, client, helpers.GetHost())
 
 	var createdGroups []helpers.TestGroup
 	var createdUsers []helpers.User
+
+	// Attempt to delete all users except root and all groups before running tests
+	users, err := helpers.GetAllUsers(client, accessToken)
+	require.NoError(t, err)
+	for _, u := range users {
+		if u.Username != "root" {
+			helpers.DeleteUser(t, client, accessToken, u.ID)
+		}
+	}
+	groups, err := helpers.GetAllGroups(t, client, helpers.GetHost(), accessToken)
+	require.NoError(t, err)
+	for _, g := range groups {
+		if g.Name != "root" {
+			helpers.DeleteGroup(t, client, accessToken, g.ID)
+		}
+	}
 
 	t.Run("user list should only have root", func(t *testing.T) {
 		users, err := helpers.GetAllUsers(client, accessToken)
@@ -71,7 +89,7 @@ func TestRootUserUserIntegration(t *testing.T) {
 	})
 
 	t.Run("create 2 groups", func(t *testing.T) {
-		groupNames := []string{"engineering-user", "marketing-user"}
+		groupNames := []string{"engineering-user-" + randomSuffix, "marketing-user-" + randomSuffix}
 		descriptions := []string{"Engineering Team for user test", "Marketing Team for user test"}
 		for i := 0; i < 2; i++ {
 			g := helpers.CreateGroup(t, client, helpers.GetHost(), accessToken, groupNames[i], descriptions[i])
@@ -85,7 +103,7 @@ func TestRootUserUserIntegration(t *testing.T) {
 		require.NoError(t, err)
 		var found int
 		for _, g := range groups {
-			if g.Name == "engineering-user" || g.Name == "marketing-user" {
+			if g.Name == "engineering-user-"+randomSuffix || g.Name == "marketing-user-"+randomSuffix {
 				found++
 			}
 		}
@@ -100,10 +118,10 @@ func TestRootUserUserIntegration(t *testing.T) {
 			Group    helpers.TestGroup
 			Role     string
 		}{
-			{"alice", "Alice Smith", "alicepass", createdGroups[0], "admin"},
-			{"bob", "Bob Jones", "bobpass", createdGroups[0], "member"},
-			{"carol", "Carol White", "carolpass", createdGroups[1], "admin"},
-			{"dave", "Dave Black", "davepass", createdGroups[1], "member"},
+			{"alice-" + randomSuffix, "Alice Smith", "alicepass", createdGroups[0], "admin"},
+			{"bob-" + randomSuffix, "Bob Jones", "bobpass", createdGroups[0], "member"},
+			{"carol-" + randomSuffix, "Carol White", "carolpass", createdGroups[1], "admin"},
+			{"dave-" + randomSuffix, "Dave Black", "davepass", createdGroups[1], "member"},
 		}
 		for _, input := range userInputs {
 			u, err := helpers.CreateUser(client, accessToken, input.Username, input.Name, input.Password, []helpers.GroupsReq{{GroupID: input.Group.ID, Role: input.Role}})
@@ -152,15 +170,5 @@ func TestRootUserUserIntegration(t *testing.T) {
 			}
 		}
 		require.True(t, found, "edited user should be found in list")
-	})
-
-	// cleanup, delete groups and users created
-	t.Run("cleanup", func(t *testing.T) {
-		for _, g := range createdGroups {
-			helpers.DeleteGroup(t, client, accessToken, g.ID)
-		}
-		for _, u := range createdUsers {
-			helpers.DeleteUser(t, client, accessToken, u.ID)
-		}
 	})
 }

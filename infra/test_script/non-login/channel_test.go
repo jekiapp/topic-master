@@ -9,10 +9,11 @@ import (
 	"os"
 	"testing"
 
+	helpers "github.com/jekiapp/topic-master/infra/test_script/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
-var channelTestHost = "http://localhost:4181"
+var channelTestHost = helpers.GetHost()
 
 type Channel struct {
 	ID           string `json:"id"`
@@ -167,7 +168,7 @@ func TestChannelIntegrationFlow(t *testing.T) {
 
 	var topicDetail Topic
 	t.Run("checkTopicDetail", func(t *testing.T) {
-		topicDetail = checkTopicDetail(t, topics[0])
+		topicDetail = checkTopicDetail(t, topics[3])
 	})
 
 	var channels []Channel
