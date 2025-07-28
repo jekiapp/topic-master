@@ -60,22 +60,6 @@ func TestRootUserUserIntegration(t *testing.T) {
 	var createdGroups []helpers.TestGroup
 	var createdUsers []helpers.User
 
-	// Attempt to delete all users except root and all groups before running tests
-	users, err := helpers.GetAllUsers(client, accessToken)
-	require.NoError(t, err)
-	for _, u := range users {
-		if u.Username != "root" {
-			helpers.DeleteUser(t, client, accessToken, u.ID)
-		}
-	}
-	groups, err := helpers.GetAllGroups(t, client, helpers.GetHost(), accessToken)
-	require.NoError(t, err)
-	for _, g := range groups {
-		if g.Name != "root" {
-			helpers.DeleteGroup(t, client, accessToken, g.ID)
-		}
-	}
-
 	t.Run("user list should only have root", func(t *testing.T) {
 		users, err := helpers.GetAllUsers(client, accessToken)
 		require.NoError(t, err)
@@ -170,5 +154,20 @@ func TestRootUserUserIntegration(t *testing.T) {
 			}
 		}
 		require.True(t, found, "edited user should be found in list")
+	})
+
+	t.Cleanup(func() {
+		// Clean up created users (except root)
+		for _, u := range createdUsers {
+			if u.Username != "root" {
+				helpers.DeleteUser(t, client, accessToken, u.ID)
+			}
+		}
+		// Clean up created groups (except root)
+		for _, g := range createdGroups {
+			if g.Name != "root" {
+				helpers.DeleteGroup(t, client, accessToken, g.ID)
+			}
+		}
 	})
 }
