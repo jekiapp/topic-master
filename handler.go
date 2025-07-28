@@ -127,6 +127,11 @@ func (h Handler) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/user/update", rootMiddleware(handlerPkg.HandleGenericPost(h.updateUserUC.Handle)))
 	mux.HandleFunc("/api/user/assign-to-group", rootMiddleware(handlerPkg.HandleGenericPost(h.assignUserToGroupUC.Handle)))
 	mux.HandleFunc("/api/user/delete", rootMiddleware(handlerPkg.HandleGenericPost(h.deleteUserUC.Handle)))
+	mux.HandleFunc("/api/user/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
+	mux.HandleFunc("/api/user/reset-password", handlerPkg.HandleGetPost(
+		h.resetPasswordUC.HandleGet,
+		h.resetPasswordUC.HandlePost,
+	))
 
 	mux.HandleFunc("/api/change-password", handlerPkg.HandleGenericPost(h.changePasswordUC.Handle))
 	mux.HandleFunc("/api/sync-topics", handlerPkg.HandleGenericGet(h.syncTopicsUC.HandleQuery))
@@ -158,11 +163,15 @@ func (h Handler) routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/api/topic/detail", sessionMiddleware(handlerPkg.HandleGenericGet(h.getTopicDetailUC.HandleQuery)))
 	mux.HandleFunc("/api/topic/stats", sessionMiddleware(handlerPkg.HandleGenericGet(h.getTopicStatsUC.HandleQuery)))
-	mux.HandleFunc("/api/entity/update-description", sessionMiddleware(handlerPkg.HandleGenericPost(h.updateDescriptionUC.Save)))
 	mux.HandleFunc("/api/entity/toggle-bookmark", authMiddleware(handlerPkg.HandleGenericPost(h.toggleBookmarkUC.Toggle)))
 
 	// this middleware is action auth required
 	actionAuthMiddleware := handlerPkg.InitActionAuthMiddleware(string(h.config.SecretKey), h.checkActionAuthUC)
+
+	mux.HandleFunc("/api/entity/update-description", sessionMiddleware(actionAuthMiddleware(
+		handlerPkg.HandleGenericPost(h.updateDescriptionUC.Save),
+		acl.Permission_Entity_Desc_Update.Name,
+	)))
 
 	mux.HandleFunc("/api/topic/publish", sessionMiddleware(actionAuthMiddleware(
 		handlerPkg.HandleGenericPost(h.getTopicDetailUC.HandlePublish),

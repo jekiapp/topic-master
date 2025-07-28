@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  topic-master:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    image: topic-master:latest
+    container_name: topic-master
+    command:
+      - -data_path=/app/infra/test_data/
+      - -port=4181
+      - -nsqlookupd_http_address=http://nsqlookupd:4161
+    environment:
+      - TOPIC_MASTER_ROOT_PASS=rootroot
+    ports:
+      - 4181:4181
+    networks:
+      - topic_master_network
+  test-script:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: test-script:latest
+    container_name: test-script
+    environment:
+      - TOPIC_MASTER_HOST=http://topic-master:4181
+    depends_on:
+      - topic-master
+    networks:
+      - topic_master_network
+networks:
+  topic_master_network:
+    external: true
