@@ -1,11 +1,11 @@
 start-test-setup:
-	docker compose -f infra/test_setup/docker-compose.yml up
+	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_setup/docker-compose.override.yml up
 
 start-test-detach:
-	docker compose -f infra/test_setup/docker-compose.yml up -d
+	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_setup/docker-compose.override.yml up -d
 
 stop-test-setup:
-	docker compose -f infra/test_setup/docker-compose.yml down 
+	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_setup/docker-compose.override.yml down 
 
 start-docs:
 	hugo server -s docs -D --disableFastRender -p 1414
@@ -29,7 +29,7 @@ build-macos-arm64:
 build-all: build-linux-amd64 build-linux-arm64 build-macos-amd64 build-macos-arm64
 
 start-test-all:
-	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_script/docker-compose.yml up --abort-on-container-exit
+	docker compose -f infra/test_setup/docker-compose.yml -f infra/test_setup/docker-compose.override.yml -f infra/test_script/docker-compose.yml up --abort-on-container-exit
 
 start-test-script:
 	docker compose -f infra/test_script/docker-compose.yml up --abort-on-container-exit
