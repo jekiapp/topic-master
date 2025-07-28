@@ -16,17 +16,18 @@ import (
 func TestManualUserCreation(t *testing.T) {
 	client := &http.Client{}
 	accessToken := helpers.LoginAsRoot(t, client, helpers.GetHost())
+	suffix := "3424"
 	group := helpers.CreateGroup(
 		t,
 		client,
 		helpers.GetHost(),
 		accessToken,
-		"engineering-user",
+		"engineering-user-"+suffix,
 		"Engineering Team for manual creation test",
 	)
 
 	// Step 2: Create a user with a generated password
-	username := "bob"
+	username := "bob-" + suffix
 	name := "Bob Marley"
 	initialPassword := "bobpass"
 	role := "member"

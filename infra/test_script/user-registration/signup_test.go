@@ -16,12 +16,13 @@ import (
 func TestSignupAndViewApplication(t *testing.T) {
 	client := &http.Client{}
 	accessToken := helpers.LoginAsRoot(t, client, helpers.GetHost())
+	suffix := "8687"
 	group := helpers.CreateGroup(
 		t,
 		client,
 		helpers.GetHost(),
 		accessToken,
-		"engineering-signup",
+		"engineering-signup-"+suffix,
 		"Engineering Team for signup test",
 	)
 
@@ -29,7 +30,7 @@ func TestSignupAndViewApplication(t *testing.T) {
 
 	t.Run("signup", func(t *testing.T) {
 		signupReq := map[string]interface{}{
-			"username":         "alice",
+			"username":         "alice-" + suffix,
 			"name":             "Alice Smith",
 			"password":         "alicepass",
 			"confirm_password": "alicepass",
@@ -83,7 +84,7 @@ func TestSignupAndViewApplication(t *testing.T) {
 		err = json.Unmarshal(bodyBytes, &appDetail)
 		require.NoError(t, err, "failed to decode signup app detail: %s", string(bodyBytes))
 		require.Equal(t, applicationID, appDetail.Data.Application.ID)
-		require.Equal(t, "alice", appDetail.Data.User.Username)
+		require.Equal(t, "alice-"+suffix, appDetail.Data.User.Username)
 		require.Equal(t, "Alice Smith", appDetail.Data.User.Name)
 		aliceID = appDetail.Data.User.ID
 	})
@@ -139,7 +140,7 @@ func TestSignupAndViewApplication(t *testing.T) {
 		err = json.Unmarshal(body, &detailResp)
 		require.NoError(t, err, "failed to decode ticket detail: %s", string(body))
 		require.Equal(t, applicationID, detailResp.Data.Ticket.ID)
-		require.Equal(t, "alice", detailResp.Data.Applicant.Username)
+		require.Equal(t, "alice-"+suffix, detailResp.Data.Applicant.Username)
 		require.Equal(t, "Alice Smith", detailResp.Data.Applicant.Name)
 	})
 
@@ -168,7 +169,7 @@ func TestSignupAndViewApplication(t *testing.T) {
 	})
 
 	t.Run("user can login after approval", func(t *testing.T) {
-		loginResp, _ := helpers.LoginUser(t, client, "alice", "alicepass")
+		loginResp, _ := helpers.LoginUser(t, client, "alice-"+suffix, "alicepass")
 		defer loginResp.Body.Close()
 		if !assert.Equal(t, http.StatusOK, loginResp.StatusCode) {
 			body, _ := io.ReadAll(loginResp.Body)
