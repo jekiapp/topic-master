@@ -14,12 +14,13 @@ import (
 func TestLoggedIn(t *testing.T) {
 	client := &http.Client{}
 	rootToken := helpers.LoginAsRoot(t, client, helpers.GetHost())
+	suffix := "889"
 	groupPayment := helpers.CreateGroup(
 		t,
 		client,
 		helpers.GetHost(),
 		rootToken,
-		"payment-team",
+		"payment-team-"+suffix,
 		"Payment Team for logged in test",
 	)
 	groupOrder := helpers.CreateGroup(
@@ -27,13 +28,13 @@ func TestLoggedIn(t *testing.T) {
 		client,
 		helpers.GetHost(),
 		rootToken,
-		"order-team",
+		"order-team-"+suffix,
 		"Order Team for logged in test",
 	)
 
-	aliceToken := UserSignup(t, "alice", rootToken, groupPayment)
-	bobToken := UserSignup(t, "bob", rootToken, groupOrder)
-	charlieToken := UserSignup(t, "charlie", rootToken, groupPayment)
+	aliceToken := UserSignup(t, "alice-"+suffix, rootToken, groupPayment)
+	bobToken := UserSignup(t, "bob-"+suffix, rootToken, groupOrder)
+	charlieToken := UserSignup(t, "charlie-"+suffix, rootToken, groupPayment)
 
 	// alice can list all topics
 	t.Run("alice list topics", func(t *testing.T) {
