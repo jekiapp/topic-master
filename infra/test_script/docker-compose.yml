@@ -14,9 +14,6 @@ services:
       - TOPIC_MASTER_ROOT_PASS=rootroot
     ports:
       - 4181:4181
-    depends_on:
-      # only depens consumer to make sure the topic has channels
-      # the consumer itself depends on nsqlookupd and nsqd
     networks:
       - topic_master_network
   test-script:
