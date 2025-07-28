@@ -13,9 +13,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Compose
-        uses: docker/setup-docker-compose@v3
-
       - name: Create external Docker network if not exists
         run: |
           docker network inspect topic_master_network >/dev/null 2>&1 || \
