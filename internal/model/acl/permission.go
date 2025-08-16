@@ -35,6 +35,10 @@ var (
 		Name:        "signup",
 		Description: "Signup a user",
 	}
+	Permission_Entity_Desc_Update = Permission{
+		Name:        "entity:desc:update",
+		Description: "Update the description of an entity",
+	}
 )
 
 var PermissionList = map[string]Permission{

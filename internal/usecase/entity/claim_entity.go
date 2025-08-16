@@ -109,17 +109,17 @@ func (uc ClaimEntityUsecase) Handle(ctx context.Context, req ClaimEntityRequest)
 	}
 	group, err := uc.repo.GetGroupByName(req.GroupName)
 	if err != nil {
-		return ClaimEntityResponse{}, errors.New("group not found")
+		return ClaimEntityResponse{}, fmt.Errorf("group %s not found", req.GroupName)
 	}
 	// Validate user is a member of the group
 	_, err = uc.repo.GetUserGroup(user.ID, group.ID)
 	if err != nil {
-		return ClaimEntityResponse{}, errors.New("user is not a member of the group")
+		return ClaimEntityResponse{}, fmt.Errorf("user %s is not a member of the group %s", user.ID, req.GroupName)
 	}
 	// get entity by id , then use the entity name as the title
 	entityObj, err := uc.repo.GetEntityByID(req.EntityID)
 	if err != nil {
-		return ClaimEntityResponse{}, errors.New("entity not found")
+		return ClaimEntityResponse{}, fmt.Errorf("entity %s not found", req.EntityID)
 	}
 
 	groupOwnerID := group.ID

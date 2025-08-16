@@ -52,7 +52,7 @@ $(function() {
         $check.on('click', function() {
             var newValue = $eventTrigger.val();
             $.ajax({
-                url: '/api/entity/update-description',
+                url: '/api/entity/update-description?entity_id=' + detail.id,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ entity_id: detail.id, description: newValue }),

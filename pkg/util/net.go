@@ -2,36 +2,20 @@ package util
 
 import (
 	"net"
-	"strings"
+	"os"
 )
 
-// ReplaceDockerHostWithLocalhost replaces any non-IP host in the input slice with 127.0.0.1, keeping the port.
-func ReplaceDockerIPWithLocalhost(ip string) string {
+// ReplaceDockerIPWithLocalhost is a helper function to replace the docker IP
+// with the localhost IP when detected to run in local environment.
+func ReplaceDockerIPWithLocalhost(address string) string {
+	if os.Getenv("IN_LOCAL") == "" {
+		return address
+	}
 	// Try to split host and port using net.SplitHostPort, which handles IPv6
-	host, port, err := net.SplitHostPort(ip)
+	_, port, err := net.SplitHostPort(address)
 	if err != nil {
 		// If error, it might be because there's no port, so treat the whole as host
-		host = ip
 		port = ""
 	}
-
-	// Remove brackets for IPv6 if present
-	trimmedHost := strings.Trim(host, "[]")
-
-	if net.ParseIP(trimmedHost) == nil {
-		if port != "" {
-			return "127.0.0.1:" + port
-		} else {
-			return "127.0.0.1"
-		}
-	} else {
-		if port != "" {
-			// Reconstruct with brackets for IPv6 if needed
-			if strings.Contains(trimmedHost, ":") {
-				return "[" + trimmedHost + "]:" + port
-			}
-			return trimmedHost + ":" + port
-		}
-		return trimmedHost
-	}
+	return "127.0.0.1:" + port
 }

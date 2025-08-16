@@ -1,0 +1,7 @@
+services:
+  nsqlookupd:
+    volumes:
+      - ./nsq/data:/data
+  nsqd:
+    volumes:
+      - ./nsq/data:/data 
