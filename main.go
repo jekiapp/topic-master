@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/tidwall/buntdb"
 
@@ -19,7 +20,8 @@ const dataFilename = "topic-master.db"
 
 func main() {
 	dataPath := flag.String("data_path", "", "Path to topic-master data directory(required)")
-	nsqlookupdHTTPAddr := flag.String("nsqlookupd_http_address", "", "NSQLookupd HTTP address (required)")
+	nsqlookupdHTTPAddr := flag.String("nsqlookupd_http_address", "", "NSQLookupd HTTP address")
+	kafkaCluster := flag.String("kafka_cluster", "", "Kafka cluster")
 	skipSync := flag.Bool("skip_sync", false, "Skip sync topics")
 	port := flag.String("port", "4181", "Port to listen on")
 	flag.Parse()
@@ -35,20 +37,32 @@ func main() {
 	defer db.Close()
 	cfg, err := config.NewConfig(db)
 	if err != nil {
-		if *nsqlookupdHTTPAddr == "" {
-			fmt.Println("No config found. Please provide -nsqlookupd_http_address flag.")
+		if *nsqlookupdHTTPAddr == "" && *kafkaCluster == "" {
+			fmt.Println("No config found. Please provide -nsqlookupd_http_address or -kafka_cluster flag.")
 			os.Exit(1)
 		}
 
-		cfg, err = config.SetupNewConfig(db, *nsqlookupdHTTPAddr)
+		cfg, err = config.SetupNewConfig(db, *nsqlookupdHTTPAddr, *kafkaCluster)
 		if err != nil {
 			log.Fatalf("failed to setup new config: %v", err)
 		}
 	}
 
-	if err == nil && cfg.NSQLookupdHTTPAddr != *nsqlookupdHTTPAddr {
-		fmt.Printf("nsqlookupd_http_address is changed from %s to %s\n", cfg.NSQLookupdHTTPAddr, *nsqlookupdHTTPAddr)
-		log.Fatalf("either provide new data path or remove %s to reset the data", *dataPath)
+	if err == nil {
+		if cfg.NSQLookupdHTTPAddr != *nsqlookupdHTTPAddr {
+			fmt.Printf("nsqlookupd_http_address is changed from \"%s\" to \"%s\"\n", cfg.NSQLookupdHTTPAddr, *nsqlookupdHTTPAddr)
+		}
+		if cfg.KafkaCluster != *kafkaCluster {
+			fmt.Printf("kafka_cluster is changed from \"%s\" to \"%s\"\n", cfg.KafkaCluster, *kafkaCluster)
+		}
+		fmt.Printf("The topic will be synced from the new address. Continue? (y/N): ")
+
+		var response string
+		fmt.Scanln(&response)
+		if strings.ToLower(strings.TrimSpace(response)) != "y" {
+			fmt.Println("Aborted by user.")
+			os.Exit(1)
+		}
 	}
 
 	// make sure indexes are created before checking and setting up root

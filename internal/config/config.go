@@ -19,7 +19,7 @@ const configKey = "topic-master_config"
 
 type Config struct {
 	NSQLookupdHTTPAddr string
-	NSQDAddr           string
+	KafkaCluster       string
 	SecretKey          []byte
 }
 
@@ -68,7 +68,7 @@ func CheckRootGroupAndUserExist(db *buntdb.DB) (bool, error) {
 }
 
 // SetupNewConfig creates a new config with a random secret key, saves it to the db, and returns it.
-func SetupNewConfig(db *buntdb.DB, nsqlookupdHTTPAddr string) (*Config, error) {
+func SetupNewConfig(db *buntdb.DB, nsqlookupdHTTPAddr string, kafkaCluster string) (*Config, error) {
 	// Generate a random 32-byte secret key
 	key := make([]byte, 32)
 	_, err := rand.Read(key)
@@ -79,6 +79,7 @@ func SetupNewConfig(db *buntdb.DB, nsqlookupdHTTPAddr string) (*Config, error) {
 
 	cfg := &Config{
 		NSQLookupdHTTPAddr: nsqlookupdHTTPAddr,
+		KafkaCluster:       kafkaCluster,
 		SecretKey:          secretKey,
 	}
 
