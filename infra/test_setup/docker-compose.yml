@@ -6,7 +6,7 @@ services:
       - "4161:4161"  # HTTP interface
       - "4160:4160"  # TCP interface
     volumes:
-      - nsq_data:/data
+      - nsq/data:/data
     networks:
       - topic_master_network
 
@@ -18,7 +18,7 @@ services:
       - "4150:4150"  # TCP interface
       - "4152:4152"  # HTTP interface for /stats
     volumes:
-      - nsq_data:/data
+      - nsq/data:/data
     depends_on:
       - nsqlookupd
     networks:
@@ -40,7 +40,7 @@ services:
       context:  ./nsq/publisher
       dockerfile: Dockerfile
     volumes:
-      - ./topics.txt:/app/topics.txt
+      - ./nsq/publisher/topics.txt:/app/topics.txt
     depends_on:
       - nsqd
     networks:
@@ -51,7 +51,7 @@ services:
       context: ./nsq/consumer
       dockerfile: Dockerfile
     volumes:
-      - ./topics.txt:/app/topics.txt
+      - ./nsq/consumer/topics.txt:/app/topics.txt
     environment:
       - TOPICS=${TOPICS}
       - NSQLOOKUPD_TCP_ADDRESS=nsqlookupd:4160
@@ -105,7 +105,6 @@ services:
       - KAFKA_BROKER=kafka:9092
     depends_on:
       - kafka
-      - kafka-publisher
 
 volumes:
   nsq_data:
