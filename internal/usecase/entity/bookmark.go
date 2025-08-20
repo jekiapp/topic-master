@@ -41,7 +41,7 @@ func (uc ToggleBookmarkUsecase) Toggle(ctx context.Context, input ToggleBookmark
 	if err != nil {
 		return ToggleBookmarkResponse{Message: "Entity not found"}, err
 	}
-	err = uc.repo.ToggleBookmark(input.EntityID, entity.TypeID, userInfo.ID, input.Bookmark)
+	err = uc.repo.ToggleBookmark(input.EntityID, entity.Kind, userInfo.ID, input.Bookmark)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			return ToggleBookmarkResponse{Message: "Bookmark already exists"}, nil
@@ -52,7 +52,7 @@ func (uc ToggleBookmarkUsecase) Toggle(ctx context.Context, input ToggleBookmark
 }
 
 type iBookmarkRepo interface {
-	ToggleBookmark(entityID, entityType, userID string, bookmark bool) error
+	ToggleBookmark(entityID, entityKind, userID string, bookmark bool) error
 	GetEntityByID(db *buntdb.DB, entityID string) (entitymodel.Entity, error)
 }
 
@@ -60,8 +60,8 @@ type bookmarkRepo struct {
 	db *buntdb.DB
 }
 
-func (r *bookmarkRepo) ToggleBookmark(entityID, entityType, userID string, bookmark bool) error {
-	return entityrepo.ToggleBookmark(r.db, entityID, entityType, userID, bookmark)
+func (r *bookmarkRepo) ToggleBookmark(entityID, entityKind, userID string, bookmark bool) error {
+	return entityrepo.ToggleBookmark(r.db, entityID, entityKind, userID, bookmark)
 }
 
 func (r *bookmarkRepo) GetEntityByID(db *buntdb.DB, entityID string) (entitymodel.Entity, error) {

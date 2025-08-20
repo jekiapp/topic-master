@@ -10,14 +10,14 @@ import (
 type Bookmark struct {
 	EntityID   string
 	UserID     string
-	EntityType string
+	EntityKind string
 	CreatedAt  time.Time
 }
 
 const (
 	TableBookmark                 = "bookmark"
 	IdxBookmark_EntityID          = TableBookmark + ":entityid"
-	IdxBookmark_UserID_EntityType = TableBookmark + ":userid_entitytype"
+	IdxBookmark_UserID_EntityKind = TableBookmark + ":userid_entitykind"
 	IdxBookmark_EntUser           = TableBookmark + ":entuser"
 )
 
@@ -36,8 +36,8 @@ func (b Bookmark) GetIndexes() []db.Index {
 			Type:    buntdb.IndexString,
 		},
 		{
-			Name:    IdxBookmark_UserID_EntityType,
-			Pattern: TableBookmark + ":*:userid_entitytype",
+			Name:    IdxBookmark_UserID_EntityKind,
+			Pattern: TableBookmark + ":*:userid_entitykind",
 			Type:    buntdb.IndexString,
 		},
 		{
@@ -51,7 +51,7 @@ func (b Bookmark) GetIndexes() []db.Index {
 func (b Bookmark) GetIndexValues() map[string]string {
 	return map[string]string{
 		"entityid":          b.EntityID,
-		"userid_entitytype": b.UserID + ":" + b.EntityType,
+		"userid_entitykind": b.UserID + ":" + b.EntityKind,
 		"entuser":           b.EntityID + ":" + b.UserID,
 	}
 }
