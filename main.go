@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/tidwall/buntdb"
 
@@ -35,34 +34,10 @@ func main() {
 		log.Fatalf("failed to open data directory: %v", err)
 	}
 	defer db.Close()
-	cfg, err := config.NewConfig(db)
+
+	cfg, err := initConfig(db, *nsqlookupdHTTPAddr, *kafkaCluster)
 	if err != nil {
-		if *nsqlookupdHTTPAddr == "" && *kafkaCluster == "" {
-			fmt.Println("No config found. Please provide -nsqlookupd_http_address or -kafka_cluster flag.")
-			os.Exit(1)
-		}
-
-		cfg, err = config.SetupNewConfig(db, *nsqlookupdHTTPAddr, *kafkaCluster)
-		if err != nil {
-			log.Fatalf("failed to setup new config: %v", err)
-		}
-	}
-
-	if err == nil {
-		if cfg.NSQLookupdHTTPAddr != *nsqlookupdHTTPAddr {
-			fmt.Printf("nsqlookupd_http_address is changed from \"%s\" to \"%s\"\n", cfg.NSQLookupdHTTPAddr, *nsqlookupdHTTPAddr)
-		}
-		if cfg.KafkaCluster != *kafkaCluster {
-			fmt.Printf("kafka_cluster is changed from \"%s\" to \"%s\"\n", cfg.KafkaCluster, *kafkaCluster)
-		}
-		fmt.Printf("The topic will be synced from the new address. Continue? (y/N): ")
-
-		var response string
-		fmt.Scanln(&response)
-		if strings.ToLower(strings.TrimSpace(response)) != "y" {
-			fmt.Println("Aborted by user.")
-			os.Exit(1)
-		}
+		log.Fatalf("failed to init config: %v", err)
 	}
 
 	// make sure indexes are created before checking and setting up root

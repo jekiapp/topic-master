@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 
 	"github.com/tidwall/buntdb"
 	"github.com/vmihailenco/msgpack/v5"
@@ -83,15 +84,24 @@ func SetupNewConfig(db *buntdb.DB, nsqlookupdHTTPAddr string, kafkaCluster strin
 		SecretKey:          secretKey,
 	}
 
+	err = cfg.SaveConfig(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return cfg, err
+}
+
+func (cfg *Config) SaveConfig(db *buntdb.DB) error {
 	data, err := msgpack.Marshal(cfg)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = db.Update(func(tx *buntdb.Tx) error {
 		_, _, err := tx.Set(configKey, string(data), nil)
 		return err
 	})
-	return cfg, err
+	return err
 }
 
 func (cfg *Config) IsUsingKafka() bool {
