@@ -4,8 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/internal/config"
+	"github.com/jekiapp/topic-master/internal/model/entity"
+	"github.com/jekiapp/topic-master/pkg/db"
+	"github.com/tidwall/buntdb"
 )
 
 var lookupdAddr string
@@ -36,4 +41,22 @@ func GetAllTopics() ([]string, error) {
 		return nil, err
 	}
 	return result.Topics, nil
+}
+
+func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) {
+	entityObj := &entity.Entity{
+		ID:         uuid.NewString(),
+		Kind:       entity.EntityKind_Topic,
+		TypeID:     entity.EntityType_NSQTopic,
+		Name:       topic,
+		Resource:   entity.EntityResource_NSQ,
+		Status:     entity.EntityStatus_Active,
+		GroupOwner: entity.GroupNone,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	if err := db.Insert(dbConn, entityObj); err != nil {
+		return nil, err
+	}
+	return entityObj, nil
 }
