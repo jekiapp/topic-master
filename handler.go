@@ -63,7 +63,7 @@ type Handler struct {
 	submitApplicationUC     submit.SubmitApplicationUsecase
 }
 
-func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
+func initHandler(db *buntdb.DB, deps *deps, cfg *config.Config) Handler {
 	webUsecase := webUC.NewWebUsecase()
 
 	return Handler{
@@ -76,7 +76,7 @@ func initHandler(db *buntdb.DB, cfg *config.Config) Handler {
 		deleteUserUC:            aclUser.NewDeleteUserUsecase(db),
 		createGroupUC:           aclGroup.NewCreateGroupUsecase(db),
 		changePasswordUC:        aclUser.NewChangePasswordUsecase(db),
-		syncTopicsUC:            topicUC.NewSyncTopicsUsecase(db),
+		syncTopicsUC:            topicUC.NewSyncTopicsUsecase(db, deps.kafka_adm_client),
 		webUC:                   webUsecase,
 		getGroupListUC:          aclGroup.NewGetGroupListUsecase(db),
 		getGroupListSimpleUC:    aclGroup.NewGetGroupListSimpleUsecase(db),

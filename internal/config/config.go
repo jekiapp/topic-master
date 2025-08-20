@@ -93,3 +93,11 @@ func SetupNewConfig(db *buntdb.DB, nsqlookupdHTTPAddr string, kafkaCluster strin
 	})
 	return cfg, err
 }
+
+func (cfg *Config) IsUsingKafka() bool {
+	return cfg.KafkaCluster != ""
+}
+
+func (cfg *Config) IsUsingNSQ() bool {
+	return cfg.NSQLookupdHTTPAddr != ""
+}

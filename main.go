@@ -73,8 +73,14 @@ func main() {
 		log.Fatalf("failed to check and setup root: %v", err)
 	}
 
+	deps, err := initDeps(cfg.KafkaCluster)
+	if err != nil {
+		log.Fatalf("failed to init deps: %v", err)
+	}
+	defer deps.close()
+
 	mux := http.NewServeMux()
-	handler := initHandler(db, cfg)
+	handler := initHandler(db, deps, cfg)
 	handler.routes(mux)
 
 	// sync all the topics
