@@ -6,4 +6,5 @@ type Topic struct {
 	Description string `json:"description"`
 	Status      string `json:"status"`
 	Group       string `json:"group"`
+	Resource    string `json:"resource"` // NSQ, Kafka, etc.
 }

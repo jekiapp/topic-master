@@ -1,30 +1,10 @@
 package entity
 
 import (
-	"time"
-
-	"github.com/google/uuid"
 	"github.com/jekiapp/topic-master/internal/model/entity"
 	"github.com/jekiapp/topic-master/pkg/db"
 	"github.com/tidwall/buntdb"
 )
-
-func CreateNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) {
-	entityObj := &entity.Entity{
-		ID:         uuid.NewString(),
-		TypeID:     entity.EntityType_NSQTopic,
-		Name:       topic,
-		Resource:   "NSQ",
-		Status:     "active",
-		GroupOwner: entity.GroupNone,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	}
-	if err := db.Insert(dbConn, entityObj); err != nil {
-		return nil, err
-	}
-	return entityObj, nil
-}
 
 func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) {
 	pivot := entity.EntityType_NSQTopic + ":" + topic
@@ -37,6 +17,14 @@ func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) 
 
 func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]entity.Entity, error) {
 	entities, err := db.SelectAll[entity.Entity](dbConn, ">="+entity.EntityType_NSQTopic, entity.IdxEntity_TypeName)
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
+}
+
+func GetAllTopicEntities(dbConn *buntdb.DB) ([]entity.Entity, error) {
+	entities, err := db.SelectAll[entity.Entity](dbConn, "="+entity.EntityKind_Topic, entity.IdxEntity_Kind)
 	if err != nil {
 		return nil, err
 	}

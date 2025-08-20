@@ -11,6 +11,7 @@ import (
 type Entity struct {
 	ID          string
 	TypeID      string // e.g EntityType_NSQTopic
+	Kind        string // e.g EntityKind_Topic
 	GroupOwner  string // Group.Name
 	Name        string
 	Resource    string
@@ -23,9 +24,17 @@ type Entity struct {
 }
 
 const (
-	EntityResource_NSQ    = "NSQ"
+	EntityResource_NSQ   = "NSQ"
+	EntityResource_Kafka = "Kafka"
+
 	EntityType_NSQTopic   = "nsq_topic"
 	EntityType_NSQChannel = "nsq_channel"
+
+	EntityType_KafkaTopic   = "kafka_topic"
+	EntityType_KafkaChannel = "kafka_channel"
+
+	EntityKind_Topic   = "topic"
+	EntityKind_Channel = "channel"
 
 	EntityStatus_Active  = "active"
 	EntityStatus_Deleted = "deleted"
@@ -49,6 +58,7 @@ const (
 	IdxEntity_GroupType    = TableEntity + ":group_type"
 	IdxEntity_TypeName     = TableEntity + ":type_name"
 	IdxEntity_TopicChannel = TableEntity + ":topic_channel"
+	IdxEntity_Kind         = TableEntity + ":kind"
 
 	GroupNone = "None"
 )
@@ -98,6 +108,11 @@ func (e Entity) GetIndexes() []db.Index {
 			Type:     buntdb.IndexString,
 			Optional: true,
 		},
+		{
+			Name:    IdxEntity_Kind,
+			Pattern: TableEntity + ":*:kind",
+			Type:    buntdb.IndexString,
+		},
 	}
 }
 
@@ -109,6 +124,7 @@ func (e Entity) GetIndexValues() map[string]string {
 		"status":     e.Status,
 		"group_type": e.GroupOwner + ":" + e.TypeID,
 		"type_name":  e.TypeID + ":" + e.Name,
+		"kind":       e.Kind,
 	}
 
 	if e.TypeID == EntityType_NSQChannel && e.Metadata["topic"] != "" {
