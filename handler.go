@@ -76,7 +76,7 @@ func initHandler(db *buntdb.DB, deps *deps, cfg *config.Config) Handler {
 		deleteUserUC:            aclUser.NewDeleteUserUsecase(db),
 		createGroupUC:           aclGroup.NewCreateGroupUsecase(db),
 		changePasswordUC:        aclUser.NewChangePasswordUsecase(db),
-		syncTopicsUC:            topicUC.NewSyncTopicsUsecase(db, deps.kafka_adm_client),
+		syncTopicsUC:            topicUC.NewSyncTopicsUsecase(cfg, db, deps.kafka_adm_client),
 		webUC:                   webUsecase,
 		getGroupListUC:          aclGroup.NewGetGroupListUsecase(db),
 		getGroupListSimpleUC:    aclGroup.NewGetGroupListSimpleUsecase(db),

@@ -39,10 +39,10 @@ type SyncTopicsUsecase struct {
 	running bool
 }
 
-func NewSyncTopicsUsecase(db *buntdb.DB, kCli *kafka.AdminClient) SyncTopicsUsecase {
+func NewSyncTopicsUsecase(cfg *config.Config, db *buntdb.DB, kCli *kafka.AdminClient) SyncTopicsUsecase {
 	return SyncTopicsUsecase{
 		db:   db,
-		repo: &syncTopicsRepo{db: db, kCli: kCli},
+		repo: &syncTopicsRepo{cfg: cfg, db: db, kCli: kCli},
 	}
 }
 

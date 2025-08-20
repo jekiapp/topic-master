@@ -21,7 +21,7 @@ const dataFilename = "topic-master.db"
 func main() {
 	dataPath := flag.String("data_path", "", "Path to topic-master data directory(required)")
 	nsqlookupdHTTPAddr := flag.String("nsqlookupd_http_address", "", "NSQLookupd HTTP address")
-	kafkaCluster := flag.String("kafka_cluster", "", "Kafka cluster")
+	kafkaCluster := flag.String("kafka_bootstrap_server", "", "Kafka bootstrap server")
 	skipSync := flag.Bool("skip_sync", false, "Skip sync topics")
 	port := flag.String("port", "4181", "Port to listen on")
 	flag.Parse()
