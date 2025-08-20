@@ -55,7 +55,7 @@ func (uc ListAllTopicsUsecase) listBookmarkedTopics(ctx context.Context) (ListTo
 	if len(ids) == 0 {
 		return ListTopicsResponse{Topics: nil}, nil
 	}
-	topicEntities, err := uc.repo.GetNsqTopicEntitiesByIDs(ids)
+	topicEntities, err := uc.repo.GetTopicEntitiesByIDs(ids)
 	if err != nil {
 		return ListTopicsResponse{}, err
 	}
@@ -81,7 +81,7 @@ func (uc ListAllTopicsUsecase) listAllTopics(ctx context.Context) (ListTopicsRes
 	}
 	var topicEntities []entity.Entity
 	var err error
-	topicEntities, err = uc.repo.GetAllNsqTopicEntities()
+	topicEntities, err = uc.repo.GetAllTopicEntities()
 	if err != nil && err != dbPkg.ErrNotFound {
 		return ListTopicsResponse{}, err
 	}
@@ -107,10 +107,10 @@ func (uc ListAllTopicsUsecase) listAllTopics(ctx context.Context) (ListTopicsRes
 
 type iListTopicsRepo interface {
 	ListNsqTopicEntitiesByGroup(group string) ([]entity.Entity, error)
-	GetAllNsqTopicEntities() ([]entity.Entity, error)
+	GetAllTopicEntities() ([]entity.Entity, error)
 	IsBookmarked(entityID, userID string) (bool, error)
 	ListBookmarkedTopicIDsByUser(userID string) ([]string, error)
-	GetNsqTopicEntitiesByIDs(ids []string) ([]entity.Entity, error)
+	GetTopicEntitiesByIDs(ids []string) ([]entity.Entity, error)
 }
 
 type listTopicsRepo struct {
@@ -121,8 +121,8 @@ func (r *listTopicsRepo) ListNsqTopicEntitiesByGroup(group string) ([]entity.Ent
 	return entityrepo.ListNsqTopicEntitiesByGroup(r.db, group)
 }
 
-func (r *listTopicsRepo) GetAllNsqTopicEntities() ([]entity.Entity, error) {
-	return entityrepo.GetAllNsqTopicEntities(r.db)
+func (r *listTopicsRepo) GetAllTopicEntities() ([]entity.Entity, error) {
+	return entityrepo.GetAllTopicEntities(r.db)
 }
 
 func (r *listTopicsRepo) IsBookmarked(entityID, userID string) (bool, error) {
@@ -133,6 +133,6 @@ func (r *listTopicsRepo) ListBookmarkedTopicIDsByUser(userID string) ([]string, 
 	return entityrepo.ListBookmarkedTopicIDsByUser(r.db, userID, entity.EntityKind_Topic)
 }
 
-func (r *listTopicsRepo) GetNsqTopicEntitiesByIDs(ids []string) ([]entity.Entity, error) {
-	return entityrepo.GetNsqTopicEntitiesByIDs(r.db, ids)
+func (r *listTopicsRepo) GetTopicEntitiesByIDs(ids []string) ([]entity.Entity, error) {
+	return entityrepo.GetTopicEntitiesByIDs(r.db, ids)
 }

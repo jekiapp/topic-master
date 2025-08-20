@@ -46,11 +46,11 @@ func ListNsqTopicEntitiesByGroup(dbConn *buntdb.DB, group string) ([]entity.Enti
 	return entities, nil
 }
 
-func GetNsqTopicEntitiesByIDs(dbConn *buntdb.DB, ids []string) ([]entity.Entity, error) {
+func GetTopicEntitiesByIDs(dbConn *buntdb.DB, ids []string) ([]entity.Entity, error) {
 	entities := make([]entity.Entity, 0, len(ids))
 	for _, id := range ids {
 		ent, err := GetEntityByID(dbConn, id)
-		if err == nil && ent.TypeID == entity.EntityType_NSQTopic {
+		if err == nil && ent.Kind == entity.EntityKind_Topic {
 			entities = append(entities, ent)
 		}
 	}
