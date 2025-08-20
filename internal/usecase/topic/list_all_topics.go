@@ -130,7 +130,7 @@ func (r *listTopicsRepo) IsBookmarked(entityID, userID string) (bool, error) {
 }
 
 func (r *listTopicsRepo) ListBookmarkedTopicIDsByUser(userID string) ([]string, error) {
-	return entityrepo.ListBookmarkedTopicIDsByUser(r.db, userID, entity.EntityType_NSQTopic)
+	return entityrepo.ListBookmarkedTopicIDsByUser(r.db, userID, entity.EntityKind_Topic)
 }
 
 func (r *listTopicsRepo) GetNsqTopicEntitiesByIDs(ids []string) ([]entity.Entity, error) {

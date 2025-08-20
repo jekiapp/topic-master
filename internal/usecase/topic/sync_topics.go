@@ -13,9 +13,13 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/jekiapp/topic-master/internal/config"
 	topicLogic "github.com/jekiapp/topic-master/internal/logic/topic"
 	"github.com/jekiapp/topic-master/internal/model/entity"
+	topicmodel "github.com/jekiapp/topic-master/internal/model/topic"
 	entityrepo "github.com/jekiapp/topic-master/internal/repository/entity"
+	kafkarepo "github.com/jekiapp/topic-master/internal/repository/kafka"
 	nsq "github.com/jekiapp/topic-master/internal/repository/nsq"
 	"github.com/tidwall/buntdb"
 )
@@ -27,51 +31,6 @@ type SyncTopicsResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-type iSyncTopicsRepo interface {
-	topicLogic.ISyncTopics
-	topicLogic.ISyncChannels
-}
-
-type syncTopicsRepo struct {
-	db *buntdb.DB
-}
-
-func (r *syncTopicsRepo) GetAllTopics() ([]string, error) {
-	return nsq.GetAllTopics()
-}
-
-func (r *syncTopicsRepo) GetNsqTopicEntity(topic string) (*entity.Entity, error) {
-	return entityrepo.GetNsqTopicEntity(r.db, topic)
-}
-
-func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*entity.Entity, error) {
-	return entityrepo.CreateNsqTopicEntity(r.db, topic)
-}
-
-func (r *syncTopicsRepo) GetAllNsqTopicEntities() ([]entity.Entity, error) {
-	return entityrepo.GetAllNsqTopicEntities(r.db)
-}
-
-func (r *syncTopicsRepo) DeleteNsqTopicEntity(topic string) error {
-	return entityrepo.DeleteNsqTopicEntity(r.db, topic)
-}
-
-func (r *syncTopicsRepo) GetAllChannels(topic string) ([]string, error) {
-	return nsq.GetAllChannels(topic)
-}
-
-func (r *syncTopicsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
-	return nsq.GetAllNsqTopicChannels(r.db, topic)
-}
-
-func (r *syncTopicsRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
-	return nsq.CreateNsqChannelEntity(r.db, topic, channel)
-}
-
-func (r *syncTopicsRepo) DeleteNsqChannelEntity(topic, channel string) error {
-	return nsq.DeleteNsqChannelEntity(r.db, topic, channel)
-}
-
 type SyncTopicsUsecase struct {
 	db   *buntdb.DB
 	repo iSyncTopicsRepo
@@ -80,10 +39,10 @@ type SyncTopicsUsecase struct {
 	running bool
 }
 
-func NewSyncTopicsUsecase(db *buntdb.DB) SyncTopicsUsecase {
+func NewSyncTopicsUsecase(db *buntdb.DB, kCli *kafka.AdminClient) SyncTopicsUsecase {
 	return SyncTopicsUsecase{
 		db:   db,
-		repo: &syncTopicsRepo{db: db},
+		repo: &syncTopicsRepo{db: db, kCli: kCli},
 	}
 }
 
@@ -108,4 +67,90 @@ func (uc *SyncTopicsUsecase) HandleQuery(ctx context.Context, _ map[string]strin
 	}
 
 	return SyncTopicsResponse{Success: true}, nil
+}
+
+type iSyncTopicsRepo interface {
+	topicLogic.ISyncTopics
+	topicLogic.ISyncChannels
+}
+
+type syncTopicsRepo struct {
+	db   *buntdb.DB
+	cfg  *config.Config
+	kCli *kafka.AdminClient
+}
+
+func (r *syncTopicsRepo) GetAllTopics() ([]topicmodel.Topic, error) {
+
+	topics := make([]topicmodel.Topic, 0)
+	if r.cfg.IsUsingNSQ() {
+		nsqtopics, err := nsq.GetAllTopics()
+		if err != nil {
+			return nil, err
+		}
+		for _, topic := range nsqtopics {
+			t := topicmodel.Topic{
+				Name:     topic,
+				Resource: entity.EntityResource_NSQ,
+			}
+			topics = append(topics, t)
+		}
+	}
+
+	if r.cfg.IsUsingKafka() {
+		kafkatopics, err := kafkarepo.GetAllTopics(r.kCli)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, topic := range kafkatopics {
+			t := topicmodel.Topic{
+				Name:     topic,
+				Resource: entity.EntityResource_Kafka,
+			}
+			topics = append(topics, t)
+		}
+	}
+
+	return topics, nil
+}
+
+func (r *syncTopicsRepo) GetNsqTopicEntity(topic string) (*entity.Entity, error) {
+	return entityrepo.GetNsqTopicEntity(r.db, topic)
+}
+
+func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*entity.Entity, error) {
+	return nsq.CreateNsqTopicEntity(r.db, topic)
+}
+
+func (r *syncTopicsRepo) GetAllTopicEntities() ([]entity.Entity, error) {
+	return entityrepo.GetAllNsqTopicEntities(r.db)
+}
+
+func (r *syncTopicsRepo) DeleteNsqTopicEntity(topic string) error {
+	return entityrepo.DeleteNsqTopicEntity(r.db, topic)
+}
+
+func (r *syncTopicsRepo) GetAllChannels(topic string) ([]string, error) {
+	return nsq.GetAllChannels(topic)
+}
+
+func (r *syncTopicsRepo) GetAllNsqChannelByTopic(topic string) ([]entity.Entity, error) {
+	return nsq.GetAllNsqTopicChannels(r.db, topic)
+}
+
+func (r *syncTopicsRepo) CreateNsqChannelEntity(topic, channel string) (*entity.Entity, error) {
+	return nsq.CreateNsqChannelEntity(r.db, topic, channel)
+}
+
+func (r *syncTopicsRepo) DeleteNsqChannelEntity(topic, channel string) error {
+	return nsq.DeleteNsqChannelEntity(r.db, topic, channel)
+}
+
+func (r *syncTopicsRepo) CreateKafkaTopicEntity(topic string) (*entity.Entity, error) {
+	return kafkarepo.CreateKafkaTopicEntity(r.db, topic)
+}
+
+func (r *syncTopicsRepo) DeleteKafkaTopicEntity(topic string) error {
+	return kafkarepo.DeleteKafkaTopicEntity(r.db, topic)
 }
