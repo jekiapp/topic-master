@@ -42,6 +42,7 @@ $(function() {
       }
       return `<tr class="topic-row" data-id="${t.id}" data-bookmarked="${t.bookmarked}">
         <td>${t.name || ''}</td>
+        <td>${t.resource || ''}</td>
         <td>${groupOwnerCell}</td>
         <td>${t.event_trigger || ''}</td>
         <td style="text-align:center;vertical-align:middle;">${renderBookmark(t.bookmarked)}</td>

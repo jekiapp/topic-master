@@ -19,6 +19,7 @@ type TopicResponse struct {
 	Name         string `json:"name"`
 	EventTrigger string `json:"event_trigger"`
 	GroupOwner   string `json:"group_owner"`
+	Resource     string `json:"resource"`
 	Bookmarked   bool   `json:"bookmarked"`
 }
 
@@ -67,6 +68,7 @@ func (uc ListAllTopicsUsecase) listBookmarkedTopics(ctx context.Context) (ListTo
 			Name:         t.Name,
 			EventTrigger: t.Description,
 			GroupOwner:   t.GroupOwner,
+			Resource:     t.Resource,
 			Bookmarked:   true,
 		}
 	}
@@ -99,6 +101,7 @@ func (uc ListAllTopicsUsecase) listAllTopics(ctx context.Context) (ListTopicsRes
 			Name:         t.Name,
 			EventTrigger: t.Description,
 			GroupOwner:   t.GroupOwner,
+			Resource:     t.Resource,
 			Bookmarked:   bookmarked,
 		}
 	}
