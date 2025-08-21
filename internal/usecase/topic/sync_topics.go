@@ -124,7 +124,7 @@ func (r *syncTopicsRepo) CreateNsqTopicEntity(topic string) (*entity.Entity, err
 }
 
 func (r *syncTopicsRepo) GetAllTopicEntities() ([]entity.Entity, error) {
-	return entityrepo.GetAllNsqTopicEntities(r.db)
+	return entityrepo.GetAllTopicEntities(r.db)
 }
 
 func (r *syncTopicsRepo) DeleteNsqTopicEntity(topic string) error {

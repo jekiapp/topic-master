@@ -15,14 +15,6 @@ func GetNsqTopicEntity(dbConn *buntdb.DB, topic string) (*entity.Entity, error) 
 	return &entityObj, nil
 }
 
-func GetAllNsqTopicEntities(dbConn *buntdb.DB) ([]entity.Entity, error) {
-	entities, err := db.SelectAll[entity.Entity](dbConn, ">="+entity.EntityType_NSQTopic, entity.IdxEntity_TypeName)
-	if err != nil {
-		return nil, err
-	}
-	return entities, nil
-}
-
 func GetAllTopicEntities(dbConn *buntdb.DB) ([]entity.Entity, error) {
 	entities, err := db.SelectAll[entity.Entity](dbConn, "="+entity.EntityKind_Topic, entity.IdxEntity_Kind)
 	if err != nil {

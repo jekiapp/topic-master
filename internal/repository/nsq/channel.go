@@ -54,6 +54,7 @@ func CreateNsqChannelEntity(db *buntdb.DB, topic, channel string) (*entity.Entit
 		ID:          uuid.NewString(),
 		Name:        channel,
 		TypeID:      entity.EntityType_NSQChannel,
+		Kind:        entity.EntityKind_Channel,
 		Resource:    entity.EntityResource_NSQ,
 		Status:      entity.EntityStatus_Active,
 		Description: "NSQ channel",
