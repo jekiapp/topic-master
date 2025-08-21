@@ -60,8 +60,14 @@ $(function() {
     mainIframe.attr('src', 'all-topics/index.html');
   }
 
-  function showTopicDetail(id) {
-    mainIframe.attr('src', `topic-details/index.html?id=${id}`);
+  function showTopicDetail(query) {
+    //parse key value pairs from query
+    const queryParams = query.split('&').reduce((acc, param) => {
+      const [key, value] = param.split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+    mainIframe.attr('src', `topic-details/${queryParams.resource}/index.html?${query}`);
   }
 
   function setActiveMenuByHash(hash) {
@@ -122,7 +128,7 @@ $(function() {
     } else if (hash === '#my-topics') {
       showMyTopics();
     } else if (hash.startsWith('#topic-detail')) {
-      showTopicDetail(hash.split('=')[1]);
+      showTopicDetail(hash.split('?')[1]);
     } else {
       showAllTopics();
     }

@@ -40,7 +40,7 @@ $(function() {
       } else {
         groupOwnerCell = `<span style="display:inline-block;min-width:60px;padding:2px 12px;border-radius:999px;background:#d4f7d4;color:#222;text-align:center;">${t.group_owner}</span>`;
       }
-      return `<tr class="topic-row" data-id="${t.id}" data-bookmarked="${t.bookmarked}">
+      return `<tr class="topic-row" data-id="${t.id}" data-bookmarked="${t.bookmarked}" data-resource="${t.resource}">
         <td>${t.name || ''}</td>
         <td>${t.resource || ''}</td>
         <td>${groupOwnerCell}</td>
@@ -70,7 +70,10 @@ $(function() {
         const id = $(this).data('id');
         if (id) {
           const back = (isBookmarked !== null) ? 'my-topics' : 'all-topics';
-          window.parent.location.hash = `topic-detail?id=${id}&back=${back}`;
+
+          resource = $(this).data('resource');
+          resource = resource.toLowerCase();
+          window.parent.location.hash = `topic-detail?id=${id}&resource=${resource}&back=${back}`;
         }
       });
       // Add click handler for bookmark icon
